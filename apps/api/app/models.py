@@ -806,6 +806,23 @@ class ThirdPartyReviewTask(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+class CheckWarningJudgment(Base):
+    """The writing model's verdict on one warning check, so approval does not ask the user to write a disposition."""
+
+    __tablename__ = "check_warning_judgment"
+    __table_args__ = (UniqueConstraint("check_run_id", "input_hash", name="uq_check_warning_judgment"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    check_run_id: Mapped[int] = mapped_column(ForeignKey("content_master_check_run.id"), index=True)
+    input_hash: Mapped[str] = mapped_column(String(64))
+    judge: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20))
+    verdict: Mapped[str | None] = mapped_column(String(20))
+    reason: Mapped[str | None] = mapped_column(String(1000))
+    model_label: Mapped[str | None] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    judged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
 class ChannelVariantRevision(Base):
     __tablename__ = "channel_variant_revision"
     __table_args__ = (

@@ -654,6 +654,9 @@ def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user:
         db.add(check)
         rows.append(check)
     db.commit()
+    from .warning_judgment import judge_warnings
+
+    judge_warnings(db, row, rows)
     return [{"id": item.id, "check_kind": item.check_kind, "input_hash": item.input_hash, "status": item.status, "report": item.report_json} for item in rows]
 
 

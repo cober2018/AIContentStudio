@@ -183,6 +183,8 @@ def test_graphic_platform_check_becomes_stale_when_published_profile_changes(cli
 def test_text_identity_review_does_not_verify_visual_identity(monkeypatch):
     checks = importlib.import_module("app.services.graphic_master_checks")
     monkeypatch.setattr(checks, "_semantic_review", lambda *args, **kwargs: ([], {"semantic": "verified"}))
+    # Platform writing: no rendered cards are handed over, so the text review cannot vouch for the picture.
+    monkeypatch.setattr(checks, "_rendered_images", lambda db, master: [])
     snapshot = SimpleNamespace(id=7, checksum="i" * 64, effective_profile_json={"expression_style": {"forbidden_phrases": []}})
     db = SimpleNamespace(get=lambda model, key: snapshot)
     layer = {"id": "title", "order": 0, "type": "text", "visible": True, "x": 0, "y": 0, "width": 200, "height": 80, "runs": [{"text": "文字可检查", "style": {"font_size": 30, "color": "#123456"}}]}

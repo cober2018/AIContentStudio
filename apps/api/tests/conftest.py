@@ -55,3 +55,11 @@ def inject_unfact(monkeypatch):
     monkeypatch.setenv("MOCK_INJECT_UNFACT_NUMBER", "false")
     get_settings.cache_clear()
     _providers.clear()
+
+
+@pytest.fixture(autouse=True)
+def accept_warning_judgments(monkeypatch):
+    """The mock provider cannot judge; tests stand in a platform verdict that accepts every warning."""
+    from app.services import warning_judgment
+
+    monkeypatch.setattr(warning_judgment, "_platform_judge", lambda request, model: ("done", "accept", "测试：提醒可以接受", model))

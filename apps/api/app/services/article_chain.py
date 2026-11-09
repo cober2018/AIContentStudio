@@ -35,7 +35,7 @@ RULES = [
     "读 get_article_brief：任务书、事实、来源原文、当前稿和格式示例。数字只用事实里有的，并写清来源；不夸大。",
     "当事实说的话（数字、症状、研究结论、政策、参数等）只用 facts（已冻结的事实边界）里有的；角色作品写稿前先用 get_fact_template 看题材模板，把要当事实说的话连出处用 submit_facts 交上去，平台核对后自动冻结；被退回的换来源或不说。事实改了要重存稿子。"
     "fact_templates 里每个模板的 red_lines 必须守，opinion_only 列的内容只能当个人经历或观点说。",
-    "事实、身份复核由平台挂起：用 get_review_tasks 领取，逐条对照来源和身份规则判断，再用 submit_review 交回（没有问题就交空 issues）。复核未交回前作品不能定稿。",
+    "事实、身份复核由平台挂起：用 get_review_tasks 领取，逐条对照来源和身份规则判断，再用 submit_review 交回（没有问题就交空 issues）。复核未交回前作品不能定稿。检查若留下提醒，get_review_tasks 的 warning_judgments 会列出，逐条用 submit_warning_judgment 判断能否接受。",
     "写完整一版用 save_article_draft 存，然后停下等用户在页面上采用或写意见；有意见就出下一版再停。文字采用即定稿；图文采用后平台出图，用户验收成图才定稿，验收时写了意见就再出下一版。定稿后不能再存。",
     "文字用 text.master.v2（title + document.blocks：heading / paragraph 等），不写 citations；图文用 graphic.master.v2（canvases → layers），图片层的 material_revision_id 用素材库素材或 generate_video_image 生成的图；图上和发布文案里都不要放「配图为AI生成」之类的标记，用户发布时在平台上自己标。",
     "图文文字层的 claims 可以把一段文字（start/end 字符位置）挂到 facts 里的一条事实（fact_pack_item_id + snapshot_checksum），平台据此登记出处。",

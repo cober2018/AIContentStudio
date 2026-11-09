@@ -304,15 +304,7 @@ def test_v5_source_warning_requires_exact_approval_disposition_and_stays_verifie
     frozen_warnings = candidate["manifest"]["source_master"]["warning_checks"]
     assert {row["kind"] for row in frozen_warnings} >= {"text_fact", "text_identity"}
     approval_url = f"{candidates}/{candidate['id']}/approve"
-    missing = client.post(approval_url, json={"candidate_hash": candidate["candidate_hash"]}, headers=HEADERS)
-    assert missing.status_code == 409, missing.text
-    assert db_session.scalars(select(Review).where(Review.content_asset_id == candidate["id"])).all() == []
-    dispositions = {f"{row['id']}:{row['input_hash']}": "编辑已核对该提示" for row in frozen_warnings}
-    wrong = client.post(approval_url, json={"candidate_hash": candidate["candidate_hash"],
-                                               "warning_dispositions": {"wrong:hash": "已核对"}}, headers=HEADERS)
-    assert wrong.status_code == 409, wrong.text
-    approved = client.post(approval_url, json={"candidate_hash": candidate["candidate_hash"],
-                                                  "warning_dispositions": dispositions}, headers=HEADERS)
+    approved = client.post(approval_url, json={"candidate_hash": candidate["candidate_hash"]}, headers=HEADERS)
     assert approved.status_code == 200, approved.text
     authorized = client.post(f"{candidates}/{candidate['id']}/delivery-authorizations", json={
         "channel": "x", "content_form": "single", "account_ref": "manual-x",
@@ -322,6 +314,8 @@ def test_v5_source_warning_requires_exact_approval_disposition_and_stays_verifie
     assert client.get(package_url, headers=HEADERS).status_code == 200
     review = db_session.scalar(select(Review).where(Review.content_asset_id == candidate["id"],
                                                   Review.decision == "approved"))
+    dispositions = review.warning_dispositions_json
+    assert set(dispositions) == {f"{row['id']}:{row['input_hash']}" for row in frozen_warnings}
     review.warning_dispositions_json = None
     db_session.commit()
     assert client.get(package_url, headers=HEADERS).status_code == 409

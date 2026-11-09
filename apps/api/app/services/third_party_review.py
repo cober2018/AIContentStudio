@@ -49,9 +49,12 @@ def pending_tasks(db: Session, user: User, project_id: int, unit_id: int) -> dic
                        .order_by(ContentMasterRevision.id.desc()).limit(1))
     rows = db.scalars(select(ThirdPartyReviewTask).where(ThirdPartyReviewTask.master_revision_id == latest,
                                                          ThirdPartyReviewTask.status == "pending").order_by(ThirdPartyReviewTask.id)).all() if latest else []
+    from .warning_judgment import pending as pending_judgments
+
     return {"writer_is_third_party": is_third_party(db, unit_id),
             "items": [{"master_id": row.master_revision_id, "purpose": row.purpose, "input_hash": row.input_hash, "request": row.request_json}
-                      for row in rows]}
+                      for row in rows],
+            "warning_judgments": pending_judgments(db, latest) if latest else []}
 
 
 def submit(db: Session, user: User, project_id: int, unit_id: int, master_id: int, purpose: str, input_hash: str, model: str, issues: list[dict]) -> dict:

@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentMasterRevision, FactPackItem, IdentitySnapshot, ProjectFactBoundaryRevision
+from ..models import ContentMasterRevision, FactPackItem, IdentitySnapshot, MaterialRevision, ProjectFactBoundaryRevision
 from .content_harness.channel_registry import ChannelRegistryError, ContentFormSpec, resolve_content_form
 from .content_identity import brand_terms
 from .graphic_documents import GraphicDocumentError, canonical_payload, validate_references
@@ -126,6 +126,28 @@ def _fact(db: Session, master: ContentMasterRevision, requirement: dict) -> tupl
     return status, {"reasons": [], "issues": issues, "coverage": coverage}
 
 
+def _rendered_images(db: Session, master: ContentMasterRevision) -> list[dict]:
+    """Rendered card files for a third-party identity review; the content hash binds the review to these exact pixels."""
+    from . import third_party_review
+
+    if not third_party_review.is_third_party(db, master.content_unit_id):
+        return []
+    from .production_modalities import adapter_for
+    from .material_storage import provider
+
+    render = adapter_for(master.modality, master.payload_schema).build_render_snapshot(db, master)
+    if render.get("status") != "ready":
+        return []
+    storage = provider()
+    images = []
+    for output in render.get("outputs") or []:
+        revision = db.get(MaterialRevision, output.get("material_revision_id"))
+        if revision is None:
+            return []
+        images.append({"canvas_id": output.get("canvas_id"), "content_hash": output.get("content_hash"), "path": str(storage._path(revision.file_path))})
+    return images
+
+
 def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> tuple[str, dict]:
     snapshot = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
     if snapshot is None:
@@ -141,13 +163,20 @@ def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> 
         return "incomplete", {"reasons": ["identity_rule_invalid"], "coverage": {"semantic": "unavailable"}}
     issues = [{"severity": "blocker", "span": term[:120], "reason": "explicit_identity_forbidden_phrase", "source": "deterministic"} for term in forbidden if term and term in body]
     issues += [{"severity": "blocker", "span": term[:120], "reason": "brand_forbidden_phrase", "source": "deterministic"} for term in brand_terms(profile) if term in body]
+    images = []
     if not body.strip() or not profile:
         semantic, coverage = [], {"semantic": "unavailable", "reason": "visible_text_missing" if not body.strip() else "identity_scope_missing"}
     else:
-        semantic, coverage = _semantic_review("identity_review", text=body, context={"identity": profile, "checksum": snapshot.checksum}, configured=requirement["metadata"]["semantic"]["configured"], review=(db, master))
+        context = {"identity": profile, "checksum": snapshot.checksum}
+        images = _rendered_images(db, master)
+        if images:
+            context["images"] = images
+        semantic, coverage = _semantic_review("identity_review", text=body, context=context, configured=requirement["metadata"]["semantic"]["configured"], review=(db, master))
     issues.extend(semantic)
-    coverage.update({"deterministic": "explicit_phrases_only", "text_layer_count": len(text_layers), "visual_semantics": "unavailable"})
-    status = "blocker" if any(issue["severity"] == "blocker" for issue in issues) else "warning"
+    # Only a third-party review that was handed the rendered cards has looked at the picture; the platform model reads text only.
+    looked = body.strip() and profile and images and coverage.get("provider") == "third_party" and coverage.get("semantic") == "verified"
+    coverage.update({"deterministic": "explicit_phrases_only", "text_layer_count": len(text_layers), "visual_semantics": "verified" if looked else "unavailable"})
+    status = "blocker" if any(issue["severity"] == "blocker" for issue in issues) else "pass" if looked and not issues else "warning"
     return status, {"reasons": [], "identity_snapshot_id": snapshot.id, "identity_checksum": snapshot.checksum, "issues": issues, "coverage": coverage}
 
 

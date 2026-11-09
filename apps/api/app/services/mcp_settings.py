@@ -28,7 +28,7 @@ GROUPS = {
     "video": ("做视频（导演稿 → 小样 → 成片）", {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
                                         "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "redo_work_covers", "file_as_common", "propose_lesson",
                                         "import_material_folder", "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}),
-    "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review"}),
+    "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}),
     "facts": ("事实边界（按题材模板自动核对）", {"get_fact_template", "submit_facts"}),
     "tools": ("小工具", {"start_media_transcription", "get_media_transcription"}),
 }
@@ -72,6 +72,7 @@ SUMMARIES = {
     "get_article_brief": "写文章 / 图文前读资料：任务书、事实、来源原文、写作方式、当前版本（也是格式示例）",
     "save_article_draft": "存一版文章 / 图文稿，然后停下等用户采用或写意见（页面开关须为「第三方模型」）",
     "get_review_tasks": "写文章 / 图文 / 文字：领取平台等待的事实、身份复核（第三方写作时由第三方模型执行）",
+    "submit_warning_judgment": "判断一条检查提醒能否接受（可以接受 / 不能接受 + 理由）；全部可以接受用户才能批准，不替用户批准",
     "submit_review": "交回一项复核结果（问题列表，没有问题就交空列表）；平台重跑检查并记录模型名，不替用户批准",
     "get_article_decision": "读用户对稿件的决定：采用即定稿，有意见就出下一版",
     "generate_video_image": "用平台生图工具生成一张画面，放进项目文件夹",

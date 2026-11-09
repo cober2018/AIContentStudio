@@ -25,7 +25,7 @@ TOOL_NAMES = {
     "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "import_material_folder", "start_media_transcription", "get_media_transcription", "prepare_video_edit", "redo_work_covers", "file_as_common", "propose_lesson", "search_web_materials", "get_web_materials",
     "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
     "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid",
-    "get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review",
+    "get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment",
     "get_fact_template", "submit_facts",
     "list_accounts", "import_account_metrics",
 }

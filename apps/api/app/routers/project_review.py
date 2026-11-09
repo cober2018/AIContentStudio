@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from ..db import get_db
 from ..deps import get_current_user, require_editor, require_editor_or_reviewer
@@ -11,6 +11,7 @@ from ..models import ChannelVariantRevision, ContentAsset, ContentProject, Mater
 from ..services import delivery as delivery_service
 from ..services import project_review as review_service
 from ..services import project_review_projection as projection
+from ..services import warning_judgment
 from ..services.project_authorization import authorize_project_asset
 from ..services.project_projection_context import ProjectProjectionContext
 from .content_projects import owned_project, owned_unit
@@ -112,7 +113,6 @@ class FreezeIn(BaseModel):
 class CandidateDecisionIn(BaseModel):
     candidate_hash: str = Field(min_length=64, max_length=64)
     comment: str | None = None
-    warning_dispositions: dict[str, str] | None = None
 
 
 def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> dict:
@@ -130,6 +130,8 @@ def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> d
     if include_manifest:
         data["manifest"] = asset.candidate_manifest_json
         data["preview"] = projection.candidate_preview(asset)
+        db = object_session(asset)
+        data["check_flow"] = warning_judgment.check_flow(db, asset) if db is not None else []
     return data
 
 
@@ -163,7 +165,12 @@ def get_candidate(project_id: int, unit_id: int, candidate_id: int, db: Session 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/candidates/{candidate_id}/approve")
 def approve(project_id: int, unit_id: int, candidate_id: int, payload: CandidateDecisionIn, db: Session = Depends(get_db), user: User = Depends(require_editor_or_reviewer)):
-    return _candidate_json(review_service.decide_candidate(db, project_id, unit_id, candidate_id, payload.candidate_hash, "approved", payload.comment, user, warning_dispositions=payload.warning_dispositions), include_manifest=True)
+    return _candidate_json(review_service.decide_candidate(db, project_id, unit_id, candidate_id, payload.candidate_hash, "approved", payload.comment, user), include_manifest=True)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/checks/{check_id}/judge")
+def judge_warning(project_id: int, unit_id: int, check_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor_or_reviewer)):
+    return warning_judgment.retry(db, user, project_id, unit_id, check_id)
 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/candidates/{candidate_id}/request-changes")

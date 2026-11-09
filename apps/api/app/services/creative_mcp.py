@@ -372,6 +372,14 @@ class ReviewSubmitInput(Scope):
     issues: list[ReviewIssue] = Field(default_factory=list, max_length=50)
 
 
+class WarningJudgmentInput(Scope):
+    check_id: ID
+    input_hash: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+    model: str = Field(min_length=1, max_length=120)
+    verdict: Annotated[str, Field(pattern=r"^(accept|reject)$")]
+    reason: str = Field(min_length=1, max_length=1000)
+
+
 class ReferenceVideoInput(Scope):
     material_revision_id: ID
 
@@ -541,8 +549,9 @@ TOOLS = {
     "save_article_draft": (ArticleDraftInput, "Save one full version of the piece (text.master.v2 for text, graphic.master.v2 for graphic; image layers name material_revision_id from the library or generate_video_image; no citations or claims). Refused when the page switch is 平台模型 or the piece is final. Graphic pieces also need their publish copy (save_publish_copy, graphic format) before they are final. Then STOP: the user approves or writes notes on the page.", False),
     "get_fact_template": (Scope, "Persona works, before the 导演稿 or article: the project's topic templates for its fact boundary (which claims need a source, accepted sources and domains, freshness, red lines, opinion-only content), suggested templates when none is chosen, the brief and the current boundary. Product works use the product brief instead.", True),
     "submit_facts": (FactsInput, "Persona works, before saving the 导演稿 or article: submit every claim the piece states as fact, found by the project's topic templates. Each item is the statement, kind (fact / event / quote / opinion), template id, source_url, the excerpt copied word for word from that page, source_date, and attribution for quotes and opinions; templates records your topic choice when the project has none. The platform opens every source: unreachable sources and excerpts not on the page come back with reasons and are not kept; the rest (labelled when outside the template's usual sites or possibly out of date) are frozen automatically as the project's new fact boundary, replacing the previous one. Save the draft after this; the user only reviews the draft.", False),
-    "get_review_tasks": (Scope, "Third-party writer only: the fact and identity reviews the platform is waiting for on the current version. Read each item's request.text and request.context, judge it against the sources and identity rules given, then call submit_review with the item's master_id, purpose and input_hash.", True),
+    "get_review_tasks": (Scope, "Third-party writer only: the fact and identity reviews the platform is waiting for on the current version. Read each item's request.text and request.context, judge it against the sources and identity rules given, then call submit_review with the item's master_id, purpose and input_hash. For a graphic identity review, request.context.images lists the rendered card files: open and look at every image, and report anything in the picture that breaks the identity rules (faces passed off as the persona, other brands, products, misleading scenes) as an issue.", True),
     "submit_review": (ReviewSubmitInput, "Third-party writer only: submit your judgement for one waiting review. issues lists each problem you found (severity warning or blocker, the exact span, the reason); an empty list means no problem. The platform reruns the checks and records your model name. It does not accept or approve the piece.", False),
+    "submit_warning_judgment": (WarningJudgmentInput, "Third-party writer only: judge one check warning listed in get_review_tasks warning_judgments. Read request.report (what the check could not confirm) and request.content; verdict accept means the piece has no problem this check guards against, reject means it has one or you cannot confirm. reason is one or two plain sentences. Only when every warning is accepted can the user approve; this does not approve for the user.", False),
     "get_article_decision": (Scope, "Read the piece's state and the user's latest decision and notes. Approved means final: save nothing more. Notes mean a new version.", True),
     "get_shot_slots": (ShotSlotsInput, "Read every shot of a video as a material slot: narration, visual, brief (search words; gen_mode text|frame chosen on the platform; t2v_prompt for direct text-to-video; frame_prompt for the first-frame still and prompt for image-to-video from it; route), status missing/candidates/chosen, the user's picks and the review link. Add candidates with start_material_match; only the user binds a shot.", True),
 }
@@ -708,6 +717,10 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
 
             return third_party_review.submit(db, user, args.project_id, args.unit_id, args.master_id, args.purpose, args.input_hash, args.model,
                                              [issue.model_dump() for issue in args.issues])
+        if name == "submit_warning_judgment":
+            from . import warning_judgment
+
+            return warning_judgment.submit(db, user, args.project_id, args.unit_id, args.check_id, args.input_hash, args.model, args.verdict, args.reason)
         return article_chain.state(db, user, args.project_id, args.unit_id)
     payload = args.model_dump(exclude_none=True, exclude={"project_id", "unit_id", "execution_id"})
     if name in _ACTIONS:
@@ -793,7 +806,7 @@ _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_s
                  "start_material_match", "get_material_match", "get_shot_slots", "start_material_autofill"}
 
 
-_ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review"}
+_ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}
 _VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
                 "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
                 "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common", "propose_lesson",

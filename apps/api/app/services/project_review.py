@@ -170,7 +170,8 @@ def freeze_variant_candidate(db: Session, project_id: int, unit_id: int, variant
     return asset
 
 
-def _validate_approval(db: Session, asset: ContentAsset, warning_dispositions: dict | None = None) -> None:
+def _validate_approval(db: Session, asset: ContentAsset) -> dict | None:
+    """Returns the warning dispositions written from the writing model's verdicts."""
     from .production_validation import (
         validate_live_v4_candidate,
         validate_live_v5_candidate,
@@ -182,17 +183,23 @@ def _validate_approval(db: Session, asset: ContentAsset, warning_dispositions: d
         from .finished_video import validate_live
 
         validate_live(db, asset)
-    elif schema == 5:
+        return None
+    if schema == 5:
         manifest = validate_live_v5_candidate(db, asset, lock_live=True)
-        validate_warning_dispositions(manifest, warning_dispositions)
     elif schema == 4 or asset.content_master_revision_id is not None:
         manifest = validate_live_v4_candidate(db, asset, lock_live=True)
-        validate_warning_dispositions(manifest, warning_dispositions)
     else:
         raise _blocked("candidate_schema", "不支持的项目候选清单版本")
+    from .warning_judgment import dispositions
+
+    warnings = [row for row in manifest.get("checks", []) if row["status"] == "warning"]
+    warnings.extend(row for row in manifest.get("source_master", {}).get("warning_checks", []) if row["status"] == "warning")
+    warning_dispositions = dispositions(db, warnings) or None
+    validate_warning_dispositions(manifest, warning_dispositions)
+    return warning_dispositions
 
 
-def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: int, expected_hash: str, decision: str, comment: str | None, user: User, warning_dispositions: dict | None = None) -> ContentAsset:
+def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: int, expected_hash: str, decision: str, comment: str | None, user: User) -> ContentAsset:
     _mutable_unit(db, project_id, unit_id, user)
     asset = _candidate(db, project_id, unit_id, candidate_id, user, mutate=True)
     schema = (asset.candidate_manifest_json or {}).get("schema_version")
@@ -208,8 +215,9 @@ def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: i
             raise _blocked("historical_candidate", "历史候选只可查看，不能重新审批或退改")
     if expected_hash != asset.candidate_hash or candidate_hash(asset.candidate_manifest_json or {}) != asset.candidate_hash:
         raise _blocked("candidate_mismatch", "冻结候选哈希不一致")
+    warning_dispositions = None
     if decision == "approved":
-        _validate_approval(db, asset, warning_dispositions)
+        warning_dispositions = _validate_approval(db, asset)
         if asset.status == "approved" and asset.approved_candidate_hash == asset.candidate_hash:
             return asset
     elif decision != "changes_requested":
@@ -235,7 +243,7 @@ def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: i
         db.expire_all()
         try:
             _mutable_unit(db, project_id, unit_id, user)
-            _validate_approval(db, asset, warning_dispositions)
+            _validate_approval(db, asset)
             if asset.candidate_hash != expected_hash:
                 raise _blocked("candidate_mismatch", "审批提交前候选发生变化")
         except HTTPException:
