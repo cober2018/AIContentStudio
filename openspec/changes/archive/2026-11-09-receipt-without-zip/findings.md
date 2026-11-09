@@ -1,0 +1,2 @@
+- 回填接口只接受 awaiting_manual_receipt / failed；只有下载 ZIP（或生成成品包预览）会把 target_authorized 改成 awaiting_manual_receipt。
+- 作品 97 的目标 #9/#10/#11 都是 target_authorized、没有任何尝试；#12（B站）已人工确认。

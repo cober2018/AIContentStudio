@@ -268,10 +268,11 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
             db.rollback()
             raise
         return _target_json(target, with_attempts=False)
-    if target.status not in {
-        DeliveryTargetStatus.awaiting_manual_receipt.value,
-        DeliveryTargetStatus.failed.value,
-    }:
+    receivable = {DeliveryTargetStatus.awaiting_manual_receipt.value, DeliveryTargetStatus.failed.value}
+    # 复制包是人自己去平台发的，可能直接用成果文件夹里的文件，不一定下载过 ZIP。
+    if target.action == "copy_package":
+        receivable |= {DeliveryTargetStatus.target_authorized.value, DeliveryTargetStatus.package_ready.value}
+    if target.status not in receivable:
         raise HTTPException(409, "目标尚未生成成品包/未执行交付，或当前状态不可回填")
     receipt = DeliveryReceipt(
         target_id=target.id,
