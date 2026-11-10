@@ -1,0 +1,3 @@
+- [x] 1.1 `_video_source_refs` 只取 shot_source，其余成片用料跳过
+- [x] 1.2 用户实测仍报 `video_media_or_timing_requires_explicit_mapping`：口播脚本生成器去掉同类检查；按旁白分段，无旁白镜头接前一段
+- [x] 1.3 渠道变体相关测试 42 通过；作品 97 整条预览本地跑通（32 段、44 个镜头画面）；重启

@@ -393,9 +393,9 @@ def _video_source_refs(db: Session, master: ContentMasterRevision) -> list[dict]
     from .video_documents import canonical_payload as canonical_video_payload
 
     source = canonical_video_payload(master.payload_json)
-    stored = db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id)).all()
-    if any(ref.role != "shot_source" for ref in stored):
-        raise HTTPException(422, {"code": "video_source_media_requires_explicit_mapping"})
+    # Voice, music, covers and the rough cut belong to the finished film; a spoken-script variant only re-uses per-shot footage.
+    stored = db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id,
+                                                            ContentMasterAssetRef.role == "shot_source")).all()
     by_shot = {ref.slot_key: ref for ref in stored}
     shots = [shot for shot in source["shots"] if "source_material_revision_id" in shot]
     if len(by_shot) != len(stored) or set(by_shot) != {shot["id"] for shot in shots}:

@@ -175,15 +175,15 @@ def test_script_only_preview_and_save_do_not_claim_finished_video(client, db_ses
     assert saved.json()["assets"] == []
 
 
-def test_timed_subtitles_require_explicit_mapping_and_do_not_write_variant(client, db_session):
+def test_finished_film_media_is_left_out_of_the_script_preview(client, db_session):
     project, unit, master, headers = _source(client, db_session, timed_cues=True)
     path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
     response = client.post(f"{path}/adapt-preview", json={
         "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
         "expected_source_context_hash": master["context_hash"], "channel_id": "douyin", "content_form": "spoken_script",
     }, headers=headers)
-    assert response.status_code == 422, response.text
-    assert response.json()["detail"]["reason"] == "video_media_or_timing_requires_explicit_mapping"
+    assert response.status_code == 200, response.text
+    assert response.json()["payload"]["estimated_srt"]["estimated"] is True
     assert client.get(path, headers=headers).json()["items"] == []
 
 

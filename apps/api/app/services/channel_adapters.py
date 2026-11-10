@@ -414,29 +414,39 @@ class VideoSpokenScriptAdapter:
             source = canonical_video_payload(source_payload)
         except VideoDocumentError as exc:
             raise AdapterUnavailable("invalid_video_source") from exc
-        if source["voice"]["mode"] != "none" or source["subtitles"]["cues"] or source["overlays"] or "material_revision_id" in source["music"] or source["cover"] or source.get("render_asset_ref"):
-            raise AdapterUnavailable("video_media_or_timing_requires_explicit_mapping")
+        # Voice, subtitles, overlays, music, covers and the render belong to the finished film; the script projection reads only script blocks and shots.
         blocks = {block["id"]: block["text"] for block in source["script"]["blocks"]}
-        if not source["shots"] or any("script_block_id" not in shot or not blocks[shot["script_block_id"]].strip() for shot in source["shots"]):
+        if (not source["shots"] or all("script_block_id" not in shot for shot in source["shots"])
+                or any("script_block_id" in shot and not blocks[shot["script_block_id"]].strip() for shot in source["shots"])):
             raise AdapterUnavailable("script_scene_mapping_incomplete")
-        if {shot["script_block_id"] for shot in source["shots"]} != set(blocks):
+        if {shot["script_block_id"] for shot in source["shots"] if "script_block_id" in shot} != set(blocks):
             raise AdapterUnavailable("script_block_coverage_incomplete")
         refs_by_shot = {ref["slot_key"]: ref for ref in asset_refs}
         if len(refs_by_shot) != len(asset_refs) or set(refs_by_shot) - {shot["id"] for shot in source["shots"]}:
             raise AdapterUnavailable("b_roll_shot_mapping_invalid")
         if {shot["id"] for shot in source["shots"] if "source_material_revision_id" in shot} != set(refs_by_shot):
             raise AdapterUnavailable("b_roll_shot_mapping_incomplete")
+        # One scene per narration line: shots sharing a line, and silent shots such as an outro card, ride on that line
+        # instead of repeating it or inventing words.
+        groups: list[dict] = []
+        for shot in source["shots"]:
+            key = shot.get("script_block_id")
+            if groups and (key is None or groups[-1]["block"] in (None, key)):
+                groups[-1]["shots"].append(shot)
+                groups[-1]["block"] = groups[-1]["block"] or key
+            else:
+                groups.append({"block": key, "shots": [shot]})
         scenes = [
-            {"id": shot["id"], "order": index, "script": blocks[shot["script_block_id"]],
-             "voice_text": blocks[shot["script_block_id"]], "b_roll_ref_keys": [shot["id"]] if shot["id"] in refs_by_shot else []}
-            for index, shot in enumerate(source["shots"])
+            {"id": group["shots"][0]["id"], "order": index, "script": blocks[group["block"]], "voice_text": blocks[group["block"]],
+             "b_roll_ref_keys": [shot["id"] for shot in group["shots"] if shot["id"] in refs_by_shot]}
+            for index, group in enumerate(groups)
         ]
         elapsed_ms = 0
         estimated_cues = []
-        for index, shot in enumerate(source["shots"], start=1):
+        for index, group in enumerate(groups, start=1):
             start_ms = elapsed_ms
-            elapsed_ms += shot["duration_ms"]
-            estimated_cues.append(f"{index}\n{self._srt_time(start_ms)} --> {self._srt_time(elapsed_ms)}\n{blocks[shot['script_block_id']]}")
+            elapsed_ms += sum(shot["duration_ms"] for shot in group["shots"])
+            estimated_cues.append(f"{index}\n{self._srt_time(start_ms)} --> {self._srt_time(elapsed_ms)}\n{blocks[group['block']]}")
         try:
             return self.canonicalize({"scenes": scenes, "estimated_srt": {"estimated": True, "text": "\n\n".join(estimated_cues)}}, asset_refs=asset_refs)
         except VariantDocumentError as exc:
