@@ -128,7 +128,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
     { id: "voice", label: "配音与音乐", hint: "生成并试听配音；看背景音乐，要换就拖一首进来。" },
     { id: "sample", label: "小样", hint: "看小样、按秒写意见；通过后开始排版。" },
     { id: "final", label: "成片", hint: "看成片、写意见或通过；通过即定稿，不能再改。" },
-    { id: "delivery", label: "交付", hint: product ? "核对成片、封面和发布文案，再去审阅与交付。" : "基于已保存主稿进行渠道适配，进入既有审核与交付。" },
+    { id: "delivery", label: "交付", hint: product ? "核对成片、封面和发布文案，再去审阅与交付。" : "成片通过后已自动送进审阅与交付；这里核对封面和发布文案，再去审阅与交付。" },
   ] : product ? [
     { id: "goal", label: "商品与本条目标", hint: "复用商品事实，填写这一条作品要表达的购买理由。" },
     { id: "plan", label: "导演方案", hint: "选择真实创作流程，起草并审阅脚本、动作链与粗分镜。" },
@@ -232,7 +232,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
             {step.id === "materials" && <><VideoChainPanel projectId={projectId} unitId={unitId} step="materials" /><ShotMaterialPages projectId={projectId} unitId={unitId} readOnly={readOnly} />{!product && <div className="mt-5"><WebMaterialSearch projectId={projectId} unitId={unitId} defaultQuery="" pickLabel="保存到项目素材" readOnly={readOnly} /></div>}</>}
             {step.id === "voice" && <><VoiceoverPanel projectId={projectId} unitId={unitId} readOnly={readOnly || chainLocked} onSaved={() => setMasterReloadRequest(value => value + 1)} /><MusicPanel projectId={projectId} unitId={unitId} readOnly={readOnly} /></>}
             {(step.id === "sample" || step.id === "final") && <VideoChainPanel projectId={projectId} unitId={unitId} step={step.id} />}
-            {step.id === "delivery" && (product ? <ProductPublishCopy projectId={projectId} unitId={unitId} readOnly={readOnly} /> : <>{unit.modality === "video" && <WorkCovers projectId={projectId} unitId={unitId} />}{(unit.modality === "video" || unit.modality === "graphic") && <PublishCopy projectId={projectId} unitId={unitId} readOnly={readOnly} />}<ChannelVariantsPanel projectId={projectId} unit={unit} readOnly={readOnly} workflowDirty={dirty} /></>)}
+            {step.id === "delivery" && (product ? <ProductPublishCopy projectId={projectId} unitId={unitId} readOnly={readOnly} /> : <>{unit.modality === "video" && <WorkCovers projectId={projectId} unitId={unitId} />}{(unit.modality === "video" || unit.modality === "graphic") && <PublishCopy projectId={projectId} unitId={unitId} readOnly={readOnly} />}{unit.modality !== "video" && <ChannelVariantsPanel projectId={projectId} unit={unit} readOnly={readOnly} workflowDirty={dirty} />}</>)}
           </div>}</Suspense>}
         {product && <div hidden={step.id !== (simpleVideo ? "final" : "review")}><SkuWorkRetention projectId={projectId} unitId={unitId} readOnly={readOnly} /></div>}
         {!advanced && <footer className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4"><Button variant="secondary" disabled={stepIndex === 0} onClick={() => goStep(steps[stepIndex - 1].id)}>上一步</Button><Button variant="secondary" disabled={stepIndex === steps.length - 1} onClick={() => goStep(steps[stepIndex + 1].id)}>前往{steps[stepIndex + 1]?.label || "下一步"}</Button></footer>}

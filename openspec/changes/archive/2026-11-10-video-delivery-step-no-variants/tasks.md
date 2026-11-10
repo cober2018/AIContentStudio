@@ -1,0 +1,2 @@
+- [x] 1.1 角色视频交付步骤去掉 ChannelVariantsPanel，改提示语
+- [x] 1.2 tsc + build 通过
