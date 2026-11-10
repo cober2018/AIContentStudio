@@ -576,7 +576,9 @@ def _open_one(db: Session, user: User, subject: PromotionSubject, confirmed: Pro
         db.flush()
         db.add(SearchWork(unit_id=unit.id, project_id=content.id, role=role))
         if modality in {"text", "graphic"}:
-            article_chain._put(db, unit.id, {"writer": item.writer, "decisions": [], "hidden": []})
+            # The platform model writes text only for now, so a derived graphic piece goes to the third-party model like video.
+            writer = item.writer if modality == "text" else "external"
+            article_chain._put(db, unit.id, {"writer": writer, "decisions": [], "hidden": []})
         record_project_event(db, project_id=content.id, event_type="unit.created", actor=user.email, entity_type="content_unit",
                              entity_id=unit.id, payload={"entry": "search", "role": role})
         units.append({"unit_id": unit.id, "role": role, "modality": modality})
@@ -899,7 +901,10 @@ def submit_batch(db: Session, user: User, project_id: int) -> dict:
         for version in _versions(db, unit_id):
             if version["candidate"] is not None:
                 continue
-            checks = channel_variants.run_variant_checks(db, project_id, unit_id, version["variant_id"], user)
+            # Re-running would ask the fact model again and may flip a version that already passed; only unfinished ones run again.
+            checks = channel_variants.projected_variant_checks(db, db.get(ChannelVariantRevision, version["variant_id"]))
+            if not checks.get("ready"):
+                checks = channel_variants.run_variant_checks(db, project_id, unit_id, version["variant_id"], user)
             if not checks.get("ready"):
                 reasons = [f"{item['check_kind']}：{'、'.join(map(str, (item.get('report') or {}).get('reasons') or [])) or item['status']}"
                            for item in checks["items"] if item["status"] != "pass"]

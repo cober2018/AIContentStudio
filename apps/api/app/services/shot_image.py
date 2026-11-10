@@ -10,6 +10,8 @@ import asyncio
 import base64
 import hashlib
 import io
+import logging
+import time
 
 import httpx
 from fastapi import HTTPException
@@ -31,8 +33,17 @@ def _fail(status: int, code: str, message: str):
     raise HTTPException(status, {"code": code, "message": message})
 
 
-def route(profile_id: str) -> dict:
+def route(profile_id: str, *, with_backup: bool = True) -> dict:
     stored = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
+    if with_backup:
+        target = route(profile_id, with_backup=False)
+        spare = (stored.get("uses") or {}).get("shot_image_backup")
+        if spare and spare != profile_id:
+            try:
+                target["backup"] = route(spare, with_backup=False)
+            except HTTPException:
+                pass  # An unusable backup leaves the primary as the only choice.
+        return target
     profile = (stored.get("profiles") or {}).get(profile_id) or {}
     binding = (profile.get("capability_bindings") or {}).get("image_generation") or {}
     vendor = (stored.get("providers") or {}).get(profile.get("provider_id")) or {}
@@ -45,6 +56,26 @@ def route(profile_id: str) -> dict:
 
 
 def generate(target: dict, prompt: str, references: list[bytes], aspect_ratio: str, keep: str = KEEP) -> bytes:
+    started = time.monotonic()
+    try:
+        return _generate_once(target, prompt, references, aspect_ratio, keep)
+    except _Refused as refused:
+        spare = target.pop("backup", None)
+        if spare is None:
+            raise refused.error from None
+        logging.getLogger(__name__).warning("shot image fallback: from=%s to=%s after %.1fs", target["model"], spare["model"], time.monotonic() - started)
+        # The caller records target["model"]; the backup replaces it for the rest of this operation.
+        target.update(spare, fallback_from=target["model"])
+        return _generate_once(target, prompt, references, aspect_ratio, keep)
+
+
+class _Refused(Exception):
+    def __init__(self, error: HTTPException):
+        self.error = error
+
+
+def _generate_once(target: dict, prompt: str, references: list[bytes], aspect_ratio: str, keep: str) -> bytes:
+    started = time.monotonic()
     text = f"{prompt}\n{keep}" if references else prompt
     headers = {"Authorization": f"Bearer {target['api_key']}"}
     try:
@@ -75,6 +106,17 @@ def generate(target: dict, prompt: str, references: list[bytes], aspect_ratio: s
                 return httpx.get(item["url"], timeout=60).content
     except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
         status = exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None
+        # Refused before drawing: quota, key or rate limit, or the connection failed or was cut at once (no image takes seconds).
+        # A slow failure may have been billed, so only these may go to the backup.
+        quick_cut = isinstance(exc, (httpx.ReadError, httpx.RemoteProtocolError)) and time.monotonic() - started < 5
+        from .model_registration import vendor_refusal_hint
+
+        gone = status == 400 and vendor_refusal_hint(exc.response) is not None
+        if status in {401, 402, 403, 429} or gone or isinstance(exc, httpx.ConnectError) or quick_cut:
+            try:
+                _fail(502, "shot_image_refused", f"{target['label']} 拒绝了这次生图（{status or type(exc).__name__}），可能是额度或密钥问题")
+            except HTTPException as error:
+                raise _Refused(error) from exc
         if isinstance(exc, httpx.TimeoutException) or status in {502, 503, 504, 520, 522, 524}:
             # The relay's gateway gives up before the model finishes; the raw Cloudflare page tells the user nothing.
             _fail(502, "shot_image_timeout", f"{target['label']} 生图服务超时（{status or '没响应'}），这次没出图。"

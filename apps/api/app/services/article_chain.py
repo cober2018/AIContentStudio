@@ -128,6 +128,11 @@ def locked(db: Session, unit_id: int) -> bool:
     return finalizing.get() != unit_id and bool(_state(db, unit_id).get("locked"))
 
 
+def _render_failed(current: dict) -> bool:
+    # A render that failed leaves nothing for the user to check, so the writer may replace the draft.
+    return current["state"] == "rendering" and (current.get("review") or {}).get("state") == "failed"
+
+
 def save_blocked(db: Session, unit_id: int) -> str | None:
     """Why a new master cannot be saved now: final, or approved and waiting for its images to be rendered or checked."""
     if finalizing.get() == unit_id:
@@ -135,7 +140,7 @@ def save_blocked(db: Session, unit_id: int) -> str | None:
     current = _state(db, unit_id)
     if current.get("locked"):
         return "已定稿，要调整请复制一份"
-    if current["state"] in {"rendering", "final_review"}:
+    if current["state"] in {"rendering", "final_review"} and not _render_failed(current):
         return "稿子已采用，成图等你验收；验收时写了意见再出下一版"
     return None
 
@@ -306,8 +311,18 @@ def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: 
         _fail("article_chain_platform_writer", "页面上的写作方式是「平台模型」，先在内容方案页切到「第三方模型」")
     if current.get("locked"):
         _fail("article_chain_locked", "已定稿，要调整请复制一份")
-    if current["state"] in {"rendering", "final_review"}:
+    if current["state"] in {"rendering", "final_review"} and not _render_failed(current):
         _fail("article_chain_waiting_render_check", "稿子已采用，成图等用户验收；用户写了意见再出下一版")
+    if unit.modality == "graphic":
+        from .graphic_documents import GraphicDocumentError, canonical_payload
+        from .local_graphic_renderer import draft_text_problems
+
+        try:
+            problems = draft_text_problems(canonical_payload(payload))
+        except GraphicDocumentError:
+            problems = []  # The save below reports the format error itself.
+        if problems:
+            _fail("article_chain_graphic_text_unsupported", "出图做不了这些文字，改了再存：" + "；".join(problems[:10]), 422)
     master = _latest(db, unit_id)
     saved = save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload={
         "expected_revision": master.revision_no if master else 0, "parent_revision_id": master.id if master else None,

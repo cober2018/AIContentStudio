@@ -1,0 +1,5 @@
+- 2026-11-10 grok-4.7 没额度时表现为连接被对方重置（Connection reset by peer → provider_request_failed），不是干净的 429；所以「厂商侧失败」要包括连接失败 / 被断开，不能只看状态码。
+- 当前挂在 Grok 上的：选题与资料、检索、平台适配（grok-4.7）；封面生图、镜头生图（grok-imagine-image）。2026-11-10 已按用户同意把前三个和封面生图临时切到 Gemini（配置版本 24），镜头生图未动。
+- 2026-11-10 实测 grok-4.7 现在的表现变了：中转站回 HTTP 400「unknown provider for model grok-4.7」（code model_not_found），不是连接断开。400 原本算「请求本身不对」不换备用，所以加了看返回内容的判断：400 里写着找不到模型或额度 / 余额不足的，也算厂商侧（model_registration.vendor_refusal_hint，只匹配不记录）。镜头生图同样处理。
+- 生图「明确失败」的界定：401/402/403/429、找不到模型或没额度的 400、连接没建立、5 秒内被断开（出图都要十几秒，这么快断开不会已经出图计费）；超时、慢失败不换，避免重复计费。
+- OpenAI 原生生图入口（openai_image_provider，只给 gpt-image / dall-e 用）没加备用：现在的主备都不走它。

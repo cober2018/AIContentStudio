@@ -1,0 +1,6 @@
+- 2026-11-10 写提案，等用户确认。
+- 2026-11-10 用户确认后改：_llm 把 schema_hint 写进 system 提示词。真实模型（grok-4.7）重放问题库：返回 keywords.primary/long_tail/brand 和 16 个问题，字段齐全。全量测试 2353 通过（5 个旧失败不变）。api、worker 已重启。
+- 2026-11-10 实跑：执行 #2 项目 62 文章三版送审；63 知乎版失败（事实核查模型一次没响应）；64 撞 generate_image 字典比对 bug 中断。补提案第 2、3 处，等用户确认。视频 110（项目 62）导演稿 v1 存好自动采用，12 镜 AE 模板渲染、抽帧检查后重做 3 镜（对比表表头挤、卖点模板空、避免重复），挂好素材和配乐，已交「素材待你看」。
+- 2026-11-10 第 2、3 处已改：generate_image 按报错代码比对；衍生图文写作方固定第三方模型，正式库 109/112/115 已改（备份 backups/content_studio_before_search_graphic_writer_20261110123904.db）。全量 2353 通过（5 旧失败）。重启后续做 63（只送出知乎版，另两版被事实提醒拦）、64（核心稿+三版全部送审）。图文 109 存稿、采用后出图失败卡死（见 findings）。
+- 2026-11-10 用户说三个一起修：① local_graphic_renderer.text_layer_problem/draft_text_problems 与出图共用规则，article_chain.save_draft 存图文前检查，_render_failed 让出图失败后可重存（save_draft 与 save_blocked 两处）；② submit_batch 先读 projected_variant_checks，已全部通过的直接用，没通过的（含等第三方复核）重跑；③ run_checks / run_variant_checks 拿到权限后、会话无未提交改动时先 commit 放锁。全量 2353 通过（5 旧失败）。重启后：图文 109 重存 v2 → 采用 → 出图 5 张 → 看图 → 存发布文案 → 验收定稿 → 两项事实复核交回 → 出小红书版本 → 整批送审成功。修复上线后 api.log 没有新的 database is locked。项目 63 续做两次都秒失败：platform_adaptation（grok-4.7）连接被对方重置（Connection reset by peer），外部问题，等恢复再续做。锁修复还没在并发模型检查下实测。
+- 2026-11-10 用户说提交吧：归档并提交。

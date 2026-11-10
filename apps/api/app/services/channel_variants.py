@@ -876,6 +876,9 @@ def get_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: i
 
 def run_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: int, user: User) -> dict:
     owned_unit(db, project_id, unit_id, user, mutate=True)
+    # Checks may wait tens of seconds on a model; the project write lock taken above would block every other writer meanwhile.
+    if not (db.new or db.dirty or db.deleted):
+        db.commit()
     row = db.get(ChannelVariantRevision, variant_id)
     if row is None or row.project_id != project_id or row.content_unit_id != unit_id:
         raise HTTPException(404, "ChannelVariant版本不存在")

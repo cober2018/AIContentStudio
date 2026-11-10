@@ -49,6 +49,7 @@ class RegisteredModelInput(StrictModel):
 
 class CoverImageUse(StrictModel):
     profile: str = Field(default="", max_length=100)
+    backup_profile: str = Field(default="", max_length=100)
     size: str = Field(default="1344x768", max_length=20)
 
 
@@ -60,6 +61,7 @@ class UsesInput(StrictModel):
     shot_video_resolution: str = Field(default="480p", pattern=r"^(480p|768p|1080p)$")
     shot_video_final_resolution: str = Field(default="480p", pattern=r"^(480p|768p|1080p)$")
     shot_image: str = Field(default="", max_length=120)
+    shot_image_backup: str = Field(default="", max_length=120)
 
 
 class RegistrationInput(StrictModel):
@@ -68,6 +70,7 @@ class RegistrationInput(StrictModel):
     models: list[RegisteredModelInput] = Field(default_factory=list, max_length=100)
     default_profile: str = Field(default="", max_length=100)
     routes: dict[str, str] = Field(default_factory=dict, max_length=len(PURPOSES))
+    backup_routes: dict[str, str] = Field(default_factory=dict, max_length=len(PURPOSES))
     uses: UsesInput | None = None
 
 
@@ -118,6 +121,24 @@ def target(provider):
         return base, parsed, port, addresses[0][4][0]
     except (OSError, ValueError) as exc:
         raise HTTPException(422, "provider_target_unavailable") from exc
+
+
+_MODEL_GONE = ("model_not_found", "model not found", "unknown provider", "no available channel", "not available")
+_NO_QUOTA = ("quota", "insufficient", "balance", "exhausted", "credit", "余额", "额度")
+
+
+def vendor_refusal_hint(response) -> str | None:
+    """Relays answer a missing model or an empty quota with HTTP 400 too; a short peek at the body tells them from a bad request.
+    The body is only matched here, never logged or passed on."""
+    try:
+        text = bytes(next(response.iter_bytes(), b""))[:4096].decode("utf-8", "ignore").lower()
+    except Exception:  # noqa: BLE001 A body that cannot be read gives no hint.
+        return None
+    if any(word in text for word in _MODEL_GONE):
+        return "model_unavailable"
+    if any(word in text for word in _NO_QUOTA):
+        return "quota"
+    return None
 
 
 def provider_request(provider, path, *, payload=None, timeout=10, image_input=False):
@@ -171,7 +192,8 @@ def provider_request(provider, path, *, payload=None, timeout=10, image_input=Fa
                 reason = ("provider_authentication_rejected" if response.status_code in {401, 403}
                           else "provider_image_protocol_rejected" if response.status_code == 400 and (native_image or path == "/images/generations")
                           else "provider_request_rejected")
-                raise HTTPException(502, reason, headers={"X-Provider-Status": str(response.status_code)})
+                hint = vendor_refusal_hint(response)
+                raise HTTPException(502, reason, headers={"X-Provider-Status": str(response.status_code), **({"X-Provider-Hint": hint} if hint else {})})
             if response.headers.get("content-encoding", "identity").strip().lower() != "identity":
                 raise HTTPException(502, "provider_response_encoding_invalid")
             data = bytearray()
@@ -205,6 +227,7 @@ def configuration_view(db):
     return {"revision": stored.get("revision", 0), "providers": providers, "profiles": profiles,
             "default_profile": stored.get("default_profile", ""),
             "routes": {key: stored.get("routes", {}).get(key, "") for key in PURPOSES}, "purposes": list(PURPOSES),
+            "backup_routes": {key: stored.get("backup_routes", {}).get(key, "") for key in PURPOSES},
             "uses": uses(stored), "search_vendors": list(SEARCH_VENDORS), "cover_sizes": list(COVER_SIZES),
             "shot_video_models": shot_video_models(stored), "shot_image_models": shot_image_models(stored),
             "local_vendors": {"minimax": _minimax_view(stored)}}
@@ -214,7 +237,7 @@ def uses(stored=None) -> dict:
     stored = stored if stored is not None else (runtime_config.get_runtime(runtime_config.KEY_MODELS) or {})
     value = stored.get("uses") or {}
     cover = value.get("cover_image") or {}
-    return {"cover_image": {"profile": cover.get("profile", ""), "size": cover.get("size", COVER_SIZES[0])},
+    return {"cover_image": {"profile": cover.get("profile", ""), "backup_profile": cover.get("backup_profile", ""), "size": cover.get("size", COVER_SIZES[0])},
             "writing_cli": value.get("writing_cli", ""), "topic_search": value.get("topic_search", ""),
             # Older saves named the MiniMax model alone; those were always the local CLI.
             "shot_video": {"MiniMax-H3": "mmx:MiniMax-H3", "MiniMax-Hailuo-2.3": "mmx:MiniMax-Hailuo-2.3"}.get(
@@ -222,7 +245,7 @@ def uses(stored=None) -> dict:
             # Test runs stay at 480P to keep each paid clip cheap; raise it for the final cut.
             "shot_video_resolution": {"720p": "768p"}.get(value.get("shot_video_resolution", "480p"), value.get("shot_video_resolution", "480p")),
             "shot_video_final_resolution": value.get("shot_video_final_resolution", "480p"),
-            "shot_image": value.get("shot_image") or _default_shot_image(stored)}
+            "shot_image": value.get("shot_image") or _default_shot_image(stored), "shot_image_backup": value.get("shot_image_backup", "")}
 
 
 def vendor_of(profile, stored) -> dict | None:
@@ -308,17 +331,20 @@ def save_configuration(db, raw, *, actor):
             profiles[key] = {**profiles.get(key, {}), "provider_id": model.provider_id, "model": model.model_id,
                              "provider": "openai_compatible", "enabled": profiles.get(key, {}).get("enabled", True),
                              "declared_capabilities": profiles.get(key, {}).get("declared_capabilities", ["chat"])}
-        if set(value.routes) - set(PURPOSES):
+        if (set(value.routes) | set(value.backup_routes)) - set(PURPOSES):
             raise HTTPException(422, "model_purpose_invalid")
-        for choice in [value.default_profile, *value.routes.values()]:
+        for choice in [value.default_profile, *value.routes.values(), *value.backup_routes.values()]:
             if choice and (choice not in profiles or not selectable(profiles[choice], merged)):
                 raise HTTPException(422, "model_selection_unavailable")
         merged["routes"] = {**merged.get("routes", {}), **value.routes}
+        # An empty choice clears that use's backup.
+        merged["backup_routes"] = {key: choice for key, choice in {**merged.get("backup_routes", {}), **value.backup_routes}.items() if choice}
         merged["default_profile"] = value.default_profile
         if value.uses is not None:
             cover, writing, search = value.uses.cover_image, value.uses.writing_cli, value.uses.topic_search
-            if cover.profile and (cover.profile not in profiles or not image_selectable(profiles[cover.profile], merged)):
-                raise HTTPException(422, "model_selection_unavailable")
+            for choice in (cover.profile, cover.backup_profile):
+                if choice and (choice not in profiles or not image_selectable(profiles[choice], merged)):
+                    raise HTTPException(422, "model_selection_unavailable")
             if cover.size not in COVER_SIZES:
                 raise HTTPException(422, "cover_image_size_invalid")
             if writing and (writing not in profiles or not selectable(profiles[writing], merged)):
@@ -327,8 +353,9 @@ def save_configuration(db, raw, *, actor):
                 raise HTTPException(422, "topic_search_vendor_invalid")
             if search == "tavily" and not providers.get("tavily", {}).get("api_key"):
                 raise HTTPException(422, "topic_search_vendor_unavailable")
-            if value.uses.shot_image and value.uses.shot_image not in {item["id"] for item in shot_image_models(merged)}:
-                raise HTTPException(422, "shot_image_model_unavailable")
+            for choice in (value.uses.shot_image, value.uses.shot_image_backup):
+                if choice and choice not in {item["id"] for item in shot_image_models(merged)}:
+                    raise HTTPException(422, "shot_image_model_unavailable")
             if value.uses.shot_video and value.uses.shot_video not in {item["id"] for item in shot_video_models(merged)}:
                 raise HTTPException(422, "shot_video_model_unavailable")
             merged["uses"] = value.uses.model_dump()

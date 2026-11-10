@@ -626,6 +626,9 @@ def master_risks(db: Session, row: ContentMasterRevision) -> list[dict]:
 
 def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user: User) -> list[dict]:
     _, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
+    # Checks may wait tens of seconds on a model; the project write lock taken above would block every other writer meanwhile.
+    if not (db.new or db.dirty or db.deleted):
+        db.commit()
     row = db.get(ContentMasterRevision, master_id)
     if row is None or row.project_id != project_id or row.content_unit_id != unit.id:
         raise HTTPException(404, "Master版本不存在")

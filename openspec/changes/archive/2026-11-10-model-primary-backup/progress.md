@@ -1,0 +1,5 @@
+- 2026-11-10 写提案，等用户确认。
+- 2026-11-10 用户确认后实现：providers 加 VendorUnavailable 分类和 FallbackProvider（按用途主备，显式指定模型时不换）；搜索推广执行记录写「这次用了备用模型」；model_registration 存取 backup_routes、封面 / 镜头生图备用；video_chain.generate_image、shot_image.generate 主模型明确失败换备用；设置页每个用途加备用选择。全量 2353 通过（5 旧失败），tsc / build 通过。备份 backups/content_studio_before_model_backup_20261110135117.db 后，按提案表设好主备（配置版本 25）。
+- 实测：平台适配调用主 grok-4.7（400 找不到模型）→ 自动转 gemini-3.8-flash-high，4.6 秒出结果，留痕带原因；普通 400 不换、429 换；镜头生图调 grok-imagine-image 被识别为厂商拒绝、备用读到 gemini-3.1-flash-image（没真的出图，避免计费）。封面生图换备用没实测出图。
+- 2026-11-10 续做项目 63（执行 #8）：三个版本在 #7 已全部送审（头条版在送审重跑时通过），#8 没调模型。执行记录显示备用的效果留待下次实跑。
+- 2026-11-10 用户说提交吧：归档并提交。

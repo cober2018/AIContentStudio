@@ -8,6 +8,7 @@ import hashlib
 import json
 import logging
 import re
+import threading
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -21,6 +22,34 @@ logger = logging.getLogger(__name__)
 
 class LLMError(RuntimeError):
     pass
+
+
+class VendorUnavailable(LLMError):
+    """The vendor could not serve the call (quota, rate limit, network, outage); a backup model may take it."""
+
+    def __init__(self, message: str, reason: str):
+        super().__init__(message)
+        self.reason = reason
+
+
+# Request-shape problems stay with the caller: another vendor would refuse the same request.
+_REQUEST_FAULT_STATUSES = {"400", "413", "422"}
+
+
+def _vendor_reason(exc: Exception) -> str | None:
+    detail = getattr(exc, "detail", None)
+    if detail in {"provider_request_failed", "provider_timeout", "provider_authentication_rejected", "provider_credential_unavailable"}:
+        return {"provider_request_failed": "连接失败或被断开", "provider_timeout": "超时",
+                "provider_authentication_rejected": "额度或鉴权被拒", "provider_credential_unavailable": "厂商没启用或没密钥"}[detail]
+    if detail == "provider_request_rejected":
+        headers = getattr(exc, "headers", None) or {}
+        status = str(headers.get("X-Provider-Status", ""))
+        hint = headers.get("X-Provider-Hint")
+        if hint:
+            return {"model_unavailable": "厂商那边没有这个模型（下线或没额度）", "quota": "额度或余额不足"}.get(hint, "厂商拒绝")
+        if status not in _REQUEST_FAULT_STATUSES:
+            return {"402": "余额不足", "429": "限流或额度用完"}.get(status, f"厂商返回 {status or '错误'}")
+    return None
 
 
 @dataclass
@@ -206,6 +235,9 @@ class OpenAICompatibleProvider:
             image_options = {"image_input": True} if request.image_inputs else {}
             return await asyncio.to_thread(provider_request, provider, "/chat/completions", payload=payload, timeout=timeout, **image_options)
         except Exception as exc:
+            reason = _vendor_reason(exc)
+            if reason:
+                raise VendorUnavailable("provider_request_failed", reason) from exc
             raise LLMError("provider_request_failed") from exc
 
     async def generate_json(self, request: GenerateRequest) -> GenerateResult:
@@ -312,8 +344,7 @@ def reset_provider_cache() -> None:
     _providers.clear()
 
 
-def get_provider(purpose: str | None = None) -> LLMProvider:
-    config = effective_llm_config(purpose)
+def _provider_for(config: dict) -> LLMProvider:
     cache_key = config.get("profile") or "default"
     if cache_key not in _providers:
         name = config["provider"]
@@ -327,6 +358,73 @@ def get_provider(purpose: str | None = None) -> LLMProvider:
         else:
             raise LLMError(f"未知 provider: {name}")
     return _providers[cache_key]
+
+
+# Which backup took which purpose's last call in this thread; run records read it to name the model actually used.
+_fallback_notes = threading.local()
+
+
+def take_fallback_note(purpose: str) -> dict | None:
+    notes = getattr(_fallback_notes, "value", None) or {}
+    return notes.pop(purpose, None)
+
+
+def backup_llm_config(purpose: str | None) -> dict | None:
+    # An explicitly chosen model (a stage run) is never swapped behind the user's back.
+    if not purpose or _explicit_profile.get():
+        return None
+    name = (_models_override().get("backup_routes") or {}).get(purpose)
+    if not name:
+        return None
+    try:
+        return effective_llm_config(purpose, profile=name)
+    except LLMError:
+        return None
+
+
+class FallbackProvider:
+    """Tries the use's primary model; when its vendor cannot serve the call, that one call goes to the backup."""
+
+    name = "fallback"
+
+    def __init__(self, purpose: str, backup: dict):
+        self.purpose, self.backup = purpose, backup
+
+    async def _call(self, method: str, request: GenerateRequest):
+        primary_model = ""
+        try:
+            config = effective_llm_config(self.purpose)
+            primary_model = config.get("model") or ""
+            return await getattr(_provider_for(config), method)(request), None
+        except VendorUnavailable as exc:
+            reason = exc.reason
+        except LLMError as exc:
+            if str(exc) not in {"model_selection_unavailable", "registered_model_unavailable"}:
+                raise
+            reason = "主模型没配置好或不可用"
+        note = {"model": self.backup["model"], "from": primary_model, "reason": reason}
+        logger.warning("model fallback: purpose=%s from=%s to=%s reason=%s", self.purpose, primary_model, self.backup["model"], reason)
+        if not hasattr(_fallback_notes, "value"):
+            _fallback_notes.value = {}
+        _fallback_notes.value[self.purpose] = note
+        return await getattr(_provider_for(self.backup), method)(request), note
+
+    async def generate_json(self, request: GenerateRequest) -> GenerateResult:
+        result, note = await self._call("generate_json", request)
+        if note:
+            result.route_provenance = {**(result.route_provenance or {}), "model": note["model"], "fallback": {"from": note["from"], "reason": note["reason"]}}
+        return result
+
+    async def generate_text(self, request: GenerateRequest) -> str:
+        text, _ = await self._call("generate_text", request)
+        return text
+
+
+def get_provider(purpose: str | None = None) -> LLMProvider:
+    backup = backup_llm_config(purpose)
+    if backup is None:
+        return _provider_for(effective_llm_config(purpose))
+    return FallbackProvider(purpose, backup)
 
 
 def provider_model_name(purpose: str | None = None) -> str:

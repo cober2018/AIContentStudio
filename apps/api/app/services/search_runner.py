@@ -62,10 +62,13 @@ def run_json(db: Session, row: SearchRun) -> dict:
 def _step(db: Session, run: SearchRun, step: str, status: str, detail: str = "", *, purpose: str | None = None, project_id: int | None = None) -> None:
     model = None
     if purpose:
-        from .generation.providers import effective_llm_config
+        from .generation.providers import effective_llm_config, take_fallback_note
 
         config = effective_llm_config(purpose)
         model = config.get("model") or config.get("provider")
+        if note := take_fallback_note(purpose):
+            model = note["model"]
+            detail = f"{detail}（主模型 {note['from'] or '未配置'} {note['reason']}，这次用了备用模型 {note['model']}）"
     run.steps_json = [*(run.steps_json or []), {"step": step, "status": status, "detail": detail[:500], "model": model,
                                                "project_id": project_id, "at": _now().isoformat()}]
     flag_modified(run, "steps_json")
@@ -205,6 +208,8 @@ def _reason(exc: Exception) -> str:
 def _llm(purpose: str, system: str, user_prompt: dict, schema_hint: str) -> dict:
     from .generation.providers import GenerateRequest, get_provider
 
+    # schema_hint only switches the provider to JSON mode; the model sees field names only if the prompt states them.
+    system = f"{system}\n严格按这个 JSON 结构输出，字段名和层级不要改，不要加别的字段：{schema_hint}"
     request = GenerateRequest(purpose=purpose, channel=None, system_prompt=system,
                               user_prompt=json.dumps(user_prompt, ensure_ascii=False)[:60000], schema_hint=schema_hint)
     try:

@@ -821,16 +821,33 @@ def generate_image(db: Session, user: User, project_id: int, unit_id: int, promp
     if model_limit is not None and model_limit < width * height:
         note = "；".join(filter(None, [note, f"这个模型最多出约 100 万像素，没按 {width}×{height} 出"]))
     try:
-        revision_id = images.make(prompt, label)
-    except HTTPException as exc:
-        # A definite refusal, or an image returned at another size, is retried once smaller; an uncertain send never is.
+        try:
+            revision_id = images.make(prompt, label)
+        except HTTPException as exc:
+            # A definite refusal, or an image returned at another size, is retried once smaller; an uncertain send never is.
+            refused = images.task is not None and images.task["state"] in {"failed", "unavailable"}
+            code = exc.detail.get("code") if isinstance(exc.detail, dict) else exc.detail
+            wrong_size = code in {"generation_output_aspect_mismatch", "generation_output_limit_exceeded"}
+            if not ((refused or wrong_size) and images.route["parameters"]["pixels"] > FALLBACK_PIXELS):
+                raise
+            images.route["parameters"]["pixels"] = FALLBACK_PIXELS
+            revision_id = images.make(prompt, label)
+            note = "；".join(filter(None, [note, f"模型出不了 {width}×{height}，按 100 万像素出了"]))
+    except HTTPException:
+        # Only a definite refusal moves to the backup model; a send whose outcome is uncertain may be billed and is never resent.
+        backup = model_registration.uses()["cover_image"].get("backup_profile")
+        spare = view["profiles"].get(backup) if backup else None
         refused = images.task is not None and images.task["state"] in {"failed", "unavailable"}
-        wrong_size = exc.detail in {"generation_output_aspect_mismatch", "generation_output_limit_exceeded"}
-        if not ((refused or wrong_size) and images.route["parameters"]["pixels"] > FALLBACK_PIXELS):
+        if not (refused and spare and backup != images.route["selected_profile"] and spare["enabled"]
+                and spare["capabilities"]["image_generation"]["declared"] and spare["capabilities"]["image_generation"]["configured"]):
             raise
-        images.route["parameters"]["pixels"] = FALLBACK_PIXELS
+        spare_limit = MODEL_MAX_PIXELS.get((spare.get("capability_bindings", {}).get("image_generation") or {}).get("model_id"))
+        logging.getLogger(__name__).warning("cover image fallback: from=%s to=%s", images.route["selected_profile"], backup)
+        images.route = {"selected_profile": backup, "configuration_mode": "custom",
+                        "parameters": {"items": 1, "aspect_ratio": aspect_ratio, "pixels": min(width * height, ceiling, spare_limit or ceiling)}}
         revision_id = images.make(prompt, label)
-        note = "；".join(filter(None, [note, f"模型出不了 {width}×{height}，按 100 万像素出了"]))
+        spare_model = (spare.get("capability_bindings", {}).get("image_generation") or {}).get("model_id") or backup
+        note = "；".join(filter(None, [note, f"封面生图主模型这次出不了图，用了备用模型 {spare_model}"]))
     revision = db.get(MaterialRevision, revision_id)
     project_folders.store_new(db, revision, project_id, "图片/图片素材")
     from PIL import Image

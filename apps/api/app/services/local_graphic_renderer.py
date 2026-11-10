@@ -18,6 +18,38 @@ from . import graphic_documents
 from .content_harness.providers import MediaRenderOutput
 
 
+TEXT_PROBLEMS = {"mixed_alignment_unsupported": "同一文字层只能用一种对齐", "font_variant_unsupported": "字重只能是常规（400）、不能斜体",
+                 "font_coverage_unsupported": "出图字体里没有其中的字"}
+
+
+def text_layer_problem(layer: dict, font_probe=None) -> str | None:
+    """What the renderer cannot draw in one text layer; checked at save as well, so a draft never fails only after adoption."""
+    if len({run["style"]["align"] for run in layer["runs"]}) != 1:
+        return "mixed_alignment_unsupported"
+    if any(run["style"]["weight"] != 400 or run["style"]["italic"] for run in layer["runs"]):
+        return "font_variant_unsupported"
+    if font_probe is not None:
+        missing = bytes(font_probe.getmask("\U0010ffff"))
+        characters = set("".join(run["text"] for run in layer["runs"]))
+        if any(not char.isspace() and bytes(font_probe.getmask(char)) == missing for char in characters):
+            return "font_coverage_unsupported"
+    return None
+
+
+def draft_text_problems(payload: dict) -> list[str]:
+    try:
+        font = LocalGraphicRenderer()._runtime()[4]
+        font_probe = ImageFont.truetype(io.BytesIO(font.read_bytes()), 32)
+    except (OSError, ValueError):
+        font_probe = None  # Without the render font configured, coverage is left to the render itself.
+    problems = []
+    for index, canvas in enumerate(payload.get("canvases") or []):
+        for layer in canvas.get("layers") or []:
+            if layer.get("type") == "text" and (problem := text_layer_problem(layer, font_probe)):
+                problems.append(f"第 {index + 1} 张（{canvas.get('id')}）文字层 {layer.get('id')}：{TEXT_PROBLEMS[problem]}")
+    return problems
+
+
 class LocalGraphicRenderer:
     key = "graphic.chromium"
     version = "1"
@@ -80,16 +112,9 @@ class LocalGraphicRenderer:
             if not font_bytes or len(font_bytes) > 30 * 1024 * 1024:
                 raise ValueError("unsupported_font")
             font_probe = ImageFont.truetype(io.BytesIO(font_bytes), 32)
-            missing = bytes(font_probe.getmask("\U0010ffff"))
             for layer in canvas["layers"]:
-                if layer["type"] == "text":
-                    if len({run["style"]["align"] for run in layer["runs"]}) != 1:
-                        raise ValueError("mixed_alignment_unsupported")
-                    if any(run["style"]["weight"] != 400 or run["style"]["italic"] for run in layer["runs"]):
-                        raise ValueError("font_variant_unsupported")
-                    characters = set("".join(run["text"] for run in layer["runs"]))
-                    if any(not char.isspace() and bytes(font_probe.getmask(char)) == missing for char in characters):
-                        raise ValueError("font_coverage_unsupported")
+                if layer["type"] == "text" and (problem := text_layer_problem(layer, font_probe)):
+                    raise ValueError(problem)
             assets = {}
             total = 0
             for source in request.get("source_assets", []):
