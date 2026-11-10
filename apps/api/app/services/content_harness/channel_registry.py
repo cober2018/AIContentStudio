@@ -76,6 +76,9 @@ PLANNED_CHANNELS: dict[str, dict] = {
     "youtube": {"label": "YouTube", "forms": {"video": ("视频", "video", "YouTube")}},
 }
 
+# 只用来登记发布账号的平台：成片直接发，不做平台改写，不进作品渠道清单。
+PUBLISH_ONLY_CHANNELS: dict[str, str] = {"wechat_channels": "视频号"}
+
 FORM_LABELS: dict[str, str] = {
     "article": "文章",
     "answer": "回答",
@@ -256,6 +259,14 @@ def list_channel_keys(db: Session) -> set[str]:
 
 def list_channels(db: Session) -> list[dict]:
     return [spec.to_dict() for spec in (resolve_channel(db, key) for key in sorted(list_channel_keys(db))) if spec]
+
+
+def list_account_channels(db: Session) -> list[dict]:
+    """登记平台账号可选的平台：已接入的渠道，加上只发布不改写的平台。"""
+    channels = list_channels(db)
+    listed = {row["channel"] for row in channels}
+    return channels + [{"channel": key, "label": label, "content_forms": []}
+                       for key, label in PUBLISH_ONLY_CHANNELS.items() if key not in listed]
 
 
 def list_channel_catalog(db: Session) -> list[dict]:

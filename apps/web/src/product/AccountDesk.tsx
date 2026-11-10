@@ -44,7 +44,7 @@ export default function AccountDesk() {
 
   async function load() {
     const [nextChannels, me] = await Promise.all([
-      api.get<Channel[]>("/channels"),
+      api.get<Channel[]>("/channels?for_accounts=true"),
       api.get<{ role: string }>("/users/me"),
     ]);
     const nextAccounts = await api.get<Account[]>("/content-accounts");

@@ -12,8 +12,10 @@ router = APIRouter(prefix="/api/v1/channels", tags=["channels"])
 
 
 @router.get("")
-def list_channels(catalog: bool = Query(False), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """列出全部可用渠道与 content forms（profile 来源 + legacy 兜底）；catalog=true 时连同待接入的目标渠道。"""
+def list_channels(catalog: bool = Query(False), for_accounts: bool = Query(False), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """列出全部可用渠道与 content forms（profile 来源 + legacy 兜底）；catalog=true 时连同待接入的目标渠道；for_accounts=true 时连同只登记发布账号的平台。"""
+    if for_accounts:
+        return channel_registry.list_account_channels(db)
     return channel_registry.list_channel_catalog(db) if catalog else channel_registry.list_channels(db)
 
 

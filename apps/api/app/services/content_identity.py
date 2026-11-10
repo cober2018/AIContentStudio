@@ -330,13 +330,13 @@ def register_public_channel_account(db: Session, user: User, persona_id: int | N
         raise HTTPException(403, "platform_binding_admin_required")
     if persona_id is not None:
         owned_entity(db, user, "persona", persona_id, mutable=True)
-    from .content_harness.channel_registry import ChannelRegistryError, ensure_channel_in_service, resolve_channel
+    from .content_harness.channel_registry import PUBLISH_ONLY_CHANNELS, ChannelRegistryError, ensure_channel_in_service, resolve_channel
 
     try:
         ensure_channel_in_service(channel)
     except ChannelRegistryError as exc:
         raise HTTPException(422, str(exc)) from None
-    if resolve_channel(db, channel) is None:
+    if resolve_channel(db, channel) is None and channel not in PUBLISH_ONLY_CHANNELS:
         raise HTTPException(422, "未知渠道")
     public_id = public_platform_id(channel, platform_account_id)
     if _persona_platform_taken(db, persona_id, channel):

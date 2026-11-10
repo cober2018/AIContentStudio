@@ -234,7 +234,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       api.get<Omit<Entity, "kind">[]>("/content-brands"), api.get<Omit<Entity, "kind">[]>("/content-personas"),
       api.get<{ id: number; name: string; version: number }[]>("/content-identities/brand-voices"),
       api.get<{ role: string }>("/users/me").catch(error => { if (generation === treeGeneration.current && currentUser() === user) setError(`权限读取失败，当前仅可查看。${errText(error)}`); return null; }),
-      api.get<Channel[]>("/channels"),
+      api.get<Channel[]>("/channels?for_accounts=true"),
     ]);
     const [nextAccounts, nextEditorial] = await Promise.all([
       api.get<Omit<Entity, "kind" | "current_revision">[]>("/content-accounts"),
