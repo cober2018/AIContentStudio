@@ -967,7 +967,7 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
 
 
 def export_names(db: Session, unit_id: int, master: ContentMasterRevision, execution_id: int, roles: list[str]) -> dict[str, str]:
-    """Exact export file names, so 成片 and every cover carry their aspect ratio: <标题>-<用途>-<比例>-任务N.<后缀>."""
+    """Exact export file names, so 成片 and every cover carry their aspect ratio and work: <标题>-<用途>-<比例>-作品N-任务M.<后缀>."""
     unit = db.get(ContentUnit, unit_id)
     title = re.sub(r"[\\/:*?\"<>|\s]+", "", unit.title if unit else "")[:40] or f"作品{unit_id}"
     width, height = (master.payload_json.get("aspect_ratio") or [16, 9])[:2]
@@ -976,7 +976,7 @@ def export_names(db: Session, unit_id: int, master: ContentMasterRevision, execu
     uses = {"rough_cut": ("小样", video, ".mp4"), "final": ("成片", video, ".mp4"),
             "cover": ("横封面" if landscape else "封面", video, ".png"),
             "cover_vertical": ("竖封面", "3x4", ".png"), "cover_43": ("横封面", "4x3", ".png")}
-    return {role: f"{title}-{uses[role][0]}-{uses[role][1]}-任务{execution_id}{uses[role][2]}" for role in roles if role in uses}
+    return {role: f"{title}-{uses[role][0]}-{uses[role][1]}-作品{unit_id}-任务{execution_id}{uses[role][2]}" for role in roles if role in uses}
 
 
 def _portrait_files(portrait: dict) -> str:
