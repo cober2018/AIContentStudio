@@ -5,7 +5,7 @@ import json
 from collections.abc import Callable
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -1193,3 +1193,17 @@ def upgrade_video_master(db: Session, *, project_id: int, unit_id: int, master_i
             "conversion_warnings": preview["warnings"],
         },
     })
+
+
+def video_aspects(db: Session, unit_ids: list[int]) -> dict[int, str]:
+    """Aspect ratio ("16:9") of each video work's latest master, so titles can show it; works without a master are left out."""
+    if not unit_ids:
+        return {}
+    latest = (select(ContentMasterRevision.content_unit_id, func.max(ContentMasterRevision.revision_no).label("revision_no"))
+              .where(ContentMasterRevision.content_unit_id.in_(unit_ids), ContentMasterRevision.modality == "video")
+              .group_by(ContentMasterRevision.content_unit_id).subquery())
+    rows = db.execute(select(ContentMasterRevision.content_unit_id, ContentMasterRevision.payload_json["aspect_ratio"])
+                      .join(latest, (latest.c.content_unit_id == ContentMasterRevision.content_unit_id)
+                            & (latest.c.revision_no == ContentMasterRevision.revision_no))).all()
+    return {unit_id: f"{ratio[0]}:{ratio[1]}" for unit_id, ratio in rows
+            if isinstance(ratio, list) and len(ratio) == 2 and all(type(item) is int for item in ratio)}

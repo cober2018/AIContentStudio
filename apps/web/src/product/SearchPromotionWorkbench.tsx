@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
-import { Button, Chip, EmptyState, ErrorBanner, Field, inputClass, Notice, Page, PageHeader, Section, Spinner, Tabs, WorkCode } from "../components/ui";
+import { Button, Chip, EmptyState, ErrorBanner, Field, inputClass, Notice, Page, PageHeader, Section, Spinner, Tabs, RatioSuffix, WorkCode } from "../components/ui";
 
 type Category = { id: number; top_key: string; top_name: string; name: string; status: "active" | "disabled" };
 type Top = { key: string; name: string; categories: Category[] };
@@ -18,7 +18,7 @@ type Library = { revision_no: number; origin: string; keywords: { primary: strin
 type ProjectRow = { id: number; title: string; question: string; settings: { forms: string[]; tone: string; reader_level: string; genre: string; writer: string; platforms?: string[]; cover?: { material_revision_id: number }; cover_error?: string }; state: string; pending_review: number; href: string };
 type Subject = SubjectRow & { library: Library | null; projects: ProjectRow[]; hints: { common_questions: string[]; writing_focus: string[] }; genres: { key: string; name: string; for: string }[] };
 type Version = { variant_id: number; channel: string; content_form: string; revision_no: number; title: string | null; candidate: { id: number; status: string } | null; review: { decision: string; comment: string | null } | null };
-type ProjectUnit = { unit_id: number; title: string; role: "core" | "derived"; modality: string; state: string; label: string; writer: string; versions: Version[]; href: string };
+type ProjectUnit = { unit_id: number; title: string; aspect_ratio?: string | null; role: "core" | "derived"; modality: string; state: string; label: string; writer: string; versions: Version[]; href: string };
 type SearchProject = ProjectRow & { subject: { id: number; name: string; revision_no: number }; genre_name: string; units: ProjectUnit[] };
 type ReviewItem = { candidate_id: number; candidate_hash: string; channel: string; content_form: string; title: string; body: string | null };
 type ReviewGroup = { project_id: number; title: string; question: string; items: ReviewItem[] };
@@ -316,7 +316,7 @@ function ProjectPage({ projectId }: { projectId: number }) {
     <PageHeader title={data.title} lead={<>回答：{data.question} · 体裁：{data.genre_name} · 基调：{data.settings.tone} · 读者：{data.settings.reader_level} · 资料第 {data.subject.revision_no} 版</>} />
     {data.settings.cover_error && <Notice tone="warn">公众号封面没生成出来：{data.settings.cover_error}。下次存核心稿时会再试；检查「设置 → 模型」里的封面生图。</Notice>}
     <Notice>中间步骤都由 AI 完成，这里只看进度。要审的平台版本在「待审成稿」{data.pending_review ? `（${data.pending_review} 个）` : ""}；视频的导演稿、小样、成片在作品页由你看。</Notice>
-    <div className="mt-4 space-y-3">{data.units.map(unit => <Section key={unit.unit_id} title={<><WorkCode id={unit.unit_id} /><Link className="underline" to={unit.href}>{unit.title}</Link></>} aside={<Chip>{unit.role === "core" ? "核心稿" : "衍生"} · {FORM_NAMES[unit.modality] || unit.modality}</Chip>}>
+    <div className="mt-4 space-y-3">{data.units.map(unit => <Section key={unit.unit_id} title={<><WorkCode id={unit.unit_id} /><Link className="underline" to={unit.href}>{unit.title}</Link><RatioSuffix ratio={unit.aspect_ratio} /></>} aside={<Chip>{unit.role === "core" ? "核心稿" : "衍生"} · {FORM_NAMES[unit.modality] || unit.modality}</Chip>}>
       <p className="text-sm text-ink-600">{unit.label} · {unit.writer === "platform" ? "平台模型" : "第三方模型"}</p>
       {unit.versions.length > 0 && <div className="mt-2 space-y-1">{unit.versions.map(version => {
         const [label, tone] = decision(version);

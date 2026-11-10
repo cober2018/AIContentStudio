@@ -294,6 +294,11 @@ export function WorkCode({ id }: { id: number }) {
   return <span className="mr-2.5 inline-flex shrink-0 items-center whitespace-nowrap rounded-pill border border-accent-200 bg-accent-50 px-2.5 py-0.5 align-middle font-sans text-[13px] font-medium leading-5 tabular-nums text-accent-700">作品 {id}</span>;
 }
 
+// Landscape, vertical and 4:3 versions of a work look alike by title, so the ratio follows it.
+export function RatioSuffix({ ratio }: { ratio?: string | null }) {
+  return ratio ? <span className="whitespace-nowrap text-ink-400"> · {ratio}</span> : null;
+}
+
 export function Notice({ children, tone = "info" }: { children: ReactNode; tone?: "info" | "warn" | "good" }) {
   const tones = { info: "border-ink-200 bg-surface text-ink-700", warn: "border-amber-200 bg-amber-50 text-amber-800", good: "border-emerald-200 bg-emerald-50 text-emerald-800" };
   const dot = { info: "bg-accent-500", warn: "bg-amber-500", good: "bg-emerald-500" };

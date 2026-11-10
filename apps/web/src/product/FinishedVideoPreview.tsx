@@ -19,7 +19,7 @@ function Cut({ file }: { file: File }) {
 export function FinishedVideoPreview({ preview }: { preview: FinishedPreview }) {
   const cut = preview.files.find(file => file.role === "final");
   const covers = preview.files.filter(file => file.role !== "final");
-  const label = (file: File) => file.role === "cover_vertical" ? "竖封面 3:4" : file.role === "cover_43" ? "横封面 4:3（抖音）" : covers.length > 1 ? "横封面 16:9" : "封面";
+  const label = (file: File) => file.role === "cover_vertical" ? "竖封面 3:4" : file.role === "cover_43" ? "横封面 4:3" : covers.length > 1 ? "横封面 16:9" : "封面";
   const copy = preview.publish_copy;
   return <div className="mt-4 space-y-4">
     <h4 className="text-lg font-semibold">{preview.title || "未命名"}</h4>

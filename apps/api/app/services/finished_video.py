@@ -22,9 +22,6 @@ CONTENT_FORM = "short_video"
 VIDEO_CHANNELS = {"douyin": "抖音", "xiaohongshu": "小红书", "wechat_channels": "视频号", "wechat": "公众号", "kuaishou": "快手",
                   "bilibili": "B站", "baijia": "百家号", "toutiao": "今日头条", "youtube": "YouTube"}
 ROLES = ("final", "cover", "cover_43", "cover_vertical")
-# 抖音 takes a 4:3 and a 3:4 cover for a landscape video; other platforms take the 16:9 one.
-PLATFORM_COVERS = {"douyin": ("cover_43", "cover_vertical")}
-DEFAULT_COVERS = ("cover", "cover_vertical")
 SUFFIX = {"video/mp4": ".mp4", "video/quicktime": ".mov", "image/png": ".png", "image/jpeg": ".jpg"}
 
 
@@ -173,13 +170,8 @@ def zip_bytes(db: Session, target, asset: ContentAsset) -> tuple[bytes, str]:
             or target.approved_candidate_hash != asset.candidate_hash):
         raise HTTPException(409, "成片交付授权与准确候选 / 渠道不一致")
     covers = [item for item in manifest["files"] if item["role"] != "final"]
-    roles = list(PLATFORM_COVERS.get(target.channel, DEFAULT_COVERS))
-    have = {item["role"] for item in covers}
-    # Works made before the 4:3 cover existed give 抖音 their 16:9 cover instead.
-    if "cover_43" in roles and "cover_43" not in have:
-        roles[roles.index("cover_43")] = "cover"
-    wanted = [item for item in covers if item["role"] in roles]
-    chosen = [item for item in manifest["files"] if item["role"] == "final"] + (wanted or covers)
+    # Every platform package carries every cover the work has; the person picks the one the platform asks for.
+    chosen = [item for item in manifest["files"] if item["role"] == "final"] + covers
     names = {"final": "成片", "cover": "封面" if len(covers) < 2 else "横封面-16x9", "cover_43": "横封面-4x3", "cover_vertical": "竖封面-3x4"}
     package = {"export_schema": "studio.finished-video.v1", "schema_version": SCHEMA, "target_id": target.id, "asset_id": asset.id,
                "candidate": {"id": asset.id, "hash": asset.candidate_hash}, "channel": target.channel, "content_form": CONTENT_FORM,

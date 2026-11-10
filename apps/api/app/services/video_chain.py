@@ -10,6 +10,7 @@ from __future__ import annotations
 import contextvars
 import copy
 import logging
+import re
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -953,7 +954,9 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
                 "persona_note": _persona_note(((package.package_json if package else {}).get("director") or {}).get("persona_clips") or [])} if phase == "final" else {}),
             "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
             "work_dir": str(work), "export_dir": str(export), "cover_dir": str(cover),
+            "file_names": export_names(db, unit_id, master, execution_id, [phase, "cover"] + (["cover_vertical"] if separate else []) + (["cover_43"] if four_three else [])),
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
+                     "导出的文件名照 file_names 起（按 role 对应，名字里带比例，不要自己改名）；"
                      + ("横版封面：横封面设计盖在成片开头 0–0.5 秒随成片渲染，横封面图 role cover 1920×1080 从渲染好的成片开头 0.5 秒内截一帧；"
                         "竖封面 role cover_vertical 1080×1440（3:4）用同一套设计单独做、不放进成片；jpg / png 按 sRGB 存，"
                         + (_portrait_files(portrait) if four_three and portrait else
@@ -961,6 +964,19 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
                         + f"封面都导出到 {cover}/，都在剪辑清单之前交，清单 output_hashes 都列；"
                         if separate else f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；")
                      + f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
+
+
+def export_names(db: Session, unit_id: int, master: ContentMasterRevision, execution_id: int, roles: list[str]) -> dict[str, str]:
+    """Exact export file names, so 成片 and every cover carry their aspect ratio: <标题>-<用途>-<比例>-任务N.<后缀>."""
+    unit = db.get(ContentUnit, unit_id)
+    title = re.sub(r"[\\/:*?\"<>|\s]+", "", unit.title if unit else "")[:40] or f"作品{unit_id}"
+    width, height = (master.payload_json.get("aspect_ratio") or [16, 9])[:2]
+    video = f"{width}x{height}"
+    landscape = width > height
+    uses = {"rough_cut": ("小样", video, ".mp4"), "final": ("成片", video, ".mp4"),
+            "cover": ("横封面" if landscape else "封面", video, ".png"),
+            "cover_vertical": ("竖封面", "3x4", ".png"), "cover_43": ("横封面", "4x3", ".png")}
+    return {role: f"{title}-{uses[role][0]}-{uses[role][1]}-任务{execution_id}{uses[role][2]}" for role in roles if role in uses}
 
 
 def _portrait_files(portrait: dict) -> str:
@@ -1045,7 +1061,8 @@ def redo_covers(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     return {"execution_id": execution_id, "master_id": master.id, "cover_template": director.get("cover_template"),
             **({"cover_portrait": director["cover_portrait"]} if director.get("cover_portrait") else {}),
             "work_dir": str(work), "cover_dir": str(cover), "cover_task": _cover_task(db, _unit_record(db, unit_id)),
-            "files": "只交两张封面，成片和 16:9 横封面不动：竖封面 role cover_vertical 1080×1440（3:4），抖音横封面 role cover_43 1440×1080，两张都必交，"
+            "file_names": export_names(db, unit_id, master, execution_id, ["cover_vertical", "cover_43"]),
+            "files": "只交两张封面，成片和 16:9 横封面不动：竖封面 role cover_vertical 1080×1440（3:4），4:3 横封面 role cover_43 1440×1080，两张都必交，文件名照 file_names 起，"
                      "用作品现在的封面设计（大标题等）分别排版，jpg / png 按 sRGB 存，"
                      + ("两张都放角色形象（cover_portrait，抠掉原图背景只留人物）；" if director.get("cover_portrait") else "")
                      + f"导出到 {cover}/，submit_output 传绝对路径 path；工程和临时文件放 {work}/。两张都交上后等用户在成片页看。"}

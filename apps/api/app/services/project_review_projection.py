@@ -179,6 +179,7 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
         summary = "ready"
     return {
         "unit_id": unit.id, "project_id": unit.project_id, "title": unit.title, "modality": unit.modality,
+        "aspect_ratio": _video_aspects(db, [unit.id]).get(unit.id) if unit.modality == "video" else None,
         "production_domain": unit.production_domain,
         "persona_id": unit.persona_id, "account_id": unit.account_id, "channel_id": unit.channel_id,
         "identity_snapshot_id": unit.identity_snapshot_id,
@@ -446,3 +447,9 @@ def candidate_preview(asset: ContentAsset) -> dict:
             script = content.get("script") or ""
             preview.update({"shot_count": len(shots), "script": script[:20_000] if isinstance(script, str) else {"structured": True}, "shots": [{"id": row.get("id"), "order": row.get("order"), "duration": row.get("duration")} for row in shots[:50]], "timeline_present": bool(content.get("timeline"))})
     return preview
+
+
+def _video_aspects(db: Session, unit_ids: list[int]) -> dict[int, str]:
+    from .content_masters import video_aspects
+
+    return video_aspects(db, unit_ids)

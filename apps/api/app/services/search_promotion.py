@@ -667,6 +667,7 @@ def get_project(db: Session, user: User, project_id: int) -> dict:
     for work, unit in db.execute(select(SearchWork, ContentUnit).join(ContentUnit, ContentUnit.id == SearchWork.unit_id)
                                  .where(SearchWork.project_id == project_id, ContentUnit.lifecycle != "deleted").order_by(SearchWork.id)).all():
         units.append({"unit_id": unit.id, "title": unit.title, "role": work.role, "modality": unit.modality, **_unit_state(db, unit),
+                      "aspect_ratio": _video_aspects(db, [unit.id]).get(unit.id) if unit.modality == "video" else None,
                       "versions": _versions(db, unit.id), "href": f"/projects/{project_id}/units/{unit.id}/production"})
     return {**_project_row(db, row), "subject": {"id": subject.id, "name": (revision.payload_json or {}).get("name"), "revision_no": revision.revision_no},
             "genre_name": GENRES[row.settings_json["genre"]][0], "units": units}
@@ -1122,3 +1123,9 @@ def cover_refs(db: Session, user: User, unit) -> list[dict]:
         revision = db.get(MaterialRevision, made["material_revision_id"])
     return [{"material_revision_id": revision.id, "content_hash": revision.content_hash, "sort_order": 0,
              "role": "cover", "slot_key": "cover", "placement": {"usage": "cover"}}]
+
+
+def _video_aspects(db: Session, unit_ids: list[int]) -> dict[int, str]:
+    from .content_masters import video_aspects
+
+    return video_aspects(db, unit_ids)

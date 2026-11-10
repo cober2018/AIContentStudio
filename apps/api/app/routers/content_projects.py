@@ -379,9 +379,10 @@ def _persona_json(db: Session, persona: ContentPersona) -> dict:
     return {"id": persona.id, "name": persona.name, "brand_id": persona.brand_id, "status": persona.status, "current_revision": revision.revision_no if revision else 0}
 
 
-def _unit_json(unit: ContentUnit) -> dict:
+def _unit_json(unit: ContentUnit, aspect: str | None = None) -> dict:
     return {
         "id": unit.id,
+        "aspect_ratio": aspect,
         "project_id": unit.project_id,
         "production_domain": unit.production_domain,
         "persona_id": unit.persona_id,
@@ -417,19 +418,21 @@ def _default_version_matches(workflow: Workflow, *, persona_id: int, account_id:
     )
 
 
-def _project_payload(project: ContentProject, units: list[ContentUnit], brief) -> dict:
+def _project_payload(project: ContentProject, units: list[ContentUnit], brief, aspects: dict[int, str] | None = None) -> dict:
     return {
         "id": project.id,
         "title": project.title,
         "objective": brief.objective if brief else project.objective,
         "status": project.status,
-        "units": [_unit_json(unit) for unit in units if unit.lifecycle != "deleted"],
+        "units": [_unit_json(unit, (aspects or {}).get(unit.id)) for unit in units if unit.lifecycle != "deleted"],
     }
 
 
 def _project_json(project: ContentProject, db: Session) -> dict:
+    from ..services.content_masters import video_aspects
+
     units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project.id).order_by(ContentUnit.id)).all()
-    return _project_payload(project, units, current_brief(db, project.id))
+    return _project_payload(project, units, current_brief(db, project.id), video_aspects(db, [unit.id for unit in units]))
 
 
 @router.get("/content-personas")
@@ -462,7 +465,10 @@ def list_projects(db: Session = Depends(get_db), user: User = Depends(get_curren
     briefs: dict[int, CreativeBriefRevision] = {}
     for brief in db.scalars(select(CreativeBriefRevision).where(CreativeBriefRevision.project_id.in_(project_ids)).order_by(CreativeBriefRevision.revision_no)).all():
         briefs[brief.project_id] = brief  # 后写覆盖＝保留最高 revision_no，与 current_brief 一致
-    return [{**_project_payload(row, units_by_project[row.id], briefs.get(row.id)), "progress": _progress(db, units_by_project[row.id])}
+    from ..services.content_masters import video_aspects
+
+    aspects = video_aspects(db, [unit.id for units in units_by_project.values() for unit in units])
+    return [{**_project_payload(row, units_by_project[row.id], briefs.get(row.id), aspects), "progress": _progress(db, units_by_project[row.id])}
             for row in rows]
 
 
