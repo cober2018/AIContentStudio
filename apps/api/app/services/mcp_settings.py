@@ -65,7 +65,7 @@ SUMMARIES = {
     "save_director_draft": "存导演稿（含每个镜头的素材需求），然后等你在页面上看",
     "get_video_decision": "读你对素材 / 小样 / 成片的决定和修改意见（导演稿也可被打回）",
     "set_shot_materials": "存导演稿后，给每个镜头定素材",
-    "submit_video_materials": "素材备齐后交给用户看，停下等确认素材",
+    "submit_video_materials": "素材开关为手动时，素材备齐后交给用户看，停下等确认素材",
     "accept_material_candidate": "把搜到的一条图库素材收进素材库和本项目",
     "search_web_materials": "去品牌官网、经销商、小电商站点和测评站点找图，把挑选页面发给你；它不能替你选",
     "get_web_materials": "读网上找图的进度、各网页找到几张图、你已经存了哪些",

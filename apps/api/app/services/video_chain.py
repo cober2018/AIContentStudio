@@ -34,12 +34,13 @@ from ..models import (
 KEY = "video_chain"
 # Returned with the brief so any external model (not only one with the repo's skills) follows the same chain.
 RULES = [
-    "你主导整条视频；平台不调用自己的模型。导演稿存好即自动采用，不用等；三处停下等用户：素材（只在第一次剪小样前）、小样、成片。有意见就出下一版再停。",
+    "你主导整条视频；平台不调用自己的模型。导演稿存好即自动采用，不用等；三处停下等用户：素材（只在第一次剪小样前，且素材开关为手动时）、小样、成片。有意见就出下一版再停。",
     "事实：口播和画面里当事实说的话（数字、症状、研究结论、政策、参数等）只用 get_video_brief 的 facts（已冻结的事实边界）里有的；角色作品写导演稿前先用 get_fact_template 看题材模板，把要当事实说的话连出处用 submit_facts 交上去，平台核对后自动冻结；被退回的换来源或不说。事实改了要重存导演稿。"
     "fact_templates 里每个模板的 red_lines 必须守，opinion_only 列的内容只能当个人经历或观点说。",
     "导演稿：完整 video.master.v2；每个镜头 board 含 message/visual/camera/speaker/sound/notes/material_request。material_request 写清画面必须有什么、景别、时长、实拍还是图形、横竖屏。一镜一个意思，景别和运镜要有变化，同一画面不重复用。",
     "商品作品和角色作品：存导演稿后先把用户素材对应到镜头（set_shot_materials），再只给没有用户素材的镜头准备画面：首帧、九宫格，并用 set_shot_video_mode 设好手动或自动、给手动镜头备好提示词；"
-    "备齐后用 submit_video_materials 交给用户看素材，停下等「确认素材」；确认前不生成图生视频（generate_shot_video 会被拒绝），确认后再给「自动」镜头生成视频、配音、剪小样。用户写了意见就按意见重配后再交。",
+    "素材开关看状态里的 materials_mode：manual（默认）时备齐后用 submit_video_materials 交给用户看素材，停下等「确认素材」；确认前不生成图生视频（generate_shot_video 会被拒绝），确认后再给「自动」镜头生成视频、配音、剪小样，用户确认时没上传的手动镜头会改成自动、由你做；用户写了意见就按意见重配后再交。"
+    "auto 时不交素材、不停下：没有用户素材的镜头全部由你做，备齐后直接生成自动镜头、配音、剪小样。",
     "九宫格分组：写导演稿时，要生成画面的镜头里需要同一个人物或同一个场景的，归成一组写进 consistency_groups（每组 id、shot_ids 至少 2 个、person 共用人物、setting 共用场景；一个镜头只在一组）；"
     "零散、互不相关的镜头不归组。采用后归了组的用 generate_storyboard_grid(group_id) 一组出一张九宫格，每格是该镜的首帧候选；没归组的用 generate_shot_image 单张出图，或给用户文生视频提示词。改分组就是改导演稿，重新存一版。",
     "角色作品补镜头：没有商品图，生首帧、九宫格都不带商品参考、不做商品检查，提示词按这一镜 board 的画面、运镜、人物态度写，不提商品；"
@@ -165,7 +166,7 @@ def _decision(record: dict, stage: str, target_id: int) -> dict | None:
 def _materials(record: dict) -> dict:
     """The one materials stop, before the work's first 小样; once approved, or once a cut exists, it never stops again."""
     last = next((item for item in reversed(record["decisions"]) if item["stage"] == "materials"), None)
-    if record["tasks"] or (last is not None and last["decision"] == "approve"):
+    if record.get("materials_mode") == "auto" or record["tasks"] or (last is not None and last["decision"] == "approve"):
         return {"state": "approved"}
     submitted = record.get("materials_submitted")
     if submitted and (last is None or datetime.fromisoformat(last["at"]) < datetime.fromisoformat(submitted["at"])):
@@ -173,6 +174,30 @@ def _materials(record: dict) -> dict:
     if last is not None:
         return {"state": "changes", "notes": last["notes"]}
     return {"state": "pending"}
+
+
+def materials_auto(db: Session, unit_id: int) -> bool:
+    return _unit_record(db, unit_id).get("materials_mode") == "auto"
+
+
+def set_materials_mode(db: Session, user: User, project_id: int, unit_id: int, mode: str) -> dict:
+    """Per-work switch: auto never stops at materials and the model makes every shot; manual stops once for the user."""
+    from .content_masters import owned_unit
+    from .project_events import record_project_event
+
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    if locked(db, unit_id):
+        _fail("video_chain_locked", "成片已定稿，这一条不能再改")
+    record = _unit_record(db, unit_id)
+    if mode == "auto":
+        record["materials_mode"] = "auto"
+    else:
+        record.pop("materials_mode", None)
+    _put(db, unit_id, record)
+    record_project_event(db, project_id=project_id, event_type="unit.updated", actor=user.email, entity_type="content_unit",
+                         entity_id=unit_id, payload={"video_materials": mode})
+    db.commit()
+    return state(db, user, project_id, unit_id)
 
 
 def require_materials_approved(db: Session, unit_id: int) -> None:
@@ -183,9 +208,11 @@ def require_materials_approved(db: Session, unit_id: int) -> None:
 def submit_materials(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     """The model hands the mapped materials to the user; it stops here until 确认素材 or notes."""
     current = state(db, user, project_id, unit_id)
+    record = _unit_record(db, unit_id)
+    if record.get("materials_mode") == "auto":
+        _fail("video_chain_materials_auto", "用户把素材设成了自动，不用交给用户看：直接生成自动镜头、配音、剪小样")
     if current["state"] not in {"materials_making", "materials_changes", "materials_review"}:
         _fail("video_chain_materials_not_open", f"现在是「{current['label']}」，不能交素材")
-    record = _unit_record(db, unit_id)
     if _materials(record)["state"] == "approved":
         _fail("video_chain_materials_already_approved", "素材已经确认过，直接配音、剪小样")
     record["materials_submitted"] = {"draft_master_id": current["draft_master_id"], "by": user.email, "at": datetime.now(UTC).isoformat()}
@@ -195,13 +222,20 @@ def submit_materials(db: Session, user: User, project_id: int, unit_id: int) -> 
             "review_url": f"/projects/{project_id}/units/{unit_id}/production?workstep=materials"}
 
 
-def _manual_without_clip(db: Session, unit_id: int, master: ContentMasterRevision) -> list[str]:
-    from .product_video import JOBS_KEY, _setting
+def _hand_unfilled_to_model(db: Session, unit_id: int, master: ContentMasterRevision, actor: str) -> None:
+    """Shots still manual without a clip at 确认素材 go to the model; manual is also the global default, so unset ones count too."""
+    from .product_video import JOBS_KEY, _mode, _put as put_setting, _setting, work
 
-    modes = (_setting(db, JOBS_KEY).get(str(unit_id)) or {}).get("modes") or {}
-    shots = sorted(master.payload_json.get("shots") or [], key=lambda shot: shot.get("order", 0))
-    return [f"镜头 {index + 1}" for index, shot in enumerate(shots)
-            if modes.get(shot["id"]) == "manual" and not shot.get("source_material_revision_id")]
+    link = work(db, unit_id)
+    unfilled = [shot["id"] for shot in master.payload_json.get("shots") or []
+                if not shot.get("source_material_revision_id") and _mode(db, link, unit_id, shot["id"]) == "manual"]
+    if not unfilled:
+        return
+    jobs = _setting(db, JOBS_KEY)
+    record = dict(jobs.get(str(unit_id)) or {})
+    record["modes"] = {**(record.get("modes") or {}), **{shot_id: "auto" for shot_id in unfilled}}
+    jobs[str(unit_id)] = record
+    put_setting(db, JOBS_KEY, jobs, actor)
 
 
 def _task(db: Session, record: dict) -> tuple[dict | None, CreativeExecution | None]:
@@ -273,7 +307,7 @@ def state(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .content_masters import owned_unit
 
     owned_unit(db, project_id, unit_id, user)
-    return _state(db, unit_id)
+    return {**_state(db, unit_id), "materials_mode": "auto" if materials_auto(db, unit_id) else "manual"}
 
 
 def _state(db: Session, unit_id: int) -> dict:
@@ -296,7 +330,8 @@ def _state(db: Session, unit_id: int) -> dict:
             return {**view, "state": "materials_changes", "label": "素材按你的意见修改中", "notes": materials["notes"]}
         if materials["state"] == "pending":
             return {**view, "state": "materials_making", "label": "备素材中", "detail": "给每个镜头配素材，备好后交给你看"}
-        return {**view, "state": "making", "label": "制作中", "detail": "生成自动镜头、配音，准备剪小样"}
+        return {**view, "state": "making", "label": "制作中", "detail": "生成自动镜头、配音，准备剪小样"
+                + ("；素材设为自动，不停下等你看" if record.get("materials_mode") == "auto" and not record["tasks"] else "")}
     phase = "sample" if task["phase"] == "rough_cut" else "final"
     view.update(execution_id=execution.id, execution_state=execution.state, phase=task["phase"])
     notes = _decision(record, phase, execution.id)
@@ -431,9 +466,7 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
         _fail("video_chain_notes_required", "写一下要改哪里", 422)
     target = current["draft_master_id"] if stage in {"draft", "materials"} else current["previous_cut"]["execution_id"] if replacing else current["execution_id"]
     if stage == "materials" and decision == "approve":
-        missing = _manual_without_clip(db, unit_id, _latest(db, unit_id))
-        if missing:
-            _fail("video_chain_manual_clip_missing", f"{'、'.join(missing)} 选了手动，还没上传视频", 422)
+        _hand_unfilled_to_model(db, unit_id, _latest(db, unit_id), user.email)
     if stage == "final" and decision == "approve" and current.get("cover_redo"):
         _fail("video_chain_cover_redo_pending", "封面重做中，等新封面交上来再通过")
     if stage == "final" and decision == "approve":

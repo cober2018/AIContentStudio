@@ -169,6 +169,10 @@ class VideoDecisionIn(BaseModel):
     notes: list[VideoNoteIn] = Field(default_factory=list, max_length=50)
 
 
+class VideoMaterialsModeIn(BaseModel):
+    mode: str = Field(pattern=r"^(manual|auto)$")
+
+
 class CoverRedoIn(BaseModel):
     note: str = Field(default="", max_length=2000)
 
@@ -355,6 +359,13 @@ def video_chain_decide(project_id: int, unit_id: int, payload: VideoDecisionIn, 
     if payload.stage == "covers":
         return video_chain.decide_covers(db, user, project_id, unit_id, payload.decision, notes)
     return video_chain.decide(db, user, project_id, unit_id, payload.stage, payload.decision, notes)
+
+
+@router.put("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/materials-mode")
+def video_chain_materials_mode(project_id: int, unit_id: int, payload: VideoMaterialsModeIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import video_chain
+
+    return video_chain.set_materials_mode(db, user, project_id, unit_id, payload.mode)
 
 
 @router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/cover-redo")

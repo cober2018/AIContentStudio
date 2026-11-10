@@ -9,7 +9,7 @@ export type Job = { state: string; material_revision_id?: number | null; reason?
 export type Candidate = { material_revision_id: number; material_id: number; consistency?: string | null };
 export type References = { product: number[]; person: number[]; scene: number[]; origin: Record<string, string>; main_image?: { revision: number; followed_latest: boolean } | null };
 export type GridRun = { status: "running" | "done" | "failed"; started_at?: number; finished_at?: number; sheets?: string[]; error?: string | null; group_id?: string; consistency_failed?: string[] };
-export type View = { product: boolean; persona?: boolean; groups?: ConsistencyGroup[]; default_mode?: "manual" | "auto";
+export type View = { product: boolean; persona?: boolean; groups?: ConsistencyGroup[]; default_mode?: "manual" | "auto"; materials_auto?: boolean;
   resolution?: { phase: "sample" | "final"; sample: string; final: string; current: string }; modes?: Record<string, "manual" | "auto">; jobs?: Record<string, Job>;
   used?: Record<string, { material_revision_id: number; source: string; i2v: boolean; title: string }>;
   frames?: Record<string, { material_revision_id: number; material_id: number; consistency: string | null; tries: number }>;
@@ -106,7 +106,7 @@ export default function ShotWork({ shot, label, data, base, busy, locked, run, o
       : <p className="mt-2 text-sm text-slate-600">已用：素材 #{used.material_revision_id} · {used.source}（用商品原图或现成素材做的，不走图生视频）</p>)}
     {generated && <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
       <span className="text-slate-500">{persona ? "出视频：" : "图生视频："}</span>
-      <Button size="sm" variant={mode === "manual" ? "primary" : "secondary"} disabled={busy || locked} onClick={() => run(() => api.put(`${base}/shots/${shot.id}/mode`, { mode: "manual" }))}>手动</Button>
+      <Button size="sm" variant={mode === "manual" ? "primary" : "secondary"} disabled={busy || locked || !!data.materials_auto} onClick={() => run(() => api.put(`${base}/shots/${shot.id}/mode`, { mode: "manual" }))}>手动</Button>
       <Button size="sm" variant={mode === "auto" ? "primary" : "secondary"} disabled={busy || locked} onClick={() => run(() => api.put(`${base}/shots/${shot.id}/mode`, { mode: "auto" }))}>自动</Button>
       {mode === "auto" && <Button size="sm" variant="secondary" disabled={busy || locked || job?.state === "running"} onClick={() => { if (window.confirm("自动生成这一镜，按条计费。继续？")) run(() => api.post(`${base}/shots/${shot.id}/generate`, {})); }}>{job ? "重新生成" : "自动生成"}</Button>}
       {job?.state === "running" && <Button size="sm" variant="ghost" disabled={busy} onClick={() => run(() => api.get(`${base}/shots/${shot.id}/video`))}>查看进度</Button>}

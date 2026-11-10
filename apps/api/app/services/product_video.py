@@ -105,6 +105,11 @@ def _settings(db: Session, link: ProductSkuWork) -> dict:
 
 
 def _mode(db: Session, link: ProductSkuWork | None, unit_id: int, shot_id: str | None = None) -> str:
+    from .video_chain import materials_auto
+
+    # Nobody fills shots in a work whose materials are set to auto, so every shot is the model's.
+    if materials_auto(db, unit_id):
+        return "auto"
     shots = (_setting(db, JOBS_KEY).get(str(unit_id)) or {}).get("modes") or {}
     if shot_id and shots.get(shot_id) in {"manual", "auto"}:
         return shots[shot_id]
@@ -405,6 +410,10 @@ def set_shot_mode(db: Session, user: User, project_id: int, unit_id: int, shot_i
     _after_approval(db, user, project_id, unit_id)
     if mode not in {"manual", "auto"}:
         _fail(422, "product_i2v_mode_invalid", "图生视频方式只能是手动或自动")
+    from .video_chain import materials_auto
+
+    if mode == "manual" and materials_auto(db, unit_id):
+        _fail(409, "video_chain_materials_auto", "素材设成了自动，镜头都由第三方模型做；要自己做这一镜，先在「素材」步骤把开关切到手动")
     jobs = _setting(db, JOBS_KEY)
     record = jobs.setdefault(str(unit_id), {})
     record.setdefault("modes", {})[shot_id] = mode
@@ -617,8 +626,11 @@ def shot_videos(db: Session, user: User, project_id: int, unit_id: int) -> dict:
         return {"product": False}
     record = _setting(db, JOBS_KEY).get(str(unit_id)) or {}
     refs, master = references(db, user, unit_id), _latest(db, unit_id)
+    from .video_chain import materials_auto
+
+    auto = materials_auto(db, unit_id)
     return {"product": link is not None, **({} if link else {"persona": True}), "groups": groups(master.payload_json if master else {}),
-            "default_mode": _mode(db, link, unit_id), "modes": record.get("modes") or {},
+            "default_mode": _mode(db, link, unit_id), "modes": {} if auto else record.get("modes") or {}, "materials_auto": auto,
             "resolution": resolution(db, user, project_id, unit_id), "used": _used(db, unit_id), "frames": _first_frames(db, record),
             "grid": _grid_candidates(db, record), "grid_run": record.get("grid_run"), "references": refs,
             "grid_sheets": {shot: Path(entry["sheet"]).name for shot, entry in (record.get("grid") or {}).items() if entry.get("sheet")},

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
 import FileLocationActions from "./FileLocationActions";
-import { PlatformSkillsSwitch } from "./ArticleChainPanel";
+import { PlatformSkillsSwitch, Switch } from "./ArticleChainPanel";
 import type { VideoDraft, VideoPayload } from "./VideoStudioModel";
 
 const StoryboardTable = lazy(() => import("./StoryboardTable"));
@@ -30,7 +30,7 @@ type ShotChecks = { status: string; basis: string; truncated?: boolean; warnings
 type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null };
 type Chain = {
   state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; draft_revision_no?: number;
-  phase?: string; locked?: boolean; sample?: Cut; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null; cover_redo?: { note: string; at: string }; previous_cut?: { execution_id: number; phase: string } | null;
+  phase?: string; locked?: boolean; materials_mode?: "manual" | "auto"; sample?: Cut; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null; cover_redo?: { note: string; at: string }; previous_cut?: { execution_id: number; phase: string } | null;
   cover_task?: CoverTask;
   persona_clips?: { slot: "intro" | "outro"; material_revision_id: number; duration_ms: number; title: string }[];
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
@@ -162,6 +162,25 @@ function CoverTaskReview({ projectId, unitId, task }: { projectId: number; unitI
 
 // The video is made by the external model over MCP; this page only shows where it is and takes the user's answer.
 // Each step page passes `step` and sees only its own stop; earlier stops are view-only.
+function MaterialsSwitch({ projectId, unitId, auto, readOnly }: { projectId: number; unitId: number; auto: boolean; readOnly: boolean }) {
+  const client = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [issue, setIssue] = useState("");
+  return <section aria-label="素材方式" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h3 className="font-semibold">素材方式</h3>
+      <Switch checked={auto} disabled={readOnly || busy} left="手动" right="自动" onChange={value => {
+        setBusy(true); setIssue("");
+        api.put(`/content-projects/${projectId}/units/${unitId}/video-chain/materials-mode`, { mode: value ? "auto" : "manual" })
+          .then(() => Promise.all([client.invalidateQueries({ queryKey: ["video-chain"] }), client.invalidateQueries({ queryKey: ["product-video"] })]))
+          .catch(error => setIssue(errorText(error))).finally(() => setBusy(false));
+      }} />
+    </div>
+    <p className="mt-2 text-xs text-slate-500">{auto ? "自动：不停下等你看素材，没有你素材的镜头全部由第三方模型做，做好直接剪小样。" : "手动：第一版小样前停下等你看素材，你补想自己做的镜头；没补的，确认后由第三方模型做。"}</p>
+    {issue && <p className="mt-2 text-xs text-rose-700">{issue}</p>}
+  </section>;
+}
+
 export default function VideoChainPanel({ projectId, unitId, step, showDraft }: { projectId: number; unitId: number; step: Step; showDraft?: boolean }) {
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -220,10 +239,11 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
       setPlayer({ url: session.url, key: `${cut.execution_id}:${Date.now()}`, output: cut.cut_output_id });
     } catch (cause) { setIssue(errorText(cause)); }
   }
-  const status = live ? data.label : step === "draft" ? `导演稿${data.draft_revision_no ? ` v${data.draft_revision_no}` : ""} 已采用` : step === "materials" ? (current > here ? "素材已确认" : "还没到素材这一步") : "小样已通过";
+  const status = live ? data.label : step === "draft" ? `导演稿${data.draft_revision_no ? ` v${data.draft_revision_no}` : ""} 已采用` : step === "materials" ? (current > here ? (data.materials_mode === "auto" ? "素材设为自动" : "素材已确认") : "还没到素材这一步") : "小样已通过";
   const draft: VideoDraft | null = data.master ? { payloadSchema: "video.master.v2", payload: data.master.payload, assetRefs: [], evidenceRefs: [] } : null;
   return <div className="space-y-4">
     {step === "draft" && <PlatformSkillsSwitch projectId={projectId} unitId={unitId} readOnly={!!data.locked} />}
+    {step === "materials" && <MaterialsSwitch projectId={projectId} unitId={unitId} auto={data.materials_mode === "auto"} readOnly={!!data.locked} />}
     <section aria-label="视频进度" className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 text-sm">
       <div className="flex flex-wrap items-center gap-2 text-xs">{STEPS.map(([label], index) => <span key={label} className={`rounded-pill px-2.5 py-0.5 ${data.state === "done" || index < current ? "bg-emerald-100 text-emerald-800" : index === current ? "bg-indigo-600 text-white" : "bg-white text-slate-500"}`}>{index + 1} {label}</span>)}</div>
       <p className="mt-2"><span className="font-semibold">{status}</span>{live && data.draft_revision_no && step === "draft" ? ` · 导演稿 v${data.draft_revision_no}` : ""}{live && data.detail ? ` · ${data.detail}` : ""}</p>
@@ -256,7 +276,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
           {!backToDraft && <Button disabled={busy || (step === "final" && !!data.cover_redo)} onClick={() => void send("approve")}>{busy && step !== "draft" ? "正在通过…" : step === "draft" ? "采用导演稿" : step === "materials" ? "确认素材" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
           {!cutOffer && <Button variant="secondary" disabled={busy || (!notes.length && !text.trim())} onClick={() => void send("changes")}>{backToDraft ? "退回导演稿" : "按意见修改"}</Button>}
         </div>
-        <p className="text-xs text-slate-500">{cutOffer ? "新版本还在做。现在通过，就用这一版，你的修改意见作废，新版本停止。" : backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "撤回退回意见、按当前导演稿继续。" : step === "materials" ? "不动就是全自动；要自己做的镜头在下面「补充镜头」切成手动，上传后再确认。写意见会让第三方模型重配素材。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
+        <p className="text-xs text-slate-500">{cutOffer ? "新版本还在做。现在通过，就用这一版，你的修改意见作废，新版本停止。" : backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "撤回退回意见、按当前导演稿继续。" : step === "materials" ? "要自己做的镜头在下面「补充镜头」切成手动并上传；没上传的镜头，确认后由第三方模型做。写意见会让第三方模型重配素材。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
       </div>}
       {step === "final" && data.locked && data.cover_task && <CoverTaskReview projectId={projectId} unitId={unitId} task={data.cover_task} />}
       {step === "final" && data.locked && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-white/70 p-3 text-xs text-slate-600"><span>成片已定稿，这一条不能再改。要调整就复制一份，在副本里从导演稿开始。</span><Button size="sm" variant="secondary" disabled={busy} onClick={() => void copy()}>复制一份</Button></div>}
