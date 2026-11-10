@@ -26,6 +26,8 @@ celery_app.conf.update(
     # 300s：端点最短周期是分钟级，5 分钟扫描粒度足够，空闲时少 4/5 的空转唤醒
     beat_schedule={
         "scan-persona-discovery": {"task": "app.tasks.worker_tasks.scan_persona_discovery", "schedule": 60.0},
+        # 数据保障巡检；15 分钟一轮才能按 30 分钟间隔补救
+        "discovery-data-guard": {"task": "app.tasks.worker_tasks.discovery_data_guard", "schedule": 900.0},
         "scan-connector-schedules": {
             "task": "app.tasks.worker_tasks.scan_connector_schedules",
             "schedule": 300.0,

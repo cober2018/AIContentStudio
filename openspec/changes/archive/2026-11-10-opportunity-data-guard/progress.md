@@ -1,0 +1,16 @@
+# 进度
+- 2026-11-09 用户确认；两处调用已改。
+- 2026-11-09 重启 api/worker；132/133 核对为隧道未建立、未发出，标成 not_dispatched 后与 134–137 一起重跑：6 个全部跑完不再报错（partial），但当天 0 条新机会。
+  - 132 AI科技：3 个候选全是已有机会的重复；133 生活方式：3 个候选初筛被拒。
+  - 134/136/137：没有可读文章（搜到的来源校验失败或没有订阅方式）；135：20 篇里 18 篇读全文 HTTP 报错。
+  - 5/6/7/9 的初始化（bootstrap）和每周找源（weekly）从 11-01 起也全因同一个 bug 失败，从未成功过。
+- 2026-11-09 需求扩为数据保障模块（用户选轻量方案，不接 Temporal）；原 fix 目录并入本目录。
+- 2026-11-09 实现：
+  - 后端：services/data_guard.py（目标、巡检、补救、状态）；discovery_runtime 加 model_reachable（问 /models，不计费，缓存 60 秒）、连不上记 not_dispatched 并退回额度、DEFAULTS 加 guard_* 目标；daily_opportunities 报错写日志 + last_error；worker_tasks 加 discovery_data_guard（每 15 分钟）、scan_persona_discovery 遇数据库占用重试 3 次；discovery 路由加 GET /guard、设置项。
+  - 前端：DataGuardPanel.tsx（红色横条 + 可展开面板），放在内容机会页信息源健康表上方。
+  - 验证：库副本模拟 模型断开→等待、恢复→重跑、30 分钟内不重复、代码报错只重试 1 次、结果未知只提醒、过 12 点标需要处理、信息源超时立即重抓、连续 3 次失败提醒；连接失败分支确认记为 not_dispatched 且额度不变；tsc 通过；内容机会测试 15 passed。
+  - 已重启 api/worker，手动巡检一次：4 项需要处理＝四个直接搜索角色旧的找源任务（bug 期间失败），明天白天会各自动重试 1 次。
+  - 全量测试：2353 passed；失败 5 个都与本改动无关：迁移版本相关 4 个（另一会话新增的 searchpromo 迁移）、test_models_plugins 1 个（另一会话未提交的 MCP 设置改动）。
+- 2026-11-10 按角色定位手动配信息源（用户确认，中英文都要、英文海外媒体优先）：新增 48 个 RSS（id 195–242），45 个验证通过并启用；204/225/232 地址已失效（404），225、204 换成 241 KQED MindShift（ww2 域名）、242 ScienceDaily 儿童健康，232 与健康老龄化重复不补，三个旧的已暂停并解除角色。现有启用信息源：懒羊羊小王 13、量化研究专家 16、萌柚老爸 15、阿军的退休日记 17。改前备份 apps/api/backups/content_studio-before-persona-sources-20261110.db。
+- 2026-11-10 按用户决定把 200 中国新闻网·教育、203 ScienceDaily·婴幼儿与学前学习 也加给萌柚老爸（懒羊羊小王是代理角色，不再扩）。
+- 2026-11-10 修「移除信息源后旧证据卡住每日任务」并补全卡住原因的大白话（daily_opportunities._events、data_guard.REASONS）；测试 19 passed；重启 api/worker；任务 149（日常生活方式博主今天）重跑：不再被拦，跑完 partial，提出 1 个选题但初筛被拒，今天 0 条新机会。

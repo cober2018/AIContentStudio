@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { DiscoveryPanel, discoveryLabel, useDiscoveryStatus } from "./DiscoveryPanel";
 import { SourceHealthTable } from "./SourceHealthTable";
+import { DataGuardPanel } from "./DataGuardPanel";
 import { api, ApiError, currentUser } from "../api";
 import { Button, EmptyState, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
 import type { Assessment, AssessmentRevision, Conversion, Opportunity, OpportunitySignal, OpportunityStatus } from "./opportunityTypes";
@@ -114,6 +115,7 @@ export function OpportunitiesPage() {
     {taskReturn(params.get("return_to")) && <Link className="text-sm text-teal-800" to={taskReturn(params.get("return_to"))}>{["/", "/home"].includes(taskReturn(params.get("return_to")).split("?")[0]) ? "返回今日工作台" : "返回来源页面"}</Link>}
     <header className="flex items-start justify-between gap-4"><div><p className="eyebrow">创作 · 选题</p><h1 className="mt-3 text-[34px] leading-[1.1] text-ink-900 sm:text-[40px]">内容机会</h1><p className="mt-2 text-sm text-slate-500">先判断为什么现在做，再明确创建项目。每日建议按角色自动生成，也可保留人工机会。</p></div>{permission.editable && <Button onClick={() => { create.reset(); setCreating(true); }}>新建机会</Button>}</header>
     <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-teal-900/10 bg-teal-50/60 p-4 text-sm"><p>{discovery.isError ? "自动选题状态读取失败" : discovery.isPending ? "正在读取运行状态…" : persona ? `${persona.name} · ${discoveryLabel(persona.status)}${persona.today_run ? ` · 今日${discoveryLabel(persona.today_run.status)}${persona.today_run.summary?.count != null ? `，保存 ${persona.today_run.summary.count} 条` : "，保存数未记录"}` : " · 今日运行未记录"}` : "选择角色查看对应运行状态；全部角色不合并计算运行结果。"}</p><Link className="font-medium text-teal-800" to={`?${new URLSearchParams({ ...Object.fromEntries(params), view: "automation" })}`}>查看运行与来源 →</Link></section>
+    <DataGuardPanel />
     <SourceHealthTable />
     {permission.error && <ErrorBanner message="用户权限读取失败，当前保持只读。" />}
     <div className="flex flex-wrap gap-3">

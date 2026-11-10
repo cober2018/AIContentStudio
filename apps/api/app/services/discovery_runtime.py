@@ -18,7 +18,9 @@ from . import discovery_search
 DEFAULTS = {"enabled": False, "public_processing_allowed": False, "timezone": "Asia/Taipei", "daily_hour": 8,
             "daily_limit": 5, "bootstrap_searches": 8, "weekly_searches": 4, "daily_searches": 4,
             "source_validations": 40, "active_sources": 24, "model_requests": 12,
-            "input_tokens": 120000, "output_tokens": 24000, "paused_persona_ids": []}
+            "input_tokens": 120000, "output_tokens": 24000, "paused_persona_ids": [],
+            "guard_source_hours": 6, "guard_daily_deadline_hour": 12, "guard_remedy_until_hour": 22,
+            "guard_retry_minutes": 30, "guard_max_attempts": 6}
 PROFILE_FIELDS = ("positioning", "target_audience", "content_domains", "content_boundaries", "risk_boundaries", "public_fact_policy")
 
 
@@ -190,6 +192,42 @@ def _budget(db, run):
     return bucket
 
 
+_probe: dict = {}
+
+
+def model_reachable() -> bool:
+    """Lists the model gateway's models: free, and fails when the tunnel or the far machine is down."""
+    import time
+
+    from .generation.providers import get_provider
+    from .model_registration import provider_request
+
+    if _probe and time.monotonic() - _probe["at"] < 60:
+        return _probe["ok"]
+    try:
+        provider = get_provider("generate")
+        target = getattr(provider, "registered_provider", None) or {
+            "enabled": True, "api_key": provider.api_key, "base_url": provider.base_url,
+            "trusted_private_endpoint": provider.base_url if provider.base_url.startswith("http://") else ""}
+        provider_request(target, "/models", timeout=8)
+        ok = True
+    except Exception:  # noqa: BLE001 Any failure here means the call would not get through.
+        ok = False
+    _probe.update(at=time.monotonic(), ok=ok)
+    return ok
+
+
+def _never_connected(exc: BaseException) -> bool:
+    import httpx
+
+    seen = exc
+    while seen is not None:
+        if isinstance(seen, (httpx.ConnectError, httpx.ConnectTimeout, ConnectionRefusedError)):
+            return True
+        seen = seen.__cause__ or seen.__context__
+    return False
+
+
 def model_json(db, run, key: str, instruction: str, data: dict, *, max_tokens=1800):
     from .generation.providers import GenerateRequest, effective_llm_config, get_provider, record_run
 
@@ -206,6 +244,8 @@ def model_json(db, run, key: str, instruction: str, data: dict, *, max_tokens=18
     selected = effective_llm_config("generate")
     if selected["provider"] == "mock" or not all(selected.get(k) for k in ("base_url", "api_key", "model")):
         raise DiscoveryBlocked("model_unavailable")
+    if not model_reachable():
+        raise DiscoveryBlocked("model_unreachable")
     try:
         provider = get_provider("generate")
     except Exception:  # noqa: BLE001 Failure to construct a provider is definitely before dispatch.
@@ -241,8 +281,22 @@ def model_json(db, run, key: str, instruction: str, data: dict, *, max_tokens=18
         response = asyncio.run(provider.generate_json(request))
         llm_run = record_run(db, request, response, prompt_version="discovery.v1")
         db.commit()
-    except Exception:  # noqa: BLE001 A possibly sent provider call must retain an unknown receipt.
+    except Exception as exc:  # noqa: BLE001 A possibly sent provider call must retain an unknown receipt.
         db.rollback()
+        if _never_connected(exc):
+            # No connection means nothing reached the model: safe to send again, and the reserved budget comes back.
+            _probe.clear()
+            db.execute(update(PersonaResearchRun).where(PersonaResearchRun.id == bucket.id).values(
+                model_requests=PersonaResearchRun.model_requests - 1,
+                input_tokens=PersonaResearchRun.input_tokens - reserved_input,
+                output_tokens=PersonaResearchRun.output_tokens - max_tokens))
+            run = db.get(PersonaResearchRun, run.id, populate_existing=True)
+            run.model_requests -= 1
+            run.input_tokens -= reserved_input
+            run.output_tokens -= max_tokens
+            db.commit()
+            checkpoint(db, run, key, {**receipt, "state": "not_dispatched"})
+            raise DiscoveryBlocked("model_unreachable") from None
         failed_log = record_run(db, request, None, error="provider_outcome_unknown", prompt_version="discovery.v1")
         db.commit()
         checkpoint(db, run, key, {**receipt, "state": "unknown", "llm_run_id": failed_log.id})

@@ -145,3 +145,54 @@ The final creation action SHALL explicitly qualify a new/watching opportunity if
 #### Scenario: Source selection
 - **WHEN** the owner selects source-document references
 - **THEN** only selected documents are passed as project sources, with no automatic promotion to facts or rights
+
+### Requirement: Direct-search personas run their daily research
+A persona without an aggregate source SHALL run its daily, bootstrap and weekly research using the configured search provider, and SHALL NOT fail because of how search availability is checked.
+
+#### Scenario: Daily run for a direct-search persona
+- **WHEN** the daily run starts for a direct-search persona with search configured
+- **THEN** it searches and produces opportunities instead of failing with research_processing_failed
+
+### Requirement: A data guard checks targets hourly and remedies misses
+The system SHALL check every hour, against configurable targets (source freshness default 6 hours; daily research done by 12:00 Asia/Taipei, remedies until 22:00), whether each enabled source was collected and each persona's daily research finished. Misses SHALL be re-dispatched automatically within bounded attempts; a model call that failed before it could be sent SHALL be recorded as not dispatched and retried; a call possibly sent SHALL NOT be resent automatically.
+
+#### Scenario: Model channel down at the daily hour
+- **WHEN** the model address cannot be connected at 08:00 and comes back at 11:00
+- **THEN** the run waits, is re-dispatched, and the day's opportunities are produced before 12:00
+
+#### Scenario: Source overdue
+- **WHEN** an enabled source has no successful collection for longer than its target
+- **THEN** collection is re-dispatched, and after 3 consecutive failures the source is shown as needing attention with its reason
+
+### Requirement: Guard problems are visible on the opportunities page
+The opportunities page SHALL show a banner when any persona or source needs attention, naming it and the step it is stuck on in plain words, and SHALL offer a data guard panel listing each persona's and source's status today.
+
+#### Scenario: Code error during research
+- **WHEN** research fails with an unexpected error twice
+- **THEN** the full error is in the worker log and the page shows 代码报错 for that persona
+
+### Requirement: A dropped source does not block later research
+When research reuses evidence from earlier opportunities, the system SHALL carry only discovery paths through sources the persona currently uses, so that removing a source from a persona never blocks that persona's later runs. Every blocked reason the guard shows SHALL have plain-language text.
+
+#### Scenario: Old opportunity found through a removed source
+- **WHEN** an earlier opportunity's article was found through two sources and one of them was later removed from the persona
+- **THEN** today's run keeps the article via the remaining source and is not blocked with source_processing_revoked
+
+### Requirement: Plain list pages can be used as sources
+When a website source's page has neither structured article data nor an advertised feed, the system SHALL read the page's same-site article links (long enough titles, article-like addresses carrying a date or article number), take the largest group of links sharing one address pattern as the article list, and take each item's date from its address or the text next to the link. The source SHALL pass validation only with at least 2 such items.
+
+#### Scenario: Government news column
+- **WHEN** a user adds https://www.nhsa.gov.cn/col/col14/index.html
+- **THEN** validation passes and collection yields the column's latest articles with publication dates
+
+#### Scenario: Page that needs scripts to show its list
+- **WHEN** the page's article list only appears after scripts run and the HTML holds fewer than 2 article links
+- **THEN** validation fails as it does today
+
+### Requirement: Article text is read from pages without an article region
+When an article page has no structured article body and no article or main region, the system SHALL take the page block holding the most paragraph text as the article body, and SHALL take the publication time from a labelled date on the page or the address. Bodies that are still too short SHALL fail as they do today.
+
+#### Scenario: Ministry article page
+- **WHEN** full text is read for an article on www.moe.gov.cn that has no article or main tag
+- **THEN** the article body is returned instead of article_region_missing
+

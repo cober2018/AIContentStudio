@@ -3,6 +3,7 @@
 import logging
 import time
 
+from sqlalchemy.exc import OperationalError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -165,8 +166,28 @@ def dispatch_pull(endpoint_id: int, actor_email: str) -> str:
     return "queued"
 
 
-@celery_app.task(name="app.tasks.worker_tasks.scan_persona_discovery")
-def scan_persona_discovery():
+@celery_app.task(name="app.tasks.worker_tasks.discovery_data_guard")
+def discovery_data_guard():
+    from .. import runtime_config
+    from ..services.data_guard import sweep
+
+    with SessionLocal() as db:
+        runtime_config.load_from_db(db)
+        return sweep(db)
+
+
+# SQLite allows one writer; a busy moment should delay this scan, not drop it.
+@celery_app.task(name="app.tasks.worker_tasks.scan_persona_discovery", bind=True, max_retries=3)
+def scan_persona_discovery(self):
+    try:
+        return _scan_persona_discovery()
+    except OperationalError as exc:
+        if "database is locked" not in str(exc):
+            raise
+        raise self.retry(exc=exc, countdown=20) from None
+
+
+def _scan_persona_discovery():
     from ..models import DiscoverySource, SystemSetting, utcnow
     from ..services.discovery_runtime import schedule_due
 

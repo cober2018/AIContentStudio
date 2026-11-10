@@ -100,6 +100,65 @@ class _Page(HTMLParser):
                 pass
 
 
+class _Blocks(HTMLParser):
+    """Paragraph text per enclosing container, for article pages without an article/main region."""
+    CONTAINERS = {"div", "td", "section", "article", "main", "body"}
+    SKIP = {"script", "style", "noscript", "nav", "header", "footer", "aside"}
+
+    def __init__(self):
+        super().__init__()
+        self.stack, self.skip, self.para, self.link, self.next_id = [], 0, None, 0, 0
+        self.blocks = {}
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.SKIP:
+            self.skip += 1
+        elif tag in self.CONTAINERS:
+            self.next_id += 1
+            self.stack.append((tag, self.next_id))
+        elif tag == "p":
+            self._close_para()
+            self.para = []
+        elif tag == "a":
+            self.link += 1
+        elif tag == "br" and self.para is not None:
+            self.para.append(("\n", False))
+
+    def handle_endtag(self, tag):
+        if tag in self.SKIP:
+            self.skip = max(0, self.skip - 1)
+        elif tag == "p":
+            self._close_para()
+        elif tag == "a":
+            self.link = max(0, self.link - 1)
+        elif tag in self.CONTAINERS and any(name == tag for name, _ in self.stack):
+            self._close_para()
+            while self.stack and self.stack.pop()[0] != tag:
+                pass
+
+    def handle_data(self, data):
+        if self.para is not None and not self.skip:
+            self.para.append((data, self.link > 0))
+
+    def _close_para(self):
+        if self.para is not None and self.stack:
+            text = clean("".join(part for part, _ in self.para), 5000)
+            linked = len(clean("".join(part for part, is_link in self.para if is_link), 5000))
+            # Footer and navigation rows are mostly links; article paragraphs are not.
+            if text and linked * 2 < len(text):
+                self.blocks.setdefault(self.stack[-1][1], []).append(text)
+        self.para = None
+
+
+def _densest_block(html):
+    parser = _Blocks()
+    parser.feed(html)
+    parser._close_para()
+    best = max(parser.blocks.values(), key=lambda texts: sum(len(text) for text in texts), default=[])
+    # A short winner is a footer or caption on a page with no article text (video pages), not a body.
+    return "\n".join(best) if sum(len(text) for text in best) >= 300 else ""
+
+
 def parse_html(body, base, *, limit=30):
     parser = _Page()
     parser.feed(body.decode("utf-8", errors="replace"))
@@ -121,7 +180,80 @@ def parse_html(body, base, *, limit=30):
                 if key in value:
                     walk(value[key], depth + 1)
     walk(parser.structured)
-    return parser.feeds[:3], result
+    html = body.decode("utf-8", errors="replace")
+    return parser.feeds[:3], result or _link_list(html, base, limit)
+
+
+_URL_DATES = (r"/(20\d{2})/(\d{1,2})/(\d{1,2})/", r"/t(20\d{2})(\d{2})(\d{2})_", r"/(20\d{2})/(\d{2})(\d{2})/",
+              r"/(20\d{2})-(\d{1,2})/(\d{1,2})/", r"/(20\d{2})(\d{2})/(\d{2})/")
+_TEXT_DATE = r"(20\d{2})[-./年](\d{1,2})[-./月](\d{1,2})"
+
+
+def _date_from(url, text=""):
+    for pattern in _URL_DATES:
+        if found := re.search(pattern, urlsplit(url).path):
+            break
+    else:
+        found = re.search(_TEXT_DATE, text)
+    if not found:
+        return None
+    year, month, day = (int(part) for part in found.groups())
+    try:
+        return datetime(year, month, day).date().isoformat()
+    except ValueError:
+        return None
+
+
+class _Links(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.links, self.current, self.skip = [], None, 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in {"script", "style"}:
+            self.skip += 1
+        elif tag == "a" and (href := dict(attrs).get("href")):
+            self.current = {"href": href, "title": [], "after": []}
+            self.links.append(self.current)
+
+    def handle_endtag(self, tag):
+        if tag in {"script", "style"}:
+            self.skip = max(0, self.skip - 1)
+        elif tag == "a" and self.current is not None:
+            self.current["open"] = False
+
+    def handle_data(self, data):
+        if self.skip or self.current is None:
+            return
+        if self.current.get("open", True):
+            self.current["title"].append(data)
+        elif sum(len(part) for part in self.current["after"]) < 300:
+            self.current["after"].append(data)
+
+
+def _link_list(html, base, limit):
+    """Plain list pages (most Chinese gov and media columns) carry neither JSON-LD nor a feed; their article links
+    share one address shape, so the biggest same-site group of such links is the list."""
+    site = ".".join((urlsplit(base).hostname or "").split(".")[-2:])
+    # Hanweb-style gov CMS pages ship the column list as CDATA records inside <script type="text/xml">.
+    html = re.sub(r"<script\b[^>]*type=[\"']text/xml[\"'][^>]*>(.*?)</script>",
+                  lambda found: found.group(1).replace("<![CDATA[", "").replace("]]>", ""), html, flags=re.IGNORECASE | re.DOTALL)
+    parser = _Links()
+    parser.feed(html)
+    groups = {}
+    for link in parser.links:
+        title = clean("".join(link["title"]), 500)
+        url = urljoin(base, link["href"].strip())
+        parts = urlsplit(url)
+        if len(title) < 8 or not (parts.hostname or "").endswith(site) or not re.search(r"\d{4,}", parts.path):
+            continue
+        segments = parts.path.rstrip("/").split("/")
+        shape = (parts.hostname, len(segments), re.sub(r"\d+", "#", segments[-1]))
+        groups.setdefault(shape, {}).setdefault(url, (title, _date_from(url, clean("".join(link["after"]), 300))))
+    links = max(groups.values(), key=len, default={})
+    if len(links) < 2:
+        return []
+    return [item for url, (title, date) in list(links.items())[:limit] if (item := _item(url, title, "", date, base))]
 
 
 def parse_json(body, base, config, *, limit=30):
@@ -319,9 +451,15 @@ def article_evidence(url, *, fetcher=None):
         publication = re.search(r'<span\b[^>]*id=["\']pubtime_baidu["\'][^>]*>([^<]+)</span>', html)
         if publication:
             publication_label = "发布时间：" + publication.group(1) + "\n"
-    if not bodies and not region:
+    paragraphs = _densest_block(html) if not bodies and not region else ""
+    if not bodies and not region and not paragraphs:
         raise ValueError("article_region_missing")
-    text = clean(max(bodies, key=len), 10000) if bodies else HtmlParser().parse(
+    if paragraphs and not publication_label:
+        stamp = re.search(r"(?:发布时间|发布日期|发表时间|日期|时间)\s*[：:]\s*(20\d{2}[-./年]\d{1,2}[-./月]\d{1,2}日?(?:\s*\d{1,2}:\d{2}(?::\d{2})?)?)",
+                          clean(html, 200000))
+        date = stamp.group(1) if stamp else _date_from(url)
+        publication_label = f"发布时间：{date}\n" if date else ""
+    text = clean(max(bodies, key=len), 10000) if bodies else paragraphs[:10000] if paragraphs else HtmlParser().parse(
         (region.group(2) if region else html).encode()).text[:10000]
     text = publication_label + text
     if len(re.sub(r"\s+", "", text)) < 120:

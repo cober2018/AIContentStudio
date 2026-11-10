@@ -1,5 +1,6 @@
 """Grounded Persona angles, independent evaluation and atomic opportunity publication."""
 
+import logging
 import difflib
 import json
 import math
@@ -244,10 +245,10 @@ def _collect_articles(db, run):
 
 
 def _events(db, run, evidence):
+    allowed = {ref["source_id"] for ref in evidence}
     if "previous_event_ids" not in run.input_json:
         old_events = db.scalars(select(DiscoveryEvent).where(DiscoveryEvent.owner_user_id == run.owner_user_id,
             DiscoveryEvent.created_at >= utcnow() - timedelta(days=14)).order_by(DiscoveryEvent.id.desc()).limit(40)).all()
-        allowed = {ref["source_id"] for ref in evidence}
         old_events = [e for e in old_events if all(ref["source_id"] in allowed and (not ref.get("published_at") or aware(datetime.fromisoformat(ref["published_at"])) <= utcnow()) for ref in e.evidence_json)
                       and any(difflib.SequenceMatcher(None, old["title"].casefold(), new["title"].casefold()).ratio() >= .35
                               for old in e.evidence_json for new in evidence)][:10]
@@ -256,6 +257,13 @@ def _events(db, run, evidence):
         db.commit()
     else:
         old_events = [db.get(DiscoveryEvent, i) for i in run.input_json["previous_event_ids"]]
+    # Older events remember every source that once surfaced an article; a source the persona has since dropped
+    # must not block today's run, so only paths through today's sources are carried.
+    trimmed = [{**ref, "discovery_paths": [path for path in ref.get("discovery_paths", []) if path["source_id"] in allowed]}
+               for ref in run.input_json["evidence"]]
+    if trimmed != run.input_json["evidence"]:
+        run.input_json = {**run.input_json, "evidence": trimmed}
+        db.commit()
     check_current(db, run, provider=True)
     grouped = model_json(db, run, "event_groups", (
         'Return {"events":[{"item_ids":[integer],"same_event_evidence":string,"prior_event_id":integer|null,'
@@ -369,7 +377,7 @@ def generate_daily(db, run):
             from .discovery_search import available
             from .source_discovery import research_sources
 
-            if available(config["search_provider"], config["credential_source"]):
+            if available(config["search_provider"]):
                 research_sources(db, run)
                 run.input_json = {k: v for k, v in run.input_json.items() if k != "collection_snapshot"}
                 db.commit()
@@ -671,7 +679,7 @@ def execute_research(db, run_id, *, execution_origin="explicit", task_id=None):
             from .discovery_aggregation import source_id_for
             from .discovery_search import available
 
-            if source_id_for(db, run.owner_user_id, run.persona_id) is None and not available(config["search_provider"], config["credential_source"]):
+            if source_id_for(db, run.owner_user_id, run.persona_id) is None and not available(config["search_provider"]):
                 raise DiscoveryBlocked("search_unavailable")
             from .source_discovery import research_sources
 
@@ -696,10 +704,13 @@ def execute_research(db, run_id, *, execution_origin="explicit", task_id=None):
         run = db.get(PersonaResearchRun, run_id, populate_existing=True)
         run.status = "unknown" if "unknown" in str(exc) else "blocked"
         run.reason = str(exc)[:100]
-    except Exception:  # noqa: BLE001 Worker boundary records failure without leaking provider payloads.
+    except Exception as exc:  # noqa: BLE001 Worker boundary records failure without leaking provider payloads.
+        # The traceback stays in the worker log; a swallowed error once left four personas failing for ten days unnoticed.
+        logging.getLogger(__name__).exception("persona research failed: run=%s", run_id)
         db.rollback()
         run = db.get(PersonaResearchRun, run_id, populate_existing=True)
         run.status, run.reason = "failed", "research_processing_failed"
+        run.output_json = {**(run.output_json or {}), "last_error": {"type": type(exc).__name__, "at": utcnow().isoformat()}}
     finally:
         if run.lease_token == token:
             run.lease_token, run.lease_until, run.finished_at = None, None, None if run.status == "waiting_collection" else utcnow()

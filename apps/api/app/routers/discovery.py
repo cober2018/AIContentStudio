@@ -68,6 +68,11 @@ class SettingsIn(BaseModel):
     daily_hour: int = Field(default=8, ge=0, le=23)
     daily_limit: int = Field(default=5, ge=1, le=5)
     paused_persona_ids: list[int] | None = Field(default=None, max_length=100)
+    guard_source_hours: int | None = Field(default=None, ge=1, le=72)
+    guard_daily_deadline_hour: int | None = Field(default=None, ge=0, le=23)
+    guard_remedy_until_hour: int | None = Field(default=None, ge=0, le=23)
+    guard_retry_minutes: int | None = Field(default=None, ge=10, le=240)
+    guard_max_attempts: int | None = Field(default=None, ge=0, le=20)
 
 
 def configuration_json(db, user):
@@ -289,6 +294,13 @@ def status_projection(db, user):
                        "next_due_at": due.isoformat() if current and config["enabled"] else None})
     return {"settings": config, "personas": result, "scheduler": heartbeat.value if heartbeat else None,
             "catchup": catchup.owner_projection(db, user.id)}
+
+
+@router.get("/guard")
+def guard_status(db=Depends(get_db), user=Depends(get_current_user)):
+    from ..services.data_guard import status
+
+    return status(db, user.id)
 
 
 @router.get("/status")
