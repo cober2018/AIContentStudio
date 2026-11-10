@@ -27,7 +27,7 @@ from ..config import get_settings
 from ..models import AuditLog, MaterialRevision, ProjectMaterialReference, User
 
 ROOT = Path(__file__).resolve().parents[2] / "craft_skills"
-SKILLS = {"craft-ae", "craft-resolve"}
+SKILLS = {"craft-ae", "craft-resolve", "craft-publish"}
 _DATA = re.compile(r"/\*AICS_DATA\*/.*?/\*AICS_END\*/", re.S)
 _ENTRY = re.compile(r"^[a-z0-9][a-z0-9_-]{0,60}(/[a-z0-9][a-z0-9_.-]{0,80})*\.(md|json)$")
 

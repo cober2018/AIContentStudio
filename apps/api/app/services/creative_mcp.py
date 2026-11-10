@@ -236,7 +236,7 @@ class ShotSlotsInput(Scope):
 
 
 class CraftSkillInput(Scope):
-    skill: str = Field(min_length=1, max_length=150, pattern=r"^(craft-ae|craft-resolve|studio\.[a-z0-9_.-]+@[1-9][0-9]{0,5})$")
+    skill: str = Field(min_length=1, max_length=150, pattern=r"^(craft-ae|craft-resolve|craft-publish|studio\.[a-z0-9_.-]+@[1-9][0-9]{0,5})$")
     entry: str | None = Field(default=None, min_length=1, max_length=200)
 
 
@@ -458,6 +458,17 @@ class EmptyInput(Input):
     pass
 
 
+class PublishTargetInput(Input):
+    target_id: ID
+
+
+class PublishDraftInput(Input):
+    target_id: ID
+    screenshot_path: str = Field(min_length=1, max_length=1000)
+    note: str = Field(default="", max_length=500)
+    model: str = Field(min_length=1, max_length=120)
+
+
 class MediaTranscriptionInput(Input):
     path: str = Field(min_length=1, max_length=2000)
     output_dir: str | None = Field(default=None, min_length=1, max_length=2000)
@@ -525,6 +536,9 @@ TOOLS = {
     "create_unit": (UnitCreateInput, "Create a work in a project for one persona (video, graphic or text; channel optional, from list_personas). Returns unit_id; continue with the normal flow, e.g. get_video_brief, where the 导演稿, 小样 and 成片 stops wait for the user.", False),
     "list_accounts": (EmptyInput, "Before importing account data: list the owner's active platform accounts (id, name, platform channel and label, persona id and name, whether the platform accepts imports) and the metric keys each platform accepts.", True),
     "import_account_metrics": (AccountMetricsInput, "Import one account's works data that you read yourself from the user's screenshots, copied text or platform export (the files are never uploaded). FIRST show the extracted table to the user in chat and get their OK; only then call this. Never guess a number you cannot read clearly: leave it out or keep your best reading and list its key in uncertain. Rates are 0–1 fractions (23.18% -> 0.2318), durations in seconds, counts as plain numbers (1.2万 -> 12000). published_at as shown on the platform, YYYY-MM-DD HH:MM[:SS], China time unless it carries an offset. source.checksum is the file's sha256 (or of the copied text); the same source for the same account is skipped. At most 200 rows per call: split a bigger table and suffix the checksum with :part2, :part3. Metric keys per platform, anything else rejects the whole import: " + _metric_key_text() + ". Works match by account + title + publish time, otherwise new external works are created; a metric imported again the same day replaces that day's value. Returns created / updated / skipped counts and the 效果复盘 batch link, where the user can undo the whole batch.", False),
+    "list_publish_targets": (EmptyInput, "Publish to platforms in the user's logged-in browser (ego-browser): list delivery targets waiting to be published (copy packages not yet published): target_id, platform, work title, status and the last draft you recorded. Upload only as a DRAFT and stop before the platform's publish button; publishing and the receipt link stay with the user.", True),
+    "get_publish_package": (PublishTargetInput, "One delivery target's publish package: absolute read-only paths of the files (cut, covers by role; never copy or edit them), the work's publish_copy (title, description, hashtags, cover_text, interaction) and skill_entry, the platform's page in get_craft_skill(skill=\"craft-publish\"). Read craft-publish first, then upload as a draft in the logged-in browser; stop at login, QR codes or captchas and ask the user.", True),
+    "report_publish_draft": (PublishDraftInput, "After the package is saved as a draft on the platform (NOT published): record it with an absolute screenshot path of the saved draft, a short note (what was filled, anything left for the user) and your model name; the delivery page shows it. Then STOP and tell the user to check the draft and publish it themselves, then fill the link on the delivery page.", False),
     "list_promotion_subjects": (EmptyInput, "搜索推广 start: list promotion subjects (推广对象) with their confirmed version and whether a draft waits for the person to confirm. Only a confirmed version can be used.", True),
     "save_promotion_subject_draft": (SubjectDraftInput, "Draft or redraft a promotion subject from the material the user gave (name, links, files) and your own research. subject = {name, category_id or proposed_category {top_key: physical|digital|service|org, name}, audiences [individual|business|government], brand, url, description, facts [{text, url, excerpt, source}], brand_statement, banned_words}. Every fact needs the page url and an exact excerpt from it: the platform opens the link, drops facts whose excerpt is not there (returned in rejected_facts) and marks unreachable pages for a manual check. Saves a DRAFT; then STOP and tell the user to confirm it on the page — you cannot confirm it.", False),
     "get_search_subject": (SubjectRefInput, "Read one promotion subject: confirmed and draft versions, the question library with each question's coverage (none / in_progress / done), its projects, category hints and the genre list.", True),
@@ -728,6 +742,14 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return _self_sourced(db, name, args, user)
     if name in _SEARCH_TOOLS:
         return _search(db, name, args, user)
+    if name in {"list_publish_targets", "get_publish_package", "report_publish_draft"}:
+        from . import browser_publish
+
+        if name == "list_publish_targets":
+            return browser_publish.pending(db, user)
+        if name == "get_publish_package":
+            return browser_publish.package(db, user, args.target_id)
+        return browser_publish.record_draft(db, user, args.target_id, args.screenshot_path, args.note, args.model)
     if name in {"list_accounts", "import_account_metrics"}:
         from . import account_metrics_import
 
@@ -1019,11 +1041,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material|media_transcription|search|promotion|fact_boundary|variant)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material|media_transcription|search|promotion|fact_boundary|variant|publish)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_asset_", "video_chain_", "video_edit_queue_", "article_chain_", "search_", "promotion_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_asset_", "video_chain_", "video_edit_queue_", "article_chain_", "search_", "promotion_", "publish_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

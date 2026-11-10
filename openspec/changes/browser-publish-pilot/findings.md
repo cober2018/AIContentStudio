@@ -1,0 +1,7 @@
+- ego-browser 已装：Codex 读 ~/.agents/skills/ego-browser（11-03 起的 Codex 会话已列出）；Claude Code 是 ~/.claude/skills/ego-browser。命令行 ego-browser v2.2.0，支持 setInputFiles / FileChooser 传本机绝对路径。
+- 现有发布包按交付目标生成（delivery.build_copy_package，成片候选清单 v6），只提供 ZIP 下载；没有给模型取文件路径和文案的接口，也没有「已上传草稿」的记录。
+- 用户补充：执行方是 Codex Desktop（桌面应用）。11 月 30 个 Codex 会话 originator 都是 Codex Desktop；它与命令行共用 ~/.codex/config.toml（已配 aicontentstudio-creative MCP），并从 ~/.agents/skills 读到 ego-browser。
+- 发布包里的文件路径：file_location 给的是项目文件夹 导出/成片、导出/封面 下的文件（不是素材库哈希路径）；截图目录由 package 直接给（project_folders.export_dir 的上级 / 发布截图），不让模型自己推算。
+- 「已上传草稿」记在 AuditLog（event delivery_target.browser_draft），不用 DeliveryAttempt：attempts 是平台自动推草稿那条流程的，对账和交付投影会读它，混进去会被当成已推送。
+- 测试里的 MCP 工具白名单（tests/test_aco_creative_mcp.py TOOL_NAMES / READ_ONLY_TOOLS）随新工具同步；禁用名单（publish、deliver 等）不受影响，新工具没有发布动作。
+- 作品 97 开着的交付目标是 #2 公众号、#3 小红书、#4 百家号、#5 抖音，没有视频号；#7–#12（含视频号 #8）是作品 95 的，已全部回填。视频号演练需要用户先在交付页给作品 97 授权视频号。

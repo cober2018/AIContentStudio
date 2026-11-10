@@ -182,7 +182,10 @@ def list_delivery_targets(asset_id: int, db: Session = Depends(get_db), user: Us
         select(DeliveryTarget).where(DeliveryTarget.content_asset_id == asset_id, DeliveryTarget.authorized_by == user.email)
         .order_by(DeliveryTarget.id.desc())
     ).all()
-    return [_target_json(t) for t in rows]
+    from ..services.browser_publish import latest_drafts
+
+    drafts = latest_drafts(db, [t.id for t in rows])
+    return [{**_target_json(t), "browser_draft": drafts.get(t.id)} for t in rows]
 
 
 @router.get("/delivery-targets/{target_id}")
