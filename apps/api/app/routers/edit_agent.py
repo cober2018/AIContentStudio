@@ -164,7 +164,7 @@ class VideoNoteIn(BaseModel):
 
 
 class VideoDecisionIn(BaseModel):
-    stage: str = Field(pattern=r"^(draft|sample|final|covers)$")
+    stage: str = Field(pattern=r"^(draft|materials|sample|final|covers)$")
     decision: str = Field(pattern=r"^(approve|changes)$")
     notes: list[VideoNoteIn] = Field(default_factory=list, max_length=50)
 
