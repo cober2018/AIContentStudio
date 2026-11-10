@@ -1,0 +1,8 @@
+- 12:42:22–12:42:36 作品107（项目 61，作品 107）POST /video-chain/decision 用时 14.2 秒，返回 409。
+- 12:42:27、12:47:28、12:52:28 后台清理任务三次「database is locked」（删 audit_log 时等写锁超时）；清理平时只删 0 行，是被挡的一方。
+- 12:41:53 后端重启；12:41:57 搜索推广项目 63、64 开始后台续跑；锁冲突从 12:42 到 12:52。占锁的具体任务待 1.1 查实。
+- 数据库是 SQLite（WAL），busy_timeout=8000；决定流程先提交「正在通过」标记，再接收输出文件，再记决定；「正在通过」标记 300 秒后自动失效。
+- 用户 13:28:47 再点一次成功，作品107 已定稿。
+- 占锁根因已查实：content_masters.run_checks（及 channel_variants.run_variant_checks）先 owned_unit(mutate=True) 对项目行做空 UPDATE 拿写锁，再等事实核查模型几十秒才提交；搜索推广续跑项目 63/64 时就是这样把整库写锁占住。另一变更 search-runner-output-format 已改成拿到权限后先提交放锁（13:29 改、13:51 起生效），本变更不重复改。
+- 第一次点通过的 409 来自 project_authorization.lock_project_context：等锁 8 秒超时后转成 project_context_busy「项目上下文正在更新，请刷新后重试」；decide 里已清「正在通过」标记，但页面没刷新状态、错误提示在面板最底下，用户看到的仍像卡住。
+- 重试放在路由层而不是 video_chain.decide：video_chain.py 里有别的需求（封面生图备用模型）未提交的改动，分开便于各自提交。

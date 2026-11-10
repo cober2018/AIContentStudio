@@ -14,6 +14,7 @@ import time
 from datetime import timedelta
 
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
@@ -98,21 +99,22 @@ def run_maintenance_cycle() -> dict:
     stats: dict = {}
     started = time.perf_counter()
     with SessionLocal() as db:
-        try:
-            stats["reaped"] = reap_stale_running(db, stale_seconds=get_settings().stale_running_seconds)
-        except Exception:
-            db.rollback()
-            logger.exception("stale running reap failed")
-        try:
-            stats["retention"] = retention.run_retention(db)
-        except Exception:
-            db.rollback()
-            logger.exception("retention sweep failed")
-        try:
-            stats["storage_cleanup"] = retention.run_storage_cleanup(db)
-        except Exception:
-            db.rollback()
-            logger.exception("storage cleanup failed")
+        for key, label, job in (("reaped", "stale running reap", lambda: reap_stale_running(db, stale_seconds=get_settings().stale_running_seconds)),
+                                ("retention", "retention sweep", lambda: retention.run_retention(db)),
+                                ("storage_cleanup", "storage cleanup", lambda: retention.run_storage_cleanup(db))):
+            try:
+                stats[key] = job()
+            except OperationalError as exc:
+                db.rollback()
+                # Another writer holding the lock is normal; this round is skipped and the next cycle catches up.
+                if "locked" not in str(exc.orig).lower():
+                    logger.exception("%s failed", label)
+                else:
+                    logger.info("%s skipped: database busy", label)
+                    stats[key] = "skipped_busy"
+            except Exception:
+                db.rollback()
+                logger.exception("%s failed", label)
     try:
         stats["wal_checkpoint"] = _wal_checkpoint()
     except Exception:

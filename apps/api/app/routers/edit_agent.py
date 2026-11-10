@@ -1,7 +1,10 @@
 """Auto-start of rough-cut edits: dispatcher endpoints (MCP token) and page/settings endpoints."""
 
+import time
+
 from fastapi import APIRouter, Depends, Header, HTTPException, UploadFile
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -358,7 +361,33 @@ def video_chain_decide(project_id: int, unit_id: int, payload: VideoDecisionIn, 
     notes = [item.model_dump() for item in payload.notes]
     if payload.stage == "covers":
         return video_chain.decide_covers(db, user, project_id, unit_id, payload.decision, notes)
-    return video_chain.decide(db, user, project_id, unit_id, payload.stage, payload.decision, notes)
+    # Another writer can hold the SQLite write lock for a few seconds; one lock timeout must not fail the user's click.
+    deadline = time.monotonic() + DECISION_BUSY_SECONDS
+    while True:
+        try:
+            return video_chain.decide(db, user, project_id, unit_id, payload.stage, payload.decision, notes)
+        except (HTTPException, OperationalError) as exc:
+            if not _db_busy(exc):
+                raise
+            db.rollback()
+            if time.monotonic() >= deadline:
+                break
+            time.sleep(1.5)
+    try:
+        video_chain._clear_approving(db, unit_id)
+    except OperationalError:
+        db.rollback()
+    raise HTTPException(409, {"code": "video_chain_db_busy", "message": "数据库正忙，这次没通过，请再点一次"})
+
+
+# Each attempt can itself wait out the 8 s busy_timeout, so 22 s of retries ends near 30 s in total.
+DECISION_BUSY_SECONDS = 22
+
+
+def _db_busy(exc: Exception) -> bool:
+    if isinstance(exc, OperationalError):
+        return "locked" in str(exc.orig).lower()
+    return isinstance(exc.detail, dict) and exc.detail.get("code") == "project_context_busy"
 
 
 @router.put("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/materials-mode")

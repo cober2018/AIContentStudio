@@ -219,7 +219,11 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
       await api.post(`/content-projects/${projectId}/units/${unitId}/video-chain/decision`, { stage: step, decision, notes: decision === "changes" ? pending : [] });
       setNotes([]); setText(""); setTime("");
       await client.invalidateQueries({ queryKey: ["video-chain"] });
-    } catch (cause) { setIssue(errorText(cause)); }
+    } catch (cause) {
+      setIssue(errorText(cause));
+      // The server may have shown 正在通过 meanwhile; reload so the stop and its button come back.
+      void client.invalidateQueries({ queryKey: ["video-chain"] });
+    }
     finally { setBusy(false); }
   }
   async function copy() {
@@ -276,11 +280,12 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
           {!backToDraft && <Button disabled={busy || (step === "final" && !!data.cover_redo)} onClick={() => void send("approve")}>{busy && step !== "draft" ? "正在通过…" : step === "draft" ? "采用导演稿" : step === "materials" ? "确认素材" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
           {!cutOffer && <Button variant="secondary" disabled={busy || (!notes.length && !text.trim())} onClick={() => void send("changes")}>{backToDraft ? "退回导演稿" : "按意见修改"}</Button>}
         </div>
+        {issue && <p role="alert" className="text-xs text-rose-700">{issue}</p>}
         <p className="text-xs text-slate-500">{cutOffer ? "新版本还在做。现在通过，就用这一版，你的修改意见作废，新版本停止。" : backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "撤回退回意见、按当前导演稿继续。" : step === "materials" ? "要自己做的镜头在下面「补充镜头」切成手动并上传；没上传的镜头，确认后由第三方模型做。写意见会让第三方模型重配素材。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
       </div>}
       {step === "final" && data.locked && data.cover_task && <CoverTaskReview projectId={projectId} unitId={unitId} task={data.cover_task} />}
       {step === "final" && data.locked && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-white/70 p-3 text-xs text-slate-600"><span>成片已定稿，这一条不能再改。要调整就复制一份，在副本里从导演稿开始。</span><Button size="sm" variant="secondary" disabled={busy} onClick={() => void copy()}>复制一份</Button></div>}
-      {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
+      {issue && !reviewing && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
     </section>
     {showDraft && draft && draft.payload.shots.some(shot => shot.board) && <Suspense fallback={null}><StoryboardTable projectId={projectId} unitId={unitId} draft={draft} readOnly paged onChange={() => {}} /></Suspense>}
     {showDraft && !!draft?.payload.consistency_groups?.length && <section aria-label="九宫格分组" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">

@@ -1,5 +1,8 @@
 """One ownership boundary for project-bound runs and definitions."""
 
+import logging
+import traceback
+
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.exc import OperationalError
@@ -34,6 +37,9 @@ def lock_project_context(db: Session, project_id: int, user: User) -> ContentPro
         db.rollback()
         sqlstate = getattr(exc.orig, "sqlstate", None) or getattr(exc.orig, "pgcode", None)
         if "locked" in str(exc.orig).lower() or sqlstate in {"40001", "40P01", "55P03"}:
+            # Name the waiting caller so a writer that holds the lock too long can be traced from the log.
+            caller = " < ".join(f"{f.name}" for f in traceback.extract_stack(limit=5)[:-1][::-1])
+            logging.getLogger(__name__).warning("project_context_busy project=%s waiting=%s", project_id, caller)
             raise HTTPException(409, {"code": "project_context_busy", "message": "项目上下文正在更新，请刷新后重试"}) from exc
         raise
     if project.owner_user_id != user.id:
