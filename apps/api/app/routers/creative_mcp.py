@@ -173,7 +173,7 @@ def _dispatch(request: Request, db: Session, binding: service.Binding, message: 
                                  "Production stages: get_stages -> preview_stage -> run_stage -> send the user review_url -> "
                                  "get_stage_decision (wait_seconds<=25, call again while waiting_for_you) -> continue only on accepted; "
                                  "on rejected or rerun_requested use the note. Footage: start_material_match -> review_url -> get_material_match. "
-                                 "Never accept, reject, bind or publish for the user, and never use the REST API to do so.")}
+                                 "Never accept, reject or bind for the user, and never use the REST API to do so; publish only through the publish tools, for targets the user authorized.")}
     if method == "ping":
         _params(params, set())
         return {}

@@ -14,7 +14,7 @@ PROTOCOL = "2025-11-25"
 TOKEN = "synthetic-r2-mcp-token-with-no-real-credential-0001"
 TOOL_NAMES = {
     # Browser publishing stops at a platform draft; publishing itself is never a tool.
-    "list_publish_targets", "get_publish_package", "report_publish_draft",
+    "list_publish_targets", "get_publish_package", "report_publish_draft", "report_publish_result",
     "list_promotion_subjects", "save_promotion_subject_draft", "get_search_subject", "save_question_library", "open_search_projects",
     "get_search_project", "adopt_search_draft", "get_search_version_template", "save_search_version", "submit_search_batch", "get_search_review",
     "list_personas", "create_project", "create_unit", "get_context", "get_package", "get_execution", "find_capabilities", "use_capability",

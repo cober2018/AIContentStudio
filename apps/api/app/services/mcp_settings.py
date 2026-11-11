@@ -33,14 +33,15 @@ GROUPS = {
     "search": ("搜索推广（资料起草 → 问题库 → 开项目 → 平台版本 → 整批送审）", {"list_promotion_subjects", "save_promotion_subject_draft", "get_search_subject",
                                                      "save_question_library", "open_search_projects", "get_search_project", "adopt_search_draft",
                                                      "get_search_version_template", "save_search_version", "submit_search_batch", "get_search_review"}),
-    "publish": ("发布到平台（浏览器上传成草稿，发表由你来）", {"list_publish_targets", "get_publish_package", "report_publish_draft"}),
+    "publish": ("发布到平台（浏览器发表或存草稿，按你说的）", {"list_publish_targets", "get_publish_package", "report_publish_draft", "report_publish_result"}),
     "tools": ("小工具", {"start_media_transcription", "get_media_transcription"}),
 }
 # Registry descriptions are written for models; these are the same facts for the person maintaining the setup.
 SUMMARIES = {
     "list_publish_targets": "列出等着发布的交付目标（哪个作品、发哪个平台、上次上传的草稿）",
     "get_publish_package": "取一个交付目标的发布包：成片、封面的本机路径和发布文案",
-    "report_publish_draft": "记一笔「已在平台存成草稿」（附截图），交付页能看到；发表由你来",
+    "report_publish_draft": "记一笔「已在平台存成草稿」（附截图），交付页能看到",
+    "report_publish_result": "发表后记回执（链接或截图），交付目标变成已发布，交付页写明第三方模型发表",
     "get_stages": "看作品的各个生产步骤、状态和当前运行，附平台审阅链接",
     "start_run": "为作品开一次新的运行（比如上一次卡在未知状态）",
     "preview_stage": "检查某一步能不能跑，拿到这一步的精确配置指纹",
