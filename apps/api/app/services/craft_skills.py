@@ -27,7 +27,7 @@ from ..config import get_settings
 from ..models import AuditLog, MaterialRevision, ProjectMaterialReference, User
 
 ROOT = Path(__file__).resolve().parents[2] / "craft_skills"
-SKILLS = {"craft-ae", "craft-resolve", "craft-publish"}
+SKILLS = {"craft-ae", "craft-resolve", "craft-publish", "craft-review"}
 _DATA = re.compile(r"/\*AICS_DATA\*/.*?/\*AICS_END\*/", re.S)
 _ENTRY = re.compile(r"^[a-z0-9][a-z0-9_-]{0,60}(/[a-z0-9][a-z0-9_.-]{0,80})*\.(md|json)$")
 
@@ -136,14 +136,17 @@ def platform_skills(db: Session, unit) -> dict:
             "rule": "只用 readable 里列出的平台 skill；writing_skills 为 off 时写文案、脚本不用平台 skill，靠自己写。剪辑、特效 skill 一直可用。"}
 
 
-def read_skill(db: Session, user: User, project_id: int, unit_id: int, skill: str, entry: str | None) -> dict:
+def read_skill(db: Session, user: User, project_id: int | None, unit_id: int | None, skill: str, entry: str | None) -> dict:
     from .content_masters import owned_unit
 
-    _project, unit = owned_unit(db, project_id, unit_id, user)
+    # Craft skills are the same for every work; publishing and 效果复盘 often run with no work in hand.
     if skill in SKILLS:
         if entry is None:
             return {"skill": skill, "index": skill_index(skill)}
         return {"skill": skill, "entry": entry, "text": skill_entry(skill, entry)}
+    if project_id is None or unit_id is None:
+        _fail("craft_skill_needs_work", message="studio.* skill 要带作品的 project_id 和 unit_id")
+    _project, unit = owned_unit(db, project_id, unit_id, user)
     if not writing_skills_on(db, unit_id):
         _fail("platform_skills_disabled", 403, message="这条作品的平台创作 skill 已被关闭，请自己来")
     from .persona_brief import persona_skill_refs

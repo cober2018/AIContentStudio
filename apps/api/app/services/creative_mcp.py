@@ -235,8 +235,10 @@ class ShotSlotsInput(Scope):
     pass
 
 
-class CraftSkillInput(Scope):
-    skill: str = Field(min_length=1, max_length=150, pattern=r"^(craft-ae|craft-resolve|craft-publish|studio\.[a-z0-9_.-]+@[1-9][0-9]{0,5})$")
+class CraftSkillInput(Input):
+    project_id: ID | None = None
+    unit_id: ID | None = None
+    skill: str = Field(min_length=1, max_length=150, pattern=r"^(craft-ae|craft-resolve|craft-publish|craft-review|studio\.[a-z0-9_.-]+@[1-9][0-9]{0,5})$")
     entry: str | None = Field(default=None, min_length=1, max_length=200)
 
 
@@ -473,6 +475,15 @@ class PublishResultInput(PublishDraftInput):
     link: str = Field(default="", max_length=1000)
 
 
+class PublishLinkInput(Input):
+    target_id: ID
+    link: str = Field(min_length=8, max_length=1000, pattern=r"^https?://")
+
+
+class AccountRefInput(Input):
+    account_id: ID
+
+
 class MediaTranscriptionInput(Input):
     path: str = Field(min_length=1, max_length=2000)
     output_dir: str | None = Field(default=None, min_length=1, max_length=2000)
@@ -506,7 +517,7 @@ class UnitCreateInput(Input):
 
 
 class AccountImportSource(Input):
-    kind: Literal["screenshot", "copied_text", "export_file"]
+    kind: Literal["platform_page", "screenshot", "copied_text", "export_file"]
     name: str = Field(min_length=1, max_length=300)
     checksum: str = Field(min_length=8, max_length=128, pattern=r"^[A-Za-z0-9:_-]+$")
 
@@ -516,6 +527,8 @@ class AccountMetricRow(Input):
     published_at: str = Field(min_length=10, max_length=40)
     content_form: str | None = Field(default=None, min_length=1, max_length=50)
     url: str | None = Field(default=None, max_length=2000, pattern=r"^https?://")
+    platform_item_id: str | None = Field(default=None, min_length=1, max_length=120, pattern=r"^[A-Za-z0-9_=-]+$")
+    published_content_id: ID | None = None
     metrics: dict[Annotated[str, Field(min_length=1, max_length=60)], Annotated[float, Field(allow_inf_nan=False)]] = Field(min_length=1, max_length=20)
     uncertain: list[Annotated[str, Field(min_length=1, max_length=60)]] = Field(default_factory=list, max_length=20)
 
@@ -539,11 +552,13 @@ TOOLS = {
     "create_project": (ProjectCreateInput, "Create a content project from a topic you researched yourself, with revision 1 of its brief. rationale (why this topic, now) is required; links are optional because a topic drawn from many sources may have no single source. Then call create_unit. Not for product works.", False),
     "create_unit": (UnitCreateInput, "Create a work in a project for one persona (video, graphic or text; channel optional, from list_personas). Returns unit_id; continue with the normal flow, e.g. get_video_brief, where the 导演稿, 小样 and 成片 stops wait for the user.", False),
     "list_accounts": (EmptyInput, "Before importing account data: list the owner's active platform accounts (id, name, platform channel and label, persona id and name, whether the platform accepts imports) and the metric keys each platform accepts.", True),
-    "import_account_metrics": (AccountMetricsInput, "Import one account's works data that you read yourself from the user's screenshots, copied text or platform export (the files are never uploaded). FIRST show the extracted table to the user in chat and get their OK; only then call this. Never guess a number you cannot read clearly: leave it out or keep your best reading and list its key in uncertain. Rates are 0–1 fractions (23.18% -> 0.2318), durations in seconds, counts as plain numbers (1.2万 -> 12000). published_at as shown on the platform, YYYY-MM-DD HH:MM[:SS], China time unless it carries an offset. source.checksum is the file's sha256 (or of the copied text); the same source for the same account is skipped. At most 200 rows per call: split a bigger table and suffix the checksum with :part2, :part3. Metric keys per platform, anything else rejects the whole import: " + _metric_key_text() + ". Works match by account + title + publish time, otherwise new external works are created; a metric imported again the same day replaces that day's value. Returns created / updated / skipped counts and the 效果复盘 batch link, where the user can undo the whole batch.", False),
-    "list_publish_targets": (EmptyInput, "Publish to platforms in the user's logged-in browser (ego-browser): list delivery targets the user authorized that wait to be published (copy packages not yet published): target_id, platform, work title, status and the last draft you recorded. Do what the user asked: publish it, or save it only as a DRAFT.", True),
+    "import_account_metrics": (AccountMetricsInput, "Import one account's works data. Best source: the platform's own data read in the user's logged-in browser (source.kind platform_page; follow get_craft_skill(skill=\"craft-review\")): import it directly, then report the counts and batch link to the user. For screenshots, copied text or a platform export (the files are never uploaded): FIRST show the extracted table to the user in chat and get their OK; only then call this. Never guess a number you cannot read clearly: leave it out or keep your best reading and list its key in uncertain. Rates are 0–1 fractions (23.18% -> 0.2318), durations in seconds, counts as plain numbers (1.2万 -> 12000). published_at as shown on the platform, YYYY-MM-DD HH:MM[:SS], China time unless it carries an offset. source.checksum is the sha256 of the file, copied text or raw platform response; the same source for the same account is skipped. At most 200 rows per call: split a bigger table and suffix the checksum with :part2, :part3. Metric keys per platform, anything else rejects the whole import: " + _metric_key_text() + ". Each row may carry platform_item_id (the platform's own id of the work) and published_content_id (the record you matched from list_published_works). Works match by platform_item_id, then published_content_id, then account + title + publish time, otherwise new external works are created; a matched record keeps the item id and gets its missing publish time, link and account from the row; a metric imported again the same day replaces that day's value. Returns created / updated / skipped counts and the 效果复盘 batch link, where the user can undo the whole batch.", False),
+    "list_published_works": (AccountRefInput, "Before importing an account's data: list the published records on that account's platform (yours and earlier imports, including ones not yet tied to an account): id, title, publish time, link, platform_item_id, origin (studio = made here). Match each platform row to one of them and pass its id as published_content_id; a studio work's title is our work title, the platform may show title plus body.", True),
+    "list_publish_targets": (EmptyInput, "Publish to platforms in the user's logged-in browser (ego-browser): list delivery targets the user authorized that wait to be published (copy packages not yet published): target_id, platform, work title, status and the last draft you recorded. Do what the user asked: publish it, or save it only as a DRAFT. links_missing lists published targets whose receipt still has no public link: fill them with report_publish_link.", True),
     "get_publish_package": (PublishTargetInput, "One delivery target's publish package: absolute read-only paths of the files (cut, covers by role; never copy or edit them), the work's publish_copy (title, description, hashtags, cover_text, interaction) and skill_entry, the platform's page in get_craft_skill(skill=\"craft-publish\"). Read craft-publish first, then publish (or save as a draft, if that is what the user asked) in the logged-in browser; stop at login, QR codes, captchas or risk checks and ask the user.", True),
     "report_publish_draft": (PublishDraftInput, "When the user asked for a draft only: after the package is saved as a draft on the platform (NOT published), record it with an absolute screenshot path of the saved draft, a short note (what was filled, anything left for the user) and your model name; the delivery page shows it. Then STOP and tell the user the draft is saved.", False),
-    "report_publish_result": (PublishResultInput, "After you clicked the platform's publish button and the work shows as published: record it with an absolute screenshot path showing the published work (e.g. in the platform's works list), the work's public link if the platform shows one (empty otherwise; the screenshot then stands as evidence), a short note (what was filled, options left at defaults) and your model name. The platform records it as the target's receipt, marked as published by a third-party model.", False),
+    "report_publish_result": (PublishResultInput, "After you clicked the platform's publish button and the work shows as published: record it with an absolute screenshot path showing the published work (e.g. in the platform's works list), the work's public link read from the platform's works list (see craft-publish for each platform's link form; empty when the platform has none yet, e.g. in review or scheduled, then fill it later with report_publish_link), a short note (what was filled, options left at defaults) and your model name. The platform records it as the target's receipt, marked as published by a third-party model.", False),
+    "report_publish_link": (PublishLinkInput, "A published target whose receipt still has no public link (listed under links_missing): record the work's link once the platform shows it. Updates the receipt and the published record.", False),
     "list_promotion_subjects": (EmptyInput, "搜索推广 start: list promotion subjects (推广对象) with their confirmed version and whether a draft waits for the person to confirm. Only a confirmed version can be used.", True),
     "save_promotion_subject_draft": (SubjectDraftInput, "Draft or redraft a promotion subject from the material the user gave (name, links, files) and your own research. subject = {name, category_id or proposed_category {top_key: physical|digital|service|org, name}, audiences [individual|business|government], brand, url, description, facts [{text, url, excerpt, source}], brand_statement, banned_words}. Every fact needs the page url and an exact excerpt from it: the platform opens the link, drops facts whose excerpt is not there (returned in rejected_facts) and marks unreachable pages for a manual check. Saves a DRAFT; then STOP and tell the user to confirm it on the page — you cannot confirm it.", False),
     "get_search_subject": (SubjectRefInput, "Read one promotion subject: confirmed and draft versions, the question library with each question's coverage (none / in_progress / done), its projects, category hints and the genre list.", True),
@@ -578,7 +593,7 @@ TOOLS = {
     "get_stage_decision": (StageDecisionInput, "Read the user's decision on an attempt (waiting_for_you/accepted/accepted_with_edits/rejected/rerun_requested/commented) with note; wait_seconds waits up to 25s.", True),
     "start_material_match": (MatchStartInput, "Search own and open libraries for a script or shots; the user picks or rejects on the platform.", False),
     "get_material_match": (MatchReadInput, "Read a material search with the user's picks and rejections per segment; wait_seconds returns early on any change.", True),
-    "get_craft_skill": (CraftSkillInput, "Read a platform skill for this work. craft-resolve (DaVinci Resolve edit and finishing) and craft-ae (After Effects templates and components) are always readable: read the index first, then only the entry you need. A studio.* writing skill (scripts, copy, shot plans) is readable only when the brief's platform_skills lists it; when the user switched writing skills off the platform refuses with platform_skills_disabled and you write on your own.", True),
+    "get_craft_skill": (CraftSkillInput, "Read a platform skill. craft-resolve (DaVinci Resolve edit and finishing), craft-ae (After Effects templates and components), craft-publish (publishing in the browser) and craft-review (效果复盘: reading works data from the platform backends) are always readable, with or without project_id/unit_id: read the index first, then only the entry you need. A studio.* skill needs the work's project_id and unit_id. A studio.* writing skill (scripts, copy, shot plans) is readable only when the brief's platform_skills lists it; when the user switched writing skills off the platform refuses with platform_skills_disabled and you write on your own.", True),
     "list_ae_templates": (TemplateListInput, "List AE template manifests: category, use, fields, images, duration range, aspects (9:16 project, landscape in variants), preview_files, fonts and status (ready after two checked renders, else draft; do not auto-use drafts). Choose templates yourself by shot content; when the user explicitly names an effect while fine-tuning, use that template, and tell the user first if it lacks the film's aspect or is not ready.", True),
     "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project, in the film's aspect (9:16 default, 16:9 when the template has a landscape variant; never stretched). Never binds it to a shot.", False),
     "start_material_autofill": (ShotSlotsInput, "Fill every empty storyboard row: licensed stock picked when eligible, else a ready AE template rendered from the row, else a gap with the reason. Never replaces the user's picks or saves the master; read progress with get_material_match and the result with get_shot_slots.", False),
@@ -747,21 +762,25 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return _self_sourced(db, name, args, user)
     if name in _SEARCH_TOOLS:
         return _search(db, name, args, user)
-    if name in {"list_publish_targets", "get_publish_package", "report_publish_draft", "report_publish_result"}:
+    if name in {"list_publish_targets", "get_publish_package", "report_publish_draft", "report_publish_result", "report_publish_link"}:
         from . import browser_publish
 
         if name == "list_publish_targets":
             return browser_publish.pending(db, user)
         if name == "get_publish_package":
             return browser_publish.package(db, user, args.target_id)
+        if name == "report_publish_link":
+            return browser_publish.record_link(db, user, args.target_id, args.link)
         if name == "report_publish_result":
             return browser_publish.record_published(db, user, args.target_id, args.screenshot_path, args.link, args.note, args.model)
         return browser_publish.record_draft(db, user, args.target_id, args.screenshot_path, args.note, args.model)
-    if name in {"list_accounts", "import_account_metrics"}:
+    if name in {"list_accounts", "import_account_metrics", "list_published_works"}:
         from . import account_metrics_import
 
         if name == "list_accounts":
             return account_metrics_import.list_accounts(db, user)
+        if name == "list_published_works":
+            return account_metrics_import.list_published_works(db, user, args.account_id)
         return account_metrics_import.import_metrics(db, user, args.account_id, args.source.model_dump(),
                                                      [row.model_dump() for row in args.rows])
     if name in {"search_web_materials", "get_web_materials"}:

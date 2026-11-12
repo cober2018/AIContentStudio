@@ -11,14 +11,14 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import AuditLog, ContentAsset, DeliveryTarget, MaterialRevision, User
+from ..models import AuditLog, ContentAsset, DeliveryReceipt, DeliveryTarget, MaterialRevision, PublishedContentRecord, User
 from .project_authorization import authorize_project_target
 
 OPEN = ("target_authorized", "package_ready", "awaiting_manual_receipt")
 DRAFT_EVENT = "delivery_target.browser_draft"
 CHANNEL_NAMES = {"wechat_channels": "视频号", "wechat": "公众号", "douyin": "抖音", "xiaohongshu": "小红书", "bilibili": "B站",
                  "toutiao": "头条", "baijia": "百家号", "kuaishou": "快手", "zhihu": "知乎"}
-RULE = ("按用户说的做：说发布就点「发表」，发表后截图并用 report_publish_result 记回执；说存草稿就停在「发表」之前截图，用 report_publish_draft 记一笔并停下。"
+RULE = ("按用户说的做：说发布就点「发表」，发表后截图、到作品列表取这条作品的链接，用 report_publish_result 记回执（还没有链接就先空着，过后用 report_publish_link 补）；说存草稿就停在「发表」之前截图，用 report_publish_draft 记一笔并停下。"
         "登录、扫码、验证码、短信、风控都停下请用户处理。一次只发一个。发布包的文件只读，不复制、不改；文案照 publish_copy 填，平台字数不够时只截短、不改意思。"
         "先读 get_craft_skill(skill=\"craft-publish\") 的总则，再读这个平台那一份（entry 见 skill_entry）。")
 
@@ -69,7 +69,30 @@ def pending(db: Session, user: User) -> dict:
                       "content_form": target.content_form, "account": target.account_ref, "status": target.status,
                       "project_id": project.get("id"), "unit_id": project.get("unit_id"), "title": manifest.get("title") or project.get("unit_title"),
                       "draft": drafts.get(target.id)})
-    return {"items": items, "rule": RULE}
+    return {"items": items, "links_missing": _links_missing(db, user), "rule": RULE}
+
+
+def _is_link(value: str | None) -> bool:
+    return (value or "").startswith(("http://", "https://"))
+
+
+def _links_missing(db: Session, user: User) -> list[dict]:
+    rows = db.scalars(select(DeliveryTarget).where(DeliveryTarget.authorized_by == user.email, DeliveryTarget.action == "copy_package",
+                                                   DeliveryTarget.status == "human_confirmed").order_by(DeliveryTarget.id.desc()).limit(100)).all()
+    items = []
+    for target in rows:
+        receipt = max(target.receipts, key=lambda row: row.id, default=None)
+        if receipt is None or _is_link(receipt.evidence_ref):
+            continue
+        project = _manifest(db, target).get("project") or {}
+        items.append({"target_id": target.id, "platform": CHANNEL_NAMES.get(target.channel, target.channel), "account": target.account_ref,
+                      "unit_id": project.get("unit_id"), "title": _manifest(db, target).get("title") or project.get("unit_title"),
+                      "published": receipt.delivered_at.isoformat() if receipt.delivered_at else None})
+    return items
+
+
+def _record_of(db: Session, receipt: DeliveryReceipt) -> PublishedContentRecord | None:
+    return db.scalar(select(PublishedContentRecord).where(PublishedContentRecord.delivery_receipt_id == receipt.id))
 
 
 def package(db: Session, user: User, target_id: int) -> dict:
@@ -135,5 +158,29 @@ def record_published(db: Session, user: User, target_id: int, screenshot_path: s
     add_receipt(target.id, ReceiptIn(status="human_confirmed", evidence_ref=evidence, verification_method="third_party_model_browser",
                                      note=detail), db, user)
     db.refresh(target)
+    record = _record_of(db, max(target.receipts, key=lambda row: row.id))
+    if record is not None and _is_link(evidence) and not record.canonical_url:
+        record.canonical_url = evidence
+        db.commit()
     return {"target_id": target.id, "status": target.status, "evidence_ref": evidence,
-            "next": "告诉用户已发表，回执已记在交付页"}
+            "next": "告诉用户已发表，回执已记在交付页" + ("" if _is_link(evidence) else "；还没有作品链接，等平台出了链接用 report_publish_link 补")}
+
+
+def record_link(db: Session, user: User, target_id: int, link: str) -> dict:
+    from .account_metrics_import import link_receipt
+
+    target = _target(db, user, target_id)
+    receipt = max(target.receipts, key=lambda row: row.id, default=None)
+    if target.status != "human_confirmed" or receipt is None or receipt.status != "human_confirmed":
+        _fail(409, "publish_target_not_published", "这个交付目标还没发表，发表后再补链接")
+    if _is_link(receipt.evidence_ref):
+        _fail(409, "publish_link_present", f"回执已经有链接：{receipt.evidence_ref}；要改请用户在交付页改")
+    record = _record_of(db, receipt)
+    if record is not None:
+        link_receipt(db, user, record, link.strip())
+    else:
+        db.add(AuditLog(event="delivery_receipt.link_updated", actor=user.email, entity_type="delivery_receipt",
+                        entity_id=str(receipt.id), detail_json={"target_id": target.id, "from": receipt.evidence_ref, "to": link.strip()}))
+        receipt.evidence_ref = link.strip()
+    db.commit()
+    return {"target_id": target.id, "link": receipt.evidence_ref, "record_id": record.id if record else None}

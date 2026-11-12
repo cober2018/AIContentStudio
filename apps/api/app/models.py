@@ -2009,7 +2009,7 @@ class AccountMetricImport(Base):
 
     __tablename__ = "account_metric_import"
     __table_args__ = (
-        CheckConstraint("source_kind IN ('screenshot','copied_text','export_file')", name='ck_account_metric_import_source'),
+        CheckConstraint("source_kind IN ('platform_page','screenshot','copied_text','export_file')", name='ck_account_metric_import_source'),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

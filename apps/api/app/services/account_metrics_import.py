@@ -1,4 +1,4 @@
-"""Account data that a third-party model read from platform screenshots or exports, written into 效果复盘 as batches."""
+"""Account data that a third-party model read from the logged-in platform backend, screenshots or exports, written into 效果复盘 as batches."""
 
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -11,6 +11,7 @@ from ..models import (
     AccountMetricImport,
     AuditLog,
     ContentAccount,
+    DeliveryReceipt,
     PerformanceObservation,
     PublishedContentRecord,
     User,
@@ -29,6 +30,7 @@ PLATFORM_METRICS: dict[str, dict[str, tuple[str, str]]] = {
     "douyin": {
         "plays": ("播放量", COUNT), "completion_rate": ("完播率", RATE), "completion_rate_5s": ("5s完播率", RATE),
         "cover_ctr": ("封面点击率", RATE), "bounce_rate_2s": ("2s跳出率", RATE), "avg_play_seconds": ("平均播放时长", SECONDS),
+        "avg_play_ratio": ("平均播放占比", RATE),
         "likes": ("点赞", COUNT), "shares": ("分享", COUNT), "comments": ("评论", COUNT), "favorites": ("收藏", COUNT),
         "profile_visits": ("主页访问量", COUNT), "followers_gained": ("粉丝增量", COUNT),
     },
@@ -84,6 +86,48 @@ def list_accounts(db: Session, user: User) -> dict:
     return {"accounts": accounts, "metric_keys": {channel: sorted(keys) for channel, keys in PLATFORM_METRICS.items()}}
 
 
+ITEM_PREFIX = "item:"
+
+
+def _item_key(item_id: str | None) -> str | None:
+    return f"{ITEM_PREFIX}{item_id.strip()}" if item_id and item_id.strip() else None
+
+
+def _record_json(db: Session, record: PublishedContentRecord) -> dict:
+    key = record.external_key or ""
+    receipt = db.get(DeliveryReceipt, record.delivery_receipt_id) if record.delivery_receipt_id else None
+    # A link filled on the delivery page lives only on the receipt; it is the surest way to match a platform row.
+    receipt_link = receipt.evidence_ref if receipt is not None and (receipt.evidence_ref or "").startswith(("http://", "https://")) else None
+    return {"id": record.id, "title": record.title, "origin": record.origin, "content_form": record.content_form,
+            "published_at": record.published_at.isoformat() if record.published_at else None, "url": record.canonical_url or receipt_link,
+            "platform_item_id": key[len(ITEM_PREFIX):] if key.startswith(ITEM_PREFIX) else None,
+            "account_bound": record.content_account_id is not None, "delivery_target_id": record.delivery_target_id}
+
+
+def list_published_works(db: Session, user: User, account_id: int) -> dict:
+    """This account's published records on its platform, including ones not yet tied to an account, for the model to match rows against."""
+    account = owned_entity(db, user, "account", account_id)
+    rows = db.scalars(select(PublishedContentRecord).where(
+        PublishedContentRecord.owner_user_id == user.id, PublishedContentRecord.channel == account.platform_channel,
+        PublishedContentRecord.status == "active",
+        (PublishedContentRecord.content_account_id == account.id) | PublishedContentRecord.content_account_id.is_(None),
+    ).order_by(PublishedContentRecord.id.desc()).limit(200)).all()
+    return {"account_id": account.id, "channel": account.platform_channel, "works": [_record_json(db, row) for row in rows]}
+
+
+def link_receipt(db: Session, user: User, record: PublishedContentRecord, url: str) -> None:
+    """A published record whose receipt still holds only a screenshot gets the work's public link on both."""
+    if not url.startswith(("http://", "https://")):
+        return
+    if not record.canonical_url:
+        record.canonical_url = url
+    receipt = db.get(DeliveryReceipt, record.delivery_receipt_id) if record.delivery_receipt_id else None
+    if receipt is not None and not (receipt.evidence_ref or "").startswith(("http://", "https://")):
+        db.add(AuditLog(event="delivery_receipt.link_updated", actor=user.email, entity_type="delivery_receipt",
+                        entity_id=str(receipt.id), detail_json={"target_id": receipt.target_id, "from": receipt.evidence_ref, "to": url}))
+        receipt.evidence_ref = url
+
+
 def parse_published_at(value: str) -> datetime:
     try:
         parsed = datetime.fromisoformat(value.strip().replace("/", "-"))
@@ -112,9 +156,43 @@ def _validate(channel: str, rows: list[dict]) -> None:
                                   "allowed_metrics": sorted(allowed)})
 
 
+def _fill(db: Session, user: User, account: ContentAccount, record: PublishedContentRecord, row: dict,
+          published_at: datetime, item_key: str | None) -> None:
+    # A receipt rarely carries the real publish time, link or account; the platform's own data page does.
+    if record.published_at is None:
+        record.published_at = published_at
+        record.content_snapshot_json = {**(record.content_snapshot_json or {}), "publication_time_source": "platform_page"}
+    if record.content_account_id is None:
+        record.content_account_id = account.id
+    if item_key and not record.external_key and db.scalar(select(PublishedContentRecord.id).where(
+            PublishedContentRecord.owner_user_id == user.id, PublishedContentRecord.channel == record.channel,
+            PublishedContentRecord.external_key == item_key)) is None:
+        record.external_key = item_key
+    if row.get("url"):
+        link_receipt(db, user, record, row["url"])
+
+
+def _given(db: Session, user: User, account: ContentAccount, record_id: int) -> PublishedContentRecord:
+    record = db.get(PublishedContentRecord, record_id)
+    if (record is None or record.owner_user_id != user.id or record.channel != account.platform_channel
+            or record.content_account_id not in (None, account.id)):
+        raise HTTPException(422, {"code": "account_import_record_mismatch",
+                                  "message": f"发布记录 {record_id} 不是这个账号所在平台的作品，先用 list_published_works 看可选的记录"})
+    return record
+
+
 def _record(db: Session, user: User, account: ContentAccount, row: dict, published_at: datetime):
-    """Matches the work by account, platform, title and publish time; returns (record, created)."""
+    """Matches the work by platform item id, then the record the model named, then title and publish time; returns (record, created)."""
     title = row["title"].strip()
+    item_key = _item_key(row.get("platform_item_id"))
+    found = db.scalar(select(PublishedContentRecord).where(
+        PublishedContentRecord.owner_user_id == user.id, PublishedContentRecord.channel == account.platform_channel,
+        PublishedContentRecord.external_key == item_key)) if item_key else None
+    if found is None and row.get("published_content_id"):
+        found = _given(db, user, account, row["published_content_id"])
+    if found is not None:
+        _fill(db, user, account, found, row, published_at, item_key)
+        return found, False
     found = db.scalar(select(PublishedContentRecord).where(
         PublishedContentRecord.owner_user_id == user.id,
         PublishedContentRecord.content_account_id == account.id,
@@ -123,9 +201,10 @@ def _record(db: Session, user: User, account: ContentAccount, row: dict, publish
         PublishedContentRecord.published_at == published_at,
     ).order_by(PublishedContentRecord.id).limit(1))
     if found:
+        _fill(db, user, account, found, row, published_at, item_key)
         return found, False
     # Deterministic key, so the same work read from two different files never becomes two works.
-    key = "account_import:" + history.checksum([account.id, title, published_at.isoformat()])[:48]
+    key = item_key or "account_import:" + history.checksum([account.id, title, published_at.isoformat()])[:48]
     found = db.scalar(select(PublishedContentRecord).where(
         PublishedContentRecord.owner_user_id == user.id, PublishedContentRecord.channel == account.platform_channel,
         PublishedContentRecord.external_key == key))

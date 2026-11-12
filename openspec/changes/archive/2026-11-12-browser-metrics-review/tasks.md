@@ -1,0 +1,7 @@
+- [x] 1.1 导入认作品：平台作品编号 → 记录编号 → 标题 + 时间；记住作品编号；补发布时间、链接、账号
+- [x] 1.2 `list_published_works` 工具（链接也取回执上的）
+- [x] 1.3 来源 `platform_page`（不用先等确认，迁移 acctdata0002）；抖音 `avg_play_ratio`；效果复盘页显示来源
+- [x] 1.4 craft-review：总则 + 抖音、小红书、公众号；get_craft_skill 对 craft-* 不要求作品
+- [x] 1.5 回填链接：craft-publish 写明取链接（含百家号）；`report_publish_link`；`list_publish_targets` 列缺链接的；复盘对上时补链接
+- [x] 1.6 测试（MCP 74、交付等 936）、迁移、重启
+- [x] 1.7 实跑：抖音 13 条、小红书 36 条、公众号 49 条导入（批次 1–3）；作品 97 和「K线差2%」在三个平台都挂到自己的发布记录；百家号两条用 report_publish_link 补了链接，缺链接的目标清零

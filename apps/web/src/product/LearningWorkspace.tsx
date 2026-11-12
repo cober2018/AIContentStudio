@@ -172,7 +172,7 @@ function History({ selected, choose }: { selected: string | null; choose: (id: n
 }
 
 type ImportBatch = { id: number; content_account_id: number; account_name: string | null; channel: string; channel_label: string | null; source_kind: string; source_name: string; counts: Record<string, number>; created_at: string; undone_at: string | null };
-const sourceKinds: Record<string, string> = { screenshot: "截图", copied_text: "复制文字", export_file: "导出表" };
+const sourceKinds: Record<string, string> = { platform_page: "平台后台数据", screenshot: "截图", copied_text: "复制文字", export_file: "导出表" };
 
 function ImportBatches({ highlight }: { highlight: string | null }) {
   const client = useQueryClient();
