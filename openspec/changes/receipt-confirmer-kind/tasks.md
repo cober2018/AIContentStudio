@@ -1,0 +1,5 @@
+- [x] 1.1 `published_history.publication_evidence()`，以及 `record_json` 返回 confirmed_by、publication_verified、pending_link
+- [x] 1.2 `GET /published-content` 返回 verified_total、pending_link_total（按全部筛选结果算，不受分页影响）
+- [x] 1.3 交付目标的回执 JSON 增加 verification_method；交付页回执行显示「模型已发表」
+- [x] 1.4 新测试 `tests/test_receipt_confirmer_kind.py`（5 条）：tone_rules 不进 expression_style；模型发表无 URL 不计入、补链接后计入；人工回执无 URL 仍计入；外部导入不参与口径；两用户之间品牌、账号、已发布记录越权返回 404
+- [x] 1.5 在正式库的只读副本上统计（正式库没改）：studio 28 条，其中人工 7、模型带链接 16、模型无链接 5；verified_total 23、pending_link_total 5。相关后端测试 393 过、10 跳过；web `npm run build`（tsc -b + vite + bundle 检查）通过

@@ -122,7 +122,8 @@ def _target_json(target: DeliveryTarget, with_attempts: bool = True) -> dict:
         "capability": target.capability_snapshot_json,
         "requested_at": target.requested_at.isoformat() if target.requested_at else None,
         "receipts": [
-            {"id": r.id, "status": r.status, "operator": r.operator, "evidence_ref": r.evidence_ref, "note": r.note}
+            {"id": r.id, "status": r.status, "operator": r.operator, "evidence_ref": r.evidence_ref, "note": r.note,
+             "verification_method": r.verification_method}
             for r in target.receipts
         ],
     }

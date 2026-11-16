@@ -479,7 +479,10 @@ def list_history(
         q = q.where(PublishedContentRecord.published_at < date_to)
     total = db.scalar(select(func.count()).select_from(q.subquery()))
     rows = db.scalars(q.order_by(PublishedContentRecord.id.desc()).offset(offset).limit(limit)).all()
-    return {"items": [service.record_json(db, r) for r in rows], "total": total, "limit": limit, "offset": offset}
+    evidence = [service.publication_evidence(db, r) for r in db.scalars(q.where(PublishedContentRecord.origin == "studio")).all()]
+    return {"items": [service.record_json(db, r) for r in rows], "total": total, "limit": limit, "offset": offset,
+            "verified_total": sum(1 for e in evidence if e["publication_verified"]),
+            "pending_link_total": sum(1 for e in evidence if e["pending_link"])}
 
 
 @router.get("/published-content/{record_id}")

@@ -84,11 +84,26 @@ def coverage(db: Session, row, *, cutoff=None):
     }
 
 
+MODEL_VERIFICATION = "third_party_model_browser"
+
+
+def publication_evidence(db: Session, row) -> dict:
+    # A model clicking 发表 in the user's browser is not a human attestation; without a work URL it proves nothing public yet.
+    if row.origin != "studio":
+        return {"confirmed_by": None, "publication_verified": None, "pending_link": False}
+    receipt = db.get(DeliveryReceipt, row.delivery_receipt_id) if row.delivery_receipt_id else None
+    by = "model" if receipt is not None and receipt.verification_method == MODEL_VERIFICATION else "human"
+    linked = bool(row.canonical_url and row.canonical_url.startswith(("http://", "https://")))
+    verified = by == "human" or linked
+    return {"confirmed_by": by, "publication_verified": verified, "pending_link": not verified}
+
+
 def record_json(db: Session, row):
     data = {col.name: getattr(row, col.name) for col in row.__table__.columns}
     data["content_snapshot"] = data.pop("content_snapshot_json") or {}
     data.pop("coverage_json")
     data["coverage"] = coverage(db, row)
+    data.update(publication_evidence(db, row))
     return data
 
 
