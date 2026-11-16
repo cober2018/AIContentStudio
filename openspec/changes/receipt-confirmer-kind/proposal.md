@@ -17,6 +17,12 @@
   - 模型发表后没有 URL，不计入已核实发布；补上链接后计入；
   - 两个用户之间，品牌、账号、已发布记录互相越权访问返回 404。
 
+## 追加（CT-002b）：效果复盘页显示两个数
+- 「效果复盘 → 已发布作品」列表顶部现在写的是「共 N 条」，改成「共 N 条 · 已核实 X · 待补链接 Y」。只有接口返回了这两个数时才显示，所以其他列表不受影响。
+- 列表里待补链接的那一行，在渠道、来源、发布时间后面加一个琥珀色的「待补链接」。
+- 只改前端两个文件：`apps/web/src/product/learningTypes.ts`（类型加可选字段）和 `apps/web/src/product/LearningWorkspace.tsx`。后端不改。
+- 手动检查：在正式库副本上启动分支的 API 和前端，换一个端口，截图看列表顶部和那 5 条带标记的行。
+
 ## 为什么不新增状态 model_confirmed，也不新增 confirmed_by_kind 字段
 - 新增状态 `model_confirmed`：`delivery_target` 的 CHECK 约束要改（SQLite 上只能重建表），另外大约 20 处判断 `human_confirmed` 的代码也都要改，包括发布记录同步、补链接、效果复盘、项目阶段判断等，改动面大，风险也大。
 - 新增字段 `confirmed_by_kind`：它和现有的 `verification_method` 记的是同一件事，要多维护一份数据，还要回填和准备回滚。

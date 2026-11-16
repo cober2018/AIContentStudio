@@ -3,3 +3,6 @@
 - [x] 1.3 交付目标的回执 JSON 增加 verification_method；交付页回执行显示「模型已发表」
 - [x] 1.4 新测试 `tests/test_receipt_confirmer_kind.py`（5 条）：tone_rules 不进 expression_style；模型发表无 URL 不计入、补链接后计入；人工回执无 URL 仍计入；外部导入不参与口径；两用户之间品牌、账号、已发布记录越权返回 404
 - [x] 1.5 在正式库的只读副本上统计（正式库没改）：studio 28 条，其中人工 7、模型带链接 16、模型无链接 5；verified_total 23、pending_link_total 5。相关后端测试 393 过、10 跳过；web `npm run build`（tsc -b + vite + bundle 检查）通过
+- [x] 2.1 效果复盘「已发布作品」列表顶部显示「已核实 X · 待补链接 Y」（只在接口返回这两个数时显示）
+- [x] 2.2 待补链接的行加「待补链接」标记
+- [x] 2.3 web build 通过；在正式库只读备份出的副本上起分支 API（8010，不跑 lifespan）和 vite（5183），无头 Chromium 截图：表头「共 120 条 · 已核实 23 · 待补链接 5」，第一页 5 条带「待补链接」

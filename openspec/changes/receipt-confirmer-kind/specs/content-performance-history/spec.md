@@ -22,3 +22,7 @@ Each Studio PublishedContentRecord SHALL report who confirmed its receipt and wh
 #### Scenario: External import
 - **WHEN** a record was imported from platform history
 - **THEN** confirmed_by and publication_verified are null and it counts toward neither total
+
+#### Scenario: Learning page shows the two counts
+- **WHEN** the user opens 效果复盘 → 已发布作品
+- **THEN** the list header shows the verified count and the pending-link count next to the total, and each pending-link row is marked 待补链接

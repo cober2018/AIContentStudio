@@ -1,10 +1,10 @@
 export type ScopeType = "owner" | "brand" | "persona" | "account" | "series";
 export type EvidenceType = "published_content" | "performance_observation" | "insight" | "delivery_feedback";
-export interface Page<T> { items: T[]; total: number; limit: number; offset: number }
+export interface Page<T> { items: T[]; total: number; limit: number; offset: number; verified_total?: number; pending_link_total?: number }
 export interface PublishedContent {
   id: number; title: string | null; channel: string; origin: string; status: string;
   published_at: string | null; content_account_id: number | null; content_form?: string | null;
-  coverage?: Record<string, unknown>; coverage_json?: Record<string, unknown>;
+  coverage?: Record<string, unknown>; coverage_json?: Record<string, unknown>; pending_link?: boolean;
   [key: string]: unknown;
 }
 export interface Observation {
