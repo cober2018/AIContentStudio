@@ -36,15 +36,26 @@ PLATFORM_METRICS: dict[str, dict[str, tuple[str, str]]] = {
     },
     "wechat": {
         "reads": ("阅读", COUNT), "likes": ("点赞", COUNT), "shares": ("分享", COUNT), "recommends": ("推荐/爱心", COUNT),
-        "comments": ("留言", COUNT), "highlights": ("划线（含义待确认）", COUNT), "reposts": ("转载（含义待确认）", COUNT),
+        "comments": ("留言", COUNT), "highlights": ("划线", COUNT), "reposts": ("转载（含义待确认）", COUNT),
+        "favorites": ("收藏", COUNT), "followers_gained": ("新增关注", COUNT), "avg_read_seconds": ("平均阅读时长", SECONDS),
+        "read_completion_rate": ("完读率", RATE),
     },
     "xiaohongshu": {
-        "views": ("观看/阅读", COUNT), "likes": ("点赞", COUNT), "comments": ("评论", COUNT),
-        "favorites": ("收藏", COUNT), "shares": ("分享", COUNT),
+        "impressions": ("曝光", COUNT), "views": ("观看/阅读", COUNT), "cover_ctr": ("封面点击率", RATE),
+        "avg_play_seconds": ("人均观看时长", SECONDS), "completion_rate": ("完播率", RATE), "completion_rate_5s": ("5s完播率", RATE),
+        "bounce_rate_2s": ("2秒退出率", RATE), "likes": ("点赞", COUNT), "comments": ("评论", COUNT),
+        "favorites": ("收藏", COUNT), "shares": ("分享", COUNT), "followers_gained": ("涨粉", COUNT), "danmaku": ("弹幕", COUNT),
     },
     "bilibili": {
         "views": ("播放", COUNT), "likes": ("点赞", COUNT), "comments": ("评论", COUNT), "favorites": ("收藏", COUNT),
         "shares": ("分享", COUNT), "coins": ("投币", COUNT), "danmaku": ("弹幕", COUNT),
+        "avg_play_ratio": ("平均播放进度", RATE), "cover_ctr": ("封标点击率", RATE), "bounce_rate_3s": ("3秒跳出率", RATE),
+        "followers_gained": ("涨粉", COUNT), "unfollows": ("取关", COUNT),
+    },
+    "wechat_channels": {
+        "plays": ("播放", COUNT), "completion_rate": ("完播率", RATE), "avg_play_seconds": ("平均播放时长", SECONDS),
+        "likes": ("点赞", COUNT), "recommends": ("推荐/爱心", COUNT), "comments": ("评论", COUNT), "shares": ("分享", COUNT),
+        "followers_gained": ("关注", COUNT),
     },
 }
 # Gains can be negative (unfollows); every other metric is a count, rate or duration.
@@ -99,7 +110,7 @@ def _record_json(db: Session, record: PublishedContentRecord) -> dict:
     # A link filled on the delivery page lives only on the receipt; it is the surest way to match a platform row.
     receipt_link = receipt.evidence_ref if receipt is not None and (receipt.evidence_ref or "").startswith(("http://", "https://")) else None
     return {"id": record.id, "title": record.title, "origin": record.origin, "content_form": record.content_form,
-            "published_at": record.published_at.isoformat() if record.published_at else None, "url": record.canonical_url or receipt_link,
+            "published_at": history.utc(record.published_at).astimezone(LOCAL_ZONE).isoformat() if record.published_at else None, "url": record.canonical_url or receipt_link,
             "platform_item_id": key[len(ITEM_PREFIX):] if key.startswith(ITEM_PREFIX) else None,
             "account_bound": record.content_account_id is not None, "delivery_target_id": record.delivery_target_id}
 

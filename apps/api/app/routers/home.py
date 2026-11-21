@@ -1,11 +1,12 @@
 """Home and project origin read projections."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user
 from ..models import User
+from ..services.home_funnel import home_funnel
 from ..services.home_projection import home_projection, project_origin
 from .content_projects import owned_project
 
@@ -15,6 +16,12 @@ router = APIRouter(prefix="/api/v1", tags=["home"])
 @router.get("/home")
 def get_home(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return home_projection(db, user)
+
+
+@router.get("/home/funnel")
+def get_home_funnel(days: int = Query(default=30, ge=0, le=3650), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """0 天表示不限时间。"""
+    return home_funnel(db, user, days)
 
 
 @router.get("/content-projects/{project_id}/origin")

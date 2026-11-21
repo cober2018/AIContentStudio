@@ -6,6 +6,7 @@ import { Button, ErrorBanner, Page, PageHeader, Spinner, Stat, Tabs } from "../c
 import { discoveryLabel, type DiscoveryStatus } from "./DiscoveryPanel";
 import type { Opportunity } from "./opportunityTypes";
 import type { Overview } from "./project/types";
+import HomeFunnel from "./HomeFunnel";
 
 interface Decision { code: string; project_id: number | null; unit_id?: number | null; node_id?: string; learning_candidate_id?: number | null; creative_execution_id?: number | null; entity_kind?: string; entity_id?: number | null; href: string; label: string }
 interface Origin { opportunity_id: number; assessment_revision_id?: number }
@@ -155,6 +156,7 @@ export default function HomePage() {
       <Stat label="待判断机会" value={opportunities.length} hint="有效期内" />
       <Stat label="身份提醒" value={missing.includes("identity_alerts") ? "—" : identityAlerts.length} hint="角色与账号" />
     </section>}
+    {view === "today" && <HomeFunnel />}
     {!views[view] && <ErrorBanner message="此工作台页面不存在，请返回今日工作台。" />}
     {(view === "today" || view === "decisions") && <section className={box}>
       {sectionHeading("待我处理", decisions.length, "decisions")}

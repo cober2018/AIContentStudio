@@ -6,7 +6,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from sqlalchemy import or_, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from ..db import get_db
@@ -230,7 +230,9 @@ def list_skus(q: str = Query(default="", max_length=300), category: str = Query(
             ProductSkuRevision.product_json["name"].as_string().icontains(term, autoescape=True)))
     if category:
         stmt = stmt.where(ProductSkuRevision.product_json["category"].as_string() == category)
-    return {"items": [sku_json(db, r) for r in db.scalars(stmt.order_by(ProductSku.id.desc()).offset(offset).limit(limit))]}
+    total = db.scalar(select(func.count()).select_from(stmt.subquery()))
+    return {"items": [sku_json(db, r) for r in db.scalars(stmt.order_by(ProductSku.id.desc()).offset(offset).limit(limit))],
+            "total": total}
 
 
 def check_category(db, user, product: dict) -> None:

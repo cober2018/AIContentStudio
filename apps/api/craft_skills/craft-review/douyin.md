@@ -21,9 +21,10 @@
    | bounce_rate_2s | `metrics.bounce_rate_2s` |
    | avg_play_seconds | `metrics.avg_view_second` |
    | avg_play_ratio | `metrics.avg_view_proportion` |
-   | likes / comments / shares / favorites | `like_count` / `comment_count` / `share_count` / `favorite_count` |
+   | likes / comments / shares / favorites | `metrics.like_count` / `metrics.comment_count` / `metrics.share_count` / `metrics.favorite_count`（都在 `metrics` 里，作品顶层没有） |
    | profile_visits | `metrics.homepage_visit_count` |
    | followers_gained | `metrics.subscribe_count`（页面上的「吸粉量」） |
    接口里数字是字符串，转成数字；比率已经是 0–1 小数，不用再除 100。
+   这 13 项就是「数据中心 · 作品分析 · 投稿列表」表格的全部列（2026-11-19 对照过）。
 4. 视频看 `video_info.duration` 有值（毫秒）；没有的是图文（2026-11-12 实测 `type` 为 1）。图文的完播率、跳出率等字段含义和视频不同（页面显示的是划走率、文案展开率，对不上），**图文只填次数类**：plays、likes、comments、shares、favorites、profile_visits、followers_gained。
 5. 字段不一定每条都有，缺的项不填。
