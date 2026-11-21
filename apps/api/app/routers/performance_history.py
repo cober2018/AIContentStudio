@@ -505,6 +505,23 @@ def patch_history(
     return service.record_json(db, row)
 
 
+class MatchIn(Input):
+    content_unit_id: int
+
+
+@router.get("/published-content/{record_id}/match-candidates")
+def match_candidates(record_id: int, q: str | None = Query(None, max_length=100),
+                     db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return service.match_candidates(db, user, record_id, q)
+
+
+@router.post("/published-content/{record_id}/match")
+def match_history(record_id: int, payload: MatchIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    row = service.match_record(db, user, record_id, payload.content_unit_id)
+    commit(db)
+    return service.record_json(db, row)
+
+
 @router.delete("/published-content/{record_id}", status_code=204)
 def archive_history(record_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     row = service.owned_record(db, user, record_id)

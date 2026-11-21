@@ -198,11 +198,46 @@ function ImportBatches({ highlight }: { highlight: string | null }) {
   </section>;
 }
 
+type MatchCandidate = { content_unit_id: number; title: string; modality: string; status: string; has_target: boolean; existing_record_id: number | null };
+
+// 平台上的标题常和站内作品名不同，由人来选是哪篇；数据、历史和平台编号跟着这条记录走。
+function MatchWork({ row }: { row: PublishedContent }) {
+  const client = useQueryClient();
+  const readOnly = useContext(LearningReadOnly);
+  const [, setParams] = useSearchParams();
+  const matched = row.matched_work as { content_unit_id: number; project_id: number; title: string } | null | undefined;
+  const [open, setOpen] = useState(!matched);
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState<number>();
+  const [error, setError] = useState("");
+  const candidates = useQuery({ queryKey: ["learning", "match", row.id, q], enabled: open && !readOnly,
+    queryFn: () => api.get<{ items: MatchCandidate[] }>(`/published-content/${row.id}/match-candidates${q ? `?q=${encodeURIComponent(q)}` : ""}`) });
+  async function match(item: MatchCandidate) {
+    const merge = item.existing_record_id != null;
+    if (busy || !window.confirm(merge ? `「${item.title}」在这个平台已有记录 #${item.existing_record_id}。把这条的数据并过去，这条归档？` : `把这条发布记录归到「${item.title}」？`)) return;
+    setError(""); setBusy(item.content_unit_id);
+    try {
+      const result = await api.post<PublishedContent>(`/published-content/${row.id}/match`, { content_unit_id: item.content_unit_id });
+      await client.invalidateQueries({ queryKey: ["learning"] });
+      if (result.id !== row.id) setParams((old) => { const next = new URLSearchParams(old); next.set("published", String(result.id)); return next; });
+      setOpen(false);
+    } catch (cause) { setError(errorText(cause)); }
+    finally { setBusy(undefined); }
+  }
+  return <div className="space-y-2 rounded-lg border border-slate-200 p-3 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-2"><p>站内作品：{matched ? <Link className="font-medium text-indigo-700" to={`/projects/${matched.project_id}`}>{matched.title}</Link> : <span className="text-amber-800">未匹配</span>}</p>{!readOnly && matched && <Button size="sm" variant="ghost" onClick={() => setOpen(!open)}>{open ? "收起" : "改匹配"}</Button>}</div>
+    {open && !readOnly && <><p className="text-slate-500">平台标题和作品名不用一样。匹配后，已有数据和历史都归到该作品；以后导入这条的新数据，也会落到同一条记录。</p>
+      <input className={inputClass} placeholder="按作品名搜索" value={q} onChange={(e) => setQ(e.target.value)} />
+      {error && <div role="alert"><ErrorBanner message={error} /></div>}
+      {candidates.isLoading ? <Spinner /> : <ul className="max-h-72 space-y-1 overflow-auto">{(candidates.data?.items ?? []).map((item) => <li key={item.content_unit_id} className="flex items-center justify-between gap-2 rounded border px-2 py-1.5"><span>{item.title}<span className="ml-2 text-xs text-slate-500">{item.has_target ? "有这个平台的交付" : "没有这个平台的交付"}{item.existing_record_id != null && ` · 已有记录 #${item.existing_record_id}`}</span></span><Button size="sm" variant="secondary" disabled={busy != null || item.content_unit_id === matched?.content_unit_id} onClick={() => void match(item)}>{busy === item.content_unit_id ? "匹配中…" : item.content_unit_id === matched?.content_unit_id ? "当前" : "匹配"}</Button></li>)}</ul>}</>}
+  </div>;
+}
+
 function PublishedDetail({ id, view }: { id: string; view: string }) {
   const readOnly = useContext(LearningReadOnly);
   const base = `/published-content/${id}`;
   return <section className={box}><LearningNavigation items={[["detail", "作品概览"], ["observations", "表现与反馈"], ...(!readOnly ? [["add-observation", "追加观察 / 更正"]] as [string, string][] : [])]} />
-    {view === "detail" && <Read<PublishedContent> path={base} children={(row) => <div className="space-y-3"><h2 className="text-xl font-semibold">{row.title ?? "标题缺失"}</h2><p className="text-sm text-slate-600"><ChannelIcon channel={row.channel} className="mr-1" />{row.channel} · {publishedTime(row.published_at)}</p><p className="text-sm">前往“表现与反馈”核对指标与缺失，再到长期分析比较同口径样本。</p><DataView data={row} title="不可变内容、来源与覆盖" /></div>} />}
+    {view === "detail" && <Read<PublishedContent> path={base} children={(row) => <div className="space-y-3"><h2 className="text-xl font-semibold">{row.title ?? "标题缺失"}</h2><p className="text-sm text-slate-600"><ChannelIcon channel={row.channel} className="mr-1" />{row.channel} · {publishedTime(row.published_at)}</p><p className="text-sm">前往“表现与反馈”核对指标与缺失，再到长期分析比较同口径样本。</p>{row.origin === "external_import" && <MatchWork row={row} />}<DataView data={row} title="不可变内容、来源与覆盖" /></div>} />}
     {view === "observations" && <>
     <h3 className="font-semibold">表现与反馈观察</h3><Paged<Observation> key={base} path={`${base}/observations`} render={(row) => <article className="rounded-lg border p-3 text-sm" key={row.id}><p>#{row.id} · {row.observation_kind} · {row.metric_namespace ?? "无指标命名空间"}.{row.metric_key ?? "无指标"}</p><p>{row.numeric_value == null ? "数值未采集" : row.numeric_value} {row.unit ?? "单位未知"} · {row.text_value ?? "无文字反馈"}</p><p className="text-xs text-slate-500">{row.observed_at} {row.supersedes_id != null && `· 更正 #${row.supersedes_id}`}</p><DataView data={row} title="窗口、来源与测量方式" /></article>} />
     </>}{view === "add-observation" && !readOnly && <ActionForm title="追加观察 / 更正（历史不覆盖）" fields={[select("observation_kind", "观察类型", ["metric", "feedback", "editorial", "correction"]), text("metric_namespace", "指标命名空间"), text("metric_key", "指标名称"), number("numeric_value", "数值（未采集则留空）"), text("unit", "单位"), date("observed_at", "采集时间", true), select("measurement_mode", "测量方式", ["snapshot", "interval"]), { name: "granularity", label: "测量粒度", value: "lifetime", maxLength: 50, hint: "默认 lifetime；最多 50 字符，留空沿用后端默认。" }, { ...date("cutoff", "指标截至时间（as of）"), hint: "按浏览器本地时区输入，提交为 ISO；留空使用采集时间，不得晚于采集时间。这是本条观察的测量口径。" }, date("period_start", "区间起点"), date("period_end", "区间终点"), { ...text("text_value", "反馈 / 编辑说明"), type: "textarea" }, number("supersedes_id", "被更正观察 ID")]} action={(values) => api.post(`${base}/observations`, values)} />}

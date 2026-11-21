@@ -5,7 +5,7 @@ import json
 from datetime import UTC, datetime
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from ..models import (
@@ -16,6 +16,7 @@ from ..models import (
     PerformanceObservation,
     PublishedContentRecord,
     User,
+    utcnow,
 )
 from .project_authorization import authorize_project_target
 
@@ -104,6 +105,7 @@ def record_json(db: Session, row):
     data.pop("coverage_json")
     data["coverage"] = coverage(db, row)
     data.update(publication_evidence(db, row))
+    data["matched_work"] = matched_work(db, row)
     return data
 
 
@@ -130,6 +132,14 @@ def sync_receipt(
         if existing.owner_user_id != user.id:
             raise HTTPException(404, "已发布内容不存在")
         return existing
+    # 外部导入的记录已匹配到这个交付目标：接上回执，不另建一条重复统计。
+    matched = db.scalar(select(PublishedContentRecord).where(
+        PublishedContentRecord.owner_user_id == user.id, PublishedContentRecord.status == "active",
+        PublishedContentRecord.delivery_target_id == target.id, PublishedContentRecord.delivery_receipt_id.is_(None)))
+    if matched:
+        matched.delivery_receipt_id = receipt.id
+        db.flush()
+        return matched
     row = PublishedContentRecord(
         owner_user_id=user.id,
         origin="studio",
@@ -194,3 +204,108 @@ def metric_scope(row):
         utc(row.period_end).isoformat() if row.period_end else None,
         payload.get("granularity", "lifetime"),
     )
+
+
+def _owned_unit(db: Session, user: User, unit_id: int):
+    from ..models import ContentProject, ContentUnit
+
+    unit = db.get(ContentUnit, unit_id)
+    project = db.get(ContentProject, unit.project_id) if unit else None
+    if unit is None or project is None or project.owner_user_id != user.id or unit.lifecycle != "active":
+        raise HTTPException(404, "站内作品不存在")
+    return unit
+
+
+def _unit_assets(db: Session, unit_id: int) -> list[int]:
+    return list(db.scalars(select(ContentAsset.id).where(ContentAsset.content_unit_id == unit_id).order_by(ContentAsset.id.desc())))
+
+
+def match_candidates(db: Session, user: User, record_id: int, q: str | None = None, limit: int = 30) -> dict:
+    """站内作品，平台标题和作品名不必一样：该平台有交付目标、还没记录的排前面。"""
+    from ..models import ContentProject, ContentUnit
+
+    record = owned_record(db, user, record_id)
+    query = (select(ContentUnit).join(ContentProject, ContentProject.id == ContentUnit.project_id)
+             .where(ContentProject.owner_user_id == user.id, ContentUnit.lifecycle == "active",
+                    ContentUnit.id.in_(select(ContentAsset.content_unit_id).where(ContentAsset.content_unit_id.is_not(None)))))
+    if q and q.strip():
+        query = query.where(ContentUnit.title.contains(q.strip()))
+    units = db.scalars(query.order_by(ContentUnit.id.desc()).limit(200)).all()
+    items = []
+    for unit in units:
+        assets = _unit_assets(db, unit.id)
+        target = db.scalar(select(DeliveryTarget).where(DeliveryTarget.content_asset_id.in_(assets),
+                                                        DeliveryTarget.channel == record.channel).limit(1))
+        existing = db.scalar(select(PublishedContentRecord.id).where(
+            PublishedContentRecord.owner_user_id == user.id, PublishedContentRecord.status == "active",
+            PublishedContentRecord.channel == record.channel, PublishedContentRecord.content_asset_id.in_(assets),
+            PublishedContentRecord.id != record.id).limit(1))
+        items.append({"content_unit_id": unit.id, "title": unit.title, "modality": unit.modality,
+                      "status": unit.status, "has_target": target is not None, "existing_record_id": existing})
+    items.sort(key=lambda i: (not (i["has_target"] and i["existing_record_id"] is None), -i["content_unit_id"]))
+    return {"record_id": record.id, "channel": record.channel, "items": items[:limit]}
+
+
+def match_record(db: Session, user: User, record_id: int, unit_id: int) -> PublishedContentRecord:
+    """外部导入的发布记录归到站内作品。数据和平台编号跟着走，以后按平台编号导入仍落到这条。"""
+    from ..models import AuditLog
+
+    record = owned_record(db, user, record_id, mutate=True)
+    if record.origin != "external_import":
+        raise HTTPException(409, "只有外部导入的发布记录可以匹配站内作品")
+    unit = _owned_unit(db, user, unit_id)
+    assets = _unit_assets(db, unit.id)
+    if not assets:
+        raise HTTPException(409, "这个站内作品还没有成稿，不能匹配")
+    target = db.scalar(select(DeliveryTarget).where(DeliveryTarget.content_asset_id.in_(assets),
+                                                    DeliveryTarget.channel == record.channel)
+                       .order_by(DeliveryTarget.id.desc()).limit(1))
+    existing = db.scalar(select(PublishedContentRecord).where(
+        PublishedContentRecord.owner_user_id == user.id, PublishedContentRecord.status == "active",
+        PublishedContentRecord.channel == record.channel, PublishedContentRecord.content_asset_id.in_(assets),
+        PublishedContentRecord.id != record.id).order_by(PublishedContentRecord.id).limit(1))
+    detail = {"content_unit_id": unit.id, "from_title": record.title, "previous_asset_id": record.content_asset_id}
+    if existing is not None:
+        # 同一作品同一平台已有记录：把数据并过去，这条归档，只算一次。
+        if existing.external_key and record.external_key and existing.external_key != record.external_key:
+            raise HTTPException(409, f"作品在这个平台已有另一条记录（#{existing.id}，平台编号不同），请先核对是不是两次发布")
+        moved = db.execute(update(PerformanceObservation).where(PerformanceObservation.published_content_id == record.id)
+                           .values(published_content_id=existing.id)).rowcount
+        key, record.external_key = record.external_key, None
+        db.flush()
+        existing.external_key = existing.external_key or key
+        for field in ("canonical_url", "published_at", "content_account_id", "content_form"):
+            if getattr(existing, field) is None:
+                setattr(existing, field, getattr(record, field))
+        existing.content_snapshot_json = {**(existing.content_snapshot_json or {}), "platform_title": record.title,
+                                          "merged_records": [*(existing.content_snapshot_json or {}).get("merged_records", []), record.id]}
+        existing.updated_at = utcnow()
+        record.status = "archived"
+        record.content_snapshot_json = {**(record.content_snapshot_json or {}), "merged_into": existing.id,
+                                        "external_key": key}
+        record.updated_at = utcnow()
+        db.add(AuditLog(event="published_content.merged", actor=user.email, entity_type=record.__tablename__,
+                        entity_id=str(record.id), detail_json={**detail, "into": existing.id, "observations_moved": moved}))
+        return existing
+    asset_id = target.content_asset_id if target else assets[0]
+    asset = db.get(ContentAsset, asset_id)
+    record.content_asset_id = asset_id
+    record.delivery_target_id = target.id if target else None
+    record.identity_snapshot_id = record.identity_snapshot_id or asset.identity_snapshot_id
+    if record.content_account_id is None and target is not None:
+        record.content_account_id = target.content_account_id
+    record.content_snapshot_json = {**(record.content_snapshot_json or {}),
+                                    "matched": {"content_unit_id": unit.id, "by": user.email, "at": utcnow().isoformat()}}
+    record.updated_at = utcnow()
+    db.add(AuditLog(event="published_content.matched", actor=user.email, entity_type=record.__tablename__,
+                    entity_id=str(record.id), detail_json={**detail, "asset_id": asset_id,
+                                                           "target_id": record.delivery_target_id}))
+    return record
+
+
+def matched_work(db: Session, row) -> dict | None:
+    from ..models import ContentUnit
+
+    asset = db.get(ContentAsset, row.content_asset_id) if row.content_asset_id else None
+    unit = db.get(ContentUnit, asset.content_unit_id) if asset and asset.content_unit_id else None
+    return {"content_unit_id": unit.id, "project_id": unit.project_id, "title": unit.title} if unit else None
