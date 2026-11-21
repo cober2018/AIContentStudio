@@ -28,7 +28,7 @@ GROUPS = {
     "video": ("做视频（导演稿 → 素材 → 小样 → 成片）", {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials", "submit_video_materials",
                                         "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "redo_work_covers", "file_as_common", "propose_lesson",
                                         "import_material_folder", "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}),
-    "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}),
+    "article": ("写文章 / 图文（第三方模型写作）", {"prepare_daily_review", "get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}),
     "facts": ("事实边界（按题材模板自动核对）", {"get_fact_template", "submit_facts"}),
     "search": ("搜索推广（资料起草 → 问题库 → 开项目 → 平台版本 → 整批送审）", {"list_promotion_subjects", "save_promotion_subject_draft", "get_search_subject",
                                                      "save_question_library", "open_search_projects", "get_search_project", "adopt_search_draft",

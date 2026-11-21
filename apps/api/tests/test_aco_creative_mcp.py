@@ -32,6 +32,7 @@ TOOL_NAMES = {
     "get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment",
     "get_fact_template", "submit_facts",
     "list_accounts", "import_account_metrics",
+    "prepare_daily_review",
 }
 READ_ONLY_TOOLS = {"list_publish_targets", "list_published_works", "get_publish_package", "list_promotion_subjects", "get_search_subject", "get_search_project", "get_search_version_template", "get_search_review", "list_personas", "list_accounts", "get_context", "get_package", "get_execution", "find_capabilities",
                    "get_stages", "preview_stage", "get_stage_result", "get_stage_decision", "get_material_match", "get_shot_slots",

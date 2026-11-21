@@ -87,10 +87,18 @@ def _renders(db: Session, master: ContentMasterRevision) -> list[dict]:
     return rows
 
 
+def _daily_review(db: Session, unit_id: int) -> bool:
+    # The daily review job writes these pieces itself, so neither writer switch describes them.
+    row = db.get(SystemSetting, "quant_review")
+    return any(day.get("unit_id") == unit_id for day in ((row.value or {}).get("days") or {}).values()) if row else False
+
+
 def _state(db: Session, unit_id: int) -> dict:
     record = _record(db, unit_id)
     master = _latest(db, unit_id)
-    view = {"writer": record["writer"], "master_id": master.id if master else None, "revision_no": master.revision_no if master else None}
+    daily = _daily_review(db, unit_id)
+    view = {"writer": "daily_review" if daily else record["writer"], "master_id": master.id if master else None,
+            "revision_no": master.revision_no if master else None}
     decided = next((item for item in reversed(record["decisions"]) if master and item["target_id"] == master.id), None)
     kind = decided["decision"] if decided else None
     graphic = bool(master and master.modality == "graphic")
@@ -107,14 +115,16 @@ def _state(db: Session, unit_id: int) -> dict:
     if kind == "approve":
         # The draft is approved and the platform renders it; a failed render shows its reason and a retry.
         return {**view, "state": "rendering", "label": "稿子已采用，出图中", "review": record.get("review") or {"state": "not_sent"}}
-    platform = record["writer"] == "platform"
+    platform = record["writer"] == "platform" and not daily
     if master is None:
+        if daily:
+            return {**view, "state": "not_started", "label": "等第三方模型写稿", "detail": "在接了 MCP 的第三方模型里说「写今天的复盘」"}
         if platform:
             return {**view, "state": "platform", "label": "平台模型写作中", "detail": "在下面的创作流程里逐步写稿，采用的稿子会回到这里等你看"}
         return {**view, "state": "not_started", "label": "等第三方模型写稿", "detail": "在接了 MCP 的第三方模型里说「写这篇」"}
     if decided:
         # Platform-written pieces are revised by running the creation flow again; its adopted master comes back here.
-        return {**view, "state": "draft_changes", "label": "按你的意见在创作流程里重写" if platform else "第三方模型按你的意见修改中",
+        return {**view, "state": "draft_changes", "label": "第三方模型按你的意见修改中" if daily else "按你的意见在创作流程里重写" if platform else "第三方模型按你的意见修改中",
                 "notes": decided["notes"]}
     return {**view, "state": "draft_review", "label": "稿件待你看"}
 
@@ -307,8 +317,14 @@ def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: 
 
     unit = _unit(db, user, project_id, unit_id, mutate=True)
     current = _state(db, unit_id)
-    if current["writer"] != "external":
+    if current["writer"] not in {"external", "daily_review"}:
         _fail("article_chain_platform_writer", "页面上的写作方式是「平台模型」，先在内容方案页切到「第三方模型」")
+    if current["writer"] == "daily_review":
+        from .quant_daily_review import advice_problem
+
+        term = advice_problem(payload)
+        if term:
+            _fail("article_chain_daily_review_advice", f"每日复盘不能有投资建议用语，稿子里出现了「{term}」，改掉再存", 422)
     if current.get("locked"):
         _fail("article_chain_locked", "已定稿，要调整请复制一份")
     if current["state"] in {"rendering", "final_review"} and not _render_failed(current):
@@ -352,9 +368,10 @@ def versions(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     used = _referenced(db, [row.id for row in rows])
     final = current["master_id"] if current.get("locked") else None
     items = []
+    daily = current["writer"] == "daily_review"
     for row in rows:
         summary = row.edit_summary_json or {}
-        source = ("第三方模型" if summary.get("article_chain") == "draft" else "平台模型" if row.source_kind == "workflow_stage"
+        source = ("每日复盘" if daily and summary.get("article_chain") == "draft" else "第三方模型" if summary.get("article_chain") == "draft" else "平台模型" if row.source_kind == "workflow_stage"
                   else "复制" if summary.get("copied_from") else "恢复的版本" if summary.get("restored_from") else "手动")
         items.append({"id": row.id, "revision_no": row.revision_no, "source": source, "note": summary.get("note") or "",
                       "created_at": row.created_at.isoformat() if row.created_at else None,

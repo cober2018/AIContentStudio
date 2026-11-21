@@ -460,6 +460,10 @@ class EmptyInput(Input):
     pass
 
 
+class DailyReviewInput(Input):
+    trade_date: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+
+
 class PublishTargetInput(Input):
     target_id: ID
 
@@ -598,6 +602,7 @@ TOOLS = {
     "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project, in the film's aspect (9:16 default, 16:9 when the template has a landscape variant; never stretched). Never binds it to a shot.", False),
     "start_material_autofill": (ShotSlotsInput, "Fill every empty storyboard row: licensed stock picked when eligible, else a ready AE template rendered from the row, else a gap with the reason. Never replaces the user's picks or saves the master; read progress with get_material_match and the result with get_shot_slots.", False),
     "get_video_brief": (Scope, "Video chain step 0: project, brief, facts, source article text, voice settings, library materials (外部 / 通用 / this project, with folder and duration), the current video master payload and the chain state. You lead the whole video; the platform calls no model. When `search` is present this is a 搜索推广 work: the script answers search.question and cites only search.facts.", True),
+    "prepare_daily_review": (DailyReviewInput, "量化研究专家每日复盘: without trade_date, the newest finished trading day. Creates or reuses that day's text piece in the 每日复盘 project, pulls the day's facts from the data platform and draws the charts (reused on later calls), then returns project_id, unit_id, persona, facts, charts (key, title, about, material_revision_id), the writing rules and a text.master.v2 payload example. Write the whole piece by the rules and save it with save_article_draft; drafts with investment-advice words are refused.", False),
     "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request; product works may add camera_presets (≤2 motion-library ids), look, intensity, chain_from_previous, character; any work may add source_kind (shoot | product_image | generated | ae_template | library: where the picture comes from, shoot shots make the shooting list) and attitude (the person's attitude and who they speak to, written with studio.video.prompt-direction; it leads the video prompt); dub_persona (a persona name or id: only that shot's line is voiced, in that persona's own voice, for live-sound videos with a few voice-over shots)} and script.blocks. Optional voice.pronunciation: up to 50 strings like \"去重/(qu4)(chong2)\" (the words as written, then one bracket of pinyin with tone number per character) for polyphonic words MiniMax misreads; the line text stays as written. Optional spoken-audio track: at most one timeline track with kind dialogue, items {id, order, material_revision_id, trim_start_ms, trim_end_ms, start_ms, end_ms, script_block_id?, speed_percent?} = play that span of the clip at that time on the cut, for that line; speed_percent (50–200, default 100) plays it faster or slower, so trim length = placement length × speed_percent / 100 — keep it when re-saving, the user set it; segments may cross shot boundaries, must not overlap, and trimmed length must equal placed length × speed_percent / 100 (no shot_id); the edit lays the voice from it while pictures still cut per shot, without it each shot keeps its own sound. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). A saved 导演稿 is adopted at once (the user may still send it back later): go on to materials without waiting.", False),
     "submit_video_materials": (Scope, "Only when the state's materials_mode is manual (the default); with auto the platform refuses (video_chain_materials_auto): go straight on to the auto clips, voice and the 小样. Before the work's first 小样: after every shot has its material, or for shots to be generated a first frame and a mode (set_shot_video_mode; manual shots get their prompts), hand the materials to the user and STOP. Send the user review_url. Wait with get_video_decision for 素材 approval (then generate the auto clips, voice and cut the 小样) or notes (rework the materials and submit again). Only once per work: after the first 小样 there is no materials stop.", False),
     "get_video_decision": (Scope, "Read the chain state and the user's latest decisions and notes (素材 / 小样 / 成片; the user may also send a 导演稿 back, state draft_changes). Continue only after approval; notes mean a new version. cover_redo {note} on a 小样 / 成片 under review means the user wants only the cover redone: redo it per the note and submit role cover again on the same task (a landscape 成片 task: every cover role it lists), without resubmitting the cut.", True),
@@ -798,6 +803,13 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
     if name in _ARTICLE_TOOLS:
         from . import article_chain
 
+        if name == "prepare_daily_review":
+            from . import quant_daily_review as review
+
+            try:
+                return review.prepare(db, user, args.trade_date)
+            except review.ReviewError as exc:
+                raise HTTPException(409, {"code": f"daily_review_{exc}", "message": review.REASONS.get(str(exc), str(exc))}) from None
         if name == "get_article_brief":
             return article_chain.brief(db, user, args.project_id, args.unit_id)
         if name == "save_article_draft":
@@ -935,7 +947,7 @@ def _search(db: Session, name: str, args: Input, user: User) -> dict:
     return sp.review_feedback(db, user, args.project_id)
 
 
-_ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}
+_ARTICLE_TOOLS = {"prepare_daily_review", "get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}
 _VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials", "submit_video_materials",
                 "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
                 "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common", "propose_lesson",

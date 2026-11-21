@@ -1,0 +1,32 @@
+# 进度
+- 2026-11-10 写方案，待用户确认。
+- 2026-11-10 用户确认后实现：
+  - 新增 apps/api/app/services/quant_daily_review.py（取数、白名单过滤、单位换算、Pillow 出 7 张图、建项目/栏目/作品、平台模型写初稿、按意见重写）；worker_tasks 加 quant_daily_review、celery_app 每 30 分钟一次（7:30–22:00 才干活）；data_guard 加每日复盘检查和大白话原因；DataGuardPanel 加「每日复盘」一行和红条。
+  - 数据：新连接 connector 5「数据中台复盘（对外展示）」（DREAMO_REVIEW_API_KEY）；旧连接端点 11（行业复盘×生命周期）、12（行业 RRG 轨迹）interval 改 0 停拉。改前备份 apps/api/backups/content_studio-before-quant-review-20261110.db。
+  - 跑通 11-09：项目 65「每日复盘」、栏目 1「每日复盘」（量化研究专家）、作品 117「2026-11-09 复盘」（文字、公众号）、7 张图表、初稿 master 386（第 2 版，按字段说明重写），状态「稿件待你看」；数据保障显示已出初稿。
+  - 验证：过滤后数据里无建议类字段；tsc 通过；相关测试 19 passed；已重启 api/worker。
+- 2026-11-10 用户给了 DREAMO_REVIEW_API_KEY，已写入 runtime.env（git 忽略）并重启；该 Key 的服务目录为空，6 个复盘服务都返回 403「该 Key 无权访问此服务」→ 需数据中台管理员开通权限。401/403 改为数据保障直接提示「密钥没有权限」，不再当网络错误重试。
+- 2026-11-11 改接 public-* 服务（collect、charts、字段说明、写稿规则重写；数量取整）。跑通 11-10：作品 123「2026-11-10 复盘」、5 张图（大盘、主要指数、行业 5 日资金、涨停接力、估值与股债性价比），初稿 master 421（第 2 版，数量改整数后重出）；行业涨跌幅因上游重复前一天被自动拿掉。稿中数字全部能在当天数据里找到。已重启 worker。全量测试 2353 passed、5 failed（迁移和模型插件测试，与本需求文件无关）。
+- 2026-11-11 用户反馈「点开作品看不到文章」：稿子一步原来只有状态和版本列表，正文藏在版本的「查看」里、只有纯文字、没有图。改 apps/web/src/product/ArticleChainPanel.tsx：文字作品在稿子一步直接显示当前稿（标题、小标题、正文、图表图片，图片经 shared-assets 找到素材 id 后走 raw 接口）；图文作品不变。tsc 通过，浏览器实看作品 123 正文和 5 张图都显示。
+- 同日修柱状图右侧数字被截断（左右留白调整，名称最多 8 字）；11-10 资金图重画，存为第 3 版（master 422，只换图，正文不变）。已重启 worker。
+- 2026-11-15 写变更二方案（proposal「变更二」、spec 新增一条要求、tasks 第 5 组）：换 aicontent-dailyreview-prod，日历改 calendar-facts，403 不再静默跳过。待用户确认。
+- 2026-11-15 用户确认变更二并实现：
+  - 生产签发 aicontent-dailyreview-prod（前缀 dodk_01e9698，账号 aicontent，2027-11-15 过期，120 次/分钟），明文直接写进 runtime.env 的 DREAMO_REVIEW_API_KEY；旧值移到 DREAMO_REVIEW_API_KEY_LEGACY 只作回滚。
+  - quant_daily_review.py：日历改 view=calendar-facts、window_days=7 和新字段名；只留 indicator_code 不是 UNKNOWN 的事件；「说明暂不可用」的国家改成空；401/403 不再静默跳过，报 api_key_no_access。
+  - 对数（11-13）：新旧两把 Key 取数，除日历外完全一致；日历出 10 条（以前旧 Key 读日历一直 403，稿子里从没有过日历）。
+  - 已重启 api、worker。没有重跑已出的 11-13 稿子，等下一次自然运行验证。
+- 2026-11-16 写变更三方案（来源标签、以图为主、重生成两篇），待用户确认。
+- 2026-11-16 变更三实现：
+  - article_chain.py：每日复盘作品的 writer 显示为 daily_review，版本来源显示「每日复盘」（旧版本一起改），改意见中的标签为「每日复盘按你的意见重写中」；ArticleChainPanel.tsx 对这类作品不显示平台/第三方开关，改成「每日复盘」标签和说明。tsc 通过；117、131 版本列表来源已显示「每日复盘」。
+  - quant_daily_review.py：取数加 series（成交额 60 天、股债性价比历史、5 个指数 20 天）；表格全部改成图形（成交额折线 + 位置条、指数归一折线、涨停大数字 + 进度条、补偿折线 + 市盈率位置条、日历时间轴），删掉 table_chart；模型只拿 series_summary（最高、最低、起点），写稿规则改成以图为主、600–1000 字，prompt 版本 quant_review.v3。11-13 的 8 张图已出图实看。
+  - 改前备份 apps/api/backups/content_studio-before-quant-review-v3-20261116.db。
+  - 重生成卡住：默认写稿模型 gemini-3.8-flash-high 已不在 CPA 代理里（代理现在只有 grok 系列），grok-4.7 写这篇要 215 秒（推理 1.65 万 token），超过平台对代理的 120 秒上限；MiniMax-M3 返回 provider_target_unavailable。试的过程中多出 32 张 11-13 的图表素材，已归档（status=archived）。
+  - 已重启 api、worker。
+- 2026-11-16 用户要求改成 MCP、不要平台自动调度；写变更四方案，待确认。
+- 2026-11-16 变更四实现（用户确认，不做平台备用入口）：
+  - celery_app 去掉 quant-daily-review；worker_tasks 去掉 quant_daily_review 任务；data_guard 去掉 REVIEW_REASONS、_review 和 status 里的 review 项；DataGuardPanel 去掉「每日复盘」一行。
+  - quant_daily_review.py：删掉 _generate、_document、write_draft、run、_revise、status；新增 RULES、PAYLOAD_EXAMPLE、advice_problem、prepare（建作品、取数、出图，CHART_LAYOUT=v3 才复用图，图挂进项目素材引用）。
+  - creative_mcp：新工具 prepare_daily_review（DailyReviewInput.trade_date 可选），错误转成 409 daily_review_<原因> 和大白话；mcp_settings「写文章」组加入该工具。article_chain.save_draft：writer 为 daily_review 也放行，存稿前查建议用语，查到返回 422 article_chain_daily_review_advice。
+  - 页面：每日复盘作品显示「由接了 MCP 的第三方模型写稿：在那边说『写今天的复盘』……」；没稿时标签「等第三方模型写稿」。
+  - 验证：ruff 只剩原有的 3 类提示；tsc 通过；重启 api、worker 后经 stdio 桥调用 prepare_daily_review 五天都成功（新图 1890–1927）；Claude Code 按 RULES 写五篇，save_article_draft 存成 master 600–604；故意加「看好」的稿被拒（422）；ego-browser 打开作品 131，标签「每日复盘」，正文和 8 张图都正常。
+- 2026-11-16 给 Antigravity 加了 aicontentstudio-creative MCP：写进 ~/.gemini/antigravity/mcp_config.json 和 ~/.gemini/config/mcp_config.json（两份原来内容一样，改前各备份 .bak-20261116），用的是和 Claude Code 相同的 stdio 桥命令；从别的目录启动实测能列出 89 个工具，含 prepare_daily_review、save_article_draft、get_article_decision。
