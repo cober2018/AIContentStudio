@@ -16,11 +16,12 @@ function publishedTime(value: string | null) {
 }
 
 const CapabilityMemoryPanel = lazy(() => import("./CapabilityMemoryPanel"));
+const PersonaPerformance = lazy(() => import("./PersonaPerformance"));
 
 const LearningReadOnly = createContext(false);
 
 const box = "space-y-4 rounded-xl border border-slate-200 bg-white p-5";
-const labels: Record<string, string> = { history: "已发布作品", analysis: "表现对比", candidates: "改进建议", memory: "已保留经验" };
+const labels: Record<string, string> = { persona: "角色表现", history: "已发布作品", analysis: "表现对比", candidates: "改进建议", memory: "已保留经验" };
 type Values = Record<string, unknown>;
 type FormField = { name: string; label: string; type?: "text" | "number" | "datetime-local" | "url" | "textarea" | "json"; options?: string[]; value?: string; required?: boolean; hint?: string; maxLength?: number; readOnly?: boolean };
 const json = (name: string, label: string, value = "{}"): FormField => ({ name, label, type: "json", value, hint: "高级 JSON；保留证据、范围和限制的原始结构。" });
@@ -153,6 +154,11 @@ function LearningNavigation({ items }: { items: [string, string][] }) {
   return <nav aria-label="当前学习任务" className="flex flex-wrap gap-3">{items.map(([view, label]) => { const next = new URLSearchParams(params); next.set("view", view); next.delete("offset"); if (view === "list" || view === "insights") { if (params.get("list_offset")) next.set("offset", params.get("list_offset")!); next.delete("list_offset"); } return <Link key={view} className="rounded-lg border bg-white px-4 py-2 text-sm text-indigo-700" to={`?${next}`}>{label}</Link>; })}</nav>;
 }
 
+function PersonaFilter({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const personas = useQuery({ queryKey: ["learning-personas", currentUser()], queryFn: () => api.get<{ items: { persona_id: number; name: string; posts: number }[] }>("/learning/personas") });
+  return <label className="flex items-center gap-2 text-sm text-ink-600">角色<select className="rounded-lg border border-ink-300 bg-surface px-3 py-1.5 text-sm" value={value} onChange={(event) => onChange(event.target.value)}><option value="">全部角色</option>{(personas.data?.items ?? []).map((p) => <option key={p.persona_id} value={p.persona_id}>{p.name}（{p.posts}）</option>)}</select></label>;
+}
+
 function History({ selected, choose }: { selected: string | null; choose: (id: number) => void }) {
   const [filters, setFilters] = useLearningFilters();
   const [params, setParams] = useSearchParams();
@@ -173,7 +179,7 @@ function History({ selected, choose }: { selected: string | null; choose: (id: n
     {view === "import" && !readOnly && <><ActionForm title="导入外部已发布内容" submit="导入外部记录" fields={[text("external_key", "外部唯一编号", true), text("channel", "渠道代码", true), text("title", "标题"), text("content_form", "内容形态"), { ...text("canonical_url", "原文地址"), type: "url" }, date("published_at", "实际发布时间（未知则留空）"), number("content_account_id", "内容账号 ID"), { ...text("body", "正文"), type: "textarea" }, { ...text("subtitles", "字幕"), type: "textarea" }, json("media", "媒体引用列表", "[]")]} prepare={(values) => { const { body, subtitles, media, ...record } = values; return { records: [{ ...record, content_snapshot: { body, subtitles, media } }] }; }} action={(values) => api.post("/published-content/import", values)} />
     <details className={box}><summary>批量导入（高级）</summary><ActionForm title="规范化记录批量导入" fields={[json("records", "记录列表", "[]")]} action={(values) => api.post("/published-content/import", values)} /></details></>}
     {view === "imports" && <ImportBatches highlight={params.get("batch")} />}
-    {view === "list" && <section className={box}><h2 className="font-semibold">已发布作品</h2><Paged<PublishedContent> key={suffix} path={`/published-content?${suffix}`} render={(row) => <button key={row.id} className="block w-full rounded-lg border p-3 text-left text-sm" onClick={() => choose(row.id)}><span className="font-medium">{row.title ?? "标题缺失"}</span><p className="mt-1 text-slate-500"><ChannelIcon channel={row.channel} className="mr-1" />{row.channel} · {row.origin} · {publishedTime(row.published_at)}{row.pending_link && <span className="ml-2 rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-800">待补链接</span>}</p></button>} /></section>}
+    {view === "list" && <section className={box}><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-semibold">已发布作品</h2><PersonaFilter value={filters.persona_id ?? ""} onChange={(id) => setFilters({ ...filters, persona_id: id })} /></div><Paged<PublishedContent> key={suffix} path={`/published-content?${suffix}`} render={(row) => <button key={row.id} className="block w-full rounded-lg border p-3 text-left text-sm" onClick={() => choose(row.id)}><span className="font-medium">{row.title ?? "标题缺失"}</span><p className="mt-1 text-slate-500"><ChannelIcon channel={row.channel} className="mr-1" />{row.channel} · {row.origin} · {publishedTime(row.published_at)}{row.pending_link && <span className="ml-2 rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-800">待补链接</span>}</p></button>} /></section>}
     </>}
   </div>;
 }
@@ -364,7 +370,8 @@ function MemoryDetail({ entry: row, readOnly = false, viewKey = "memory_view" }:
 
 export default function LearningWorkspace() {
   const [params, setParams] = useSearchParams();
-  const requested = params.get("tab") ?? "history";
+  // 不带参数进来先看角色表现；带着作品编号的旧链接仍落到作品详情。
+  const requested = params.get("tab") ?? (params.get("published") ? "history" : "persona");
   const tab = Object.prototype.hasOwnProperty.call(labels, requested) ? requested : "history";
   const me = useQuery({ queryKey: ["learning-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
   const readOnly = !me.isSuccess || !["admin", "editor"].includes(me.data.role);
@@ -373,6 +380,6 @@ export default function LearningWorkspace() {
   const published = params.get("published");
   return <div className="mx-auto w-full max-w-[1240px] space-y-8 px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12">{taskReturn(params.get("return_to")) && <Link className="-mb-2 inline-block text-[13px] text-ink-500 hover:text-ink-900" to={taskReturn(params.get("return_to"))}>{taskReturn(params.get("return_to")).split("?")[0] === "/review" ? "返回审阅与交付" : "返回来源页面"}</Link>}<PageHeader eyebrow="发布与增长" title="效果复盘" lead="看作品表现，比较同类结果，核对改进建议，再决定哪些经验要长期保留。" /><nav role="tablist" aria-label="学习分区" className="-mt-4 flex gap-1 overflow-x-auto border-b border-ink-200/80 [scrollbar-width:none]">{Object.entries(labels).map(([key, label]) => <Link role="tab" aria-selected={tab === key} className={`relative whitespace-nowrap px-3 pb-3 pt-1 text-[14px] transition-colors ${tab === key ? "font-medium text-ink-900 after:absolute after:inset-x-3 after:-bottom-px after:h-[2px] after:rounded-full after:bg-accent-500" : "text-ink-500 hover:text-ink-900"}`} key={key} to={`/learning?${new URLSearchParams({ tab: key, ...(taskReturn(params.get("return_to")) ? { return_to: taskReturn(params.get("return_to")) } : {}) })}`}>{label}</Link>)}</nav>
     {((tab === "history" && published && !/^\d+$/.test(published)) || (tab === "candidates" && candidate && !/^\d+$/.test(candidate))) && <ErrorBanner message="记录链接无效，请返回对应列表选择作品或候选。" />}
-    {readOnly && <p className="text-sm text-slate-500">当前为只读浏览。身份未核实或没有编辑权限时不提供写入操作。</p>}<LearningReadOnly.Provider value={readOnly}><div role="tabpanel">{tab === "history" && <History selected={published && /^\d+$/.test(published) ? published : null} choose={(id) => choose("published", id)} />}{tab === "analysis" && <Analysis />}{tab === "candidates" && <Candidates selected={candidate && /^\d+$/.test(candidate) ? candidate : null} choose={(id) => choose("candidate", id)} />}{tab === "memory" && <MemoryPanel readOnly={readOnly} />}</div></LearningReadOnly.Provider>
+    {readOnly && <p className="text-sm text-slate-500">当前为只读浏览。身份未核实或没有编辑权限时不提供写入操作。</p>}<LearningReadOnly.Provider value={readOnly}><div role="tabpanel">{tab === "persona" && <Suspense fallback={<Spinner />}><PersonaPerformance /></Suspense>}{tab === "history" && <History selected={published && /^\d+$/.test(published) ? published : null} choose={(id) => choose("published", id)} />}{tab === "analysis" && <Analysis />}{tab === "candidates" && <Candidates selected={candidate && /^\d+$/.test(candidate) ? candidate : null} choose={(id) => choose("candidate", id)} />}{tab === "memory" && <MemoryPanel readOnly={readOnly} />}</div></LearningReadOnly.Provider>
   </div>;
 }

@@ -345,3 +345,25 @@ def undo_batch(db: Session, user: User, batch_id: int) -> dict:
     db.commit()
     return {**batch_json(batch, db.get(ContentAccount, batch.content_account_id)),
             "observations_removed": removed, "records_removed": len(removed_records)}
+
+
+def record_followers(db: Session, user: User, account_id: int, followers: int, source_name: str) -> dict:
+    """Store the account's total followers as read today (China date); a second reading the same day replaces the first."""
+    from ..models import AccountFollowerSnapshot
+
+    account = owned_entity(db, user, "account", account_id, mutable=True)
+    now = datetime.now(LOCAL_ZONE)
+    day = now.date().isoformat()
+    row = db.scalar(select(AccountFollowerSnapshot).where(
+        AccountFollowerSnapshot.content_account_id == account.id, AccountFollowerSnapshot.observed_on == day))
+    previous = db.scalar(select(AccountFollowerSnapshot).where(
+        AccountFollowerSnapshot.content_account_id == account.id, AccountFollowerSnapshot.observed_on < day)
+        .order_by(AccountFollowerSnapshot.observed_on.desc()).limit(1))
+    if row is None:
+        row = AccountFollowerSnapshot(owner_user_id=user.id, content_account_id=account.id, observed_on=day)
+        db.add(row)
+    row.followers, row.source_name, row.observed_at, row.created_by = followers, source_name, now, user.email
+    db.commit()
+    return {"account_id": account.id, "channel": account.platform_channel, "followers": followers, "observed_on": day,
+            "previous": {"followers": previous.followers, "observed_on": previous.observed_on} if previous else None,
+            "link": "/learning?tab=persona" + (f"&persona={account.persona_id}" if account.persona_id else "")}

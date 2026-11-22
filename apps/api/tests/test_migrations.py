@@ -92,7 +92,8 @@ def test_f6e_additive_schema_up_down_up_on_empty_isolated_sqlite(fresh_sqlite_ur
 
     cfg = Config("alembic.ini")
     cfg.attributes["configure_logger"] = False
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["a3series00000001"]
+    # 只断言"单头无分叉"，不锁具体版本号（迁移链前进后老断言会漂移）
+    assert len(ScriptDirectory.from_config(cfg).get_heads()) == 1
     command.upgrade(cfg, "head")
     engine = create_engine(fresh_sqlite_url)
     try:

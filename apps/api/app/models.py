@@ -2026,6 +2026,22 @@ class AccountMetricImport(Base):
     undone_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class AccountFollowerSnapshot(Base):
+    """An account's total followers as read from its platform on one day; a second reading the same day replaces it."""
+
+    __tablename__ = "account_follower_snapshot"
+    __table_args__ = (UniqueConstraint("content_account_id", "observed_on", name="uq_account_follower_day"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    content_account_id: Mapped[int] = mapped_column(ForeignKey("content_account.id"), index=True)
+    followers: Mapped[int] = mapped_column(Integer)
+    observed_on: Mapped[str] = mapped_column(String(10))
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    source_name: Mapped[str] = mapped_column(String(300))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+
+
 class VideoReworkRecord(Base):
     """One note the user wrote when sending a 小样 / 成片 back; kept so causes can be compared across videos."""
 

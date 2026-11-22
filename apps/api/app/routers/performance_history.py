@@ -19,6 +19,7 @@ from ..models import (
     ContentAsset,
     DeliveryReceipt,
     DeliveryTarget,
+    ContentAccount,
     IdentitySnapshot,
     PerformanceObservation,
     PublishedContentRecord,
@@ -450,6 +451,7 @@ def confirm_reconciled(payload: RecoveryIn, db: Session = Depends(get_db), user:
 def list_history(
     channel: str | None = None,
     content_account_id: int | None = None,
+    persona_id: int | None = None,
     content_form: str | None = None,
     date_from: datetime | None = None,
     date_to: datetime | None = None,
@@ -471,6 +473,10 @@ def list_history(
         q = q.where(PublishedContentRecord.channel == channel)
     if content_account_id:
         q = q.where(PublishedContentRecord.content_account_id == content_account_id)
+    if persona_id is not None:
+        owned_entity(db, user, "persona", persona_id)
+        q = q.where(PublishedContentRecord.content_account_id.in_(
+            select(ContentAccount.id).where(ContentAccount.persona_id == persona_id)))
     if content_form:
         q = q.where(PublishedContentRecord.content_form == content_form)
     if date_from:

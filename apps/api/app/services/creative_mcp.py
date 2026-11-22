@@ -549,6 +549,12 @@ def _metric_key_text() -> str:
     return "; ".join(f"{channel}: " + ", ".join(f"{key}({label})" for key, (label, _unit) in metrics.items())
                      for channel, metrics in PLATFORM_METRICS.items())
 
+class AccountFollowersInput(Input):
+    account_id: ID
+    followers: int = Field(ge=0, le=2_000_000_000)
+    source_name: str = Field(min_length=1, max_length=300)
+
+
 TOOLS = {
     "start_media_transcription": (MediaTranscriptionInput, "Small tool, not tied to any project: transcribe one local audio or video file (full path on this Mac or the material drive) with the platform's local speech recognition (no network, no cost). Writes one folder with <name>.txt (plain text), <name>.srt (subtitles) and <name>.md (notes split at scene changes, each part with its screenshot in images/ by relative path; audio gets text only). Default folder: 自媒体素材/AIContentStudio/转写/<name>/ on the material drive; output_dir (full path) writes elsewhere; earlier results are never overwritten. Runs in the background one job at a time and returns job_id at once; read it with get_media_transcription.", False),
     "get_media_transcription": (MediaTranscriptionReadInput, "Read a job started with start_media_transcription: status (queued / running / done / failed with reason), output folder, files (txt, srt, md, images), duration, cue and screenshot counts and the opening text. While queued or running, call again after a while.", True),
@@ -569,6 +575,7 @@ TOOLS = {
     "save_question_library": (LibraryInput, "Save a new version of the subject's question library (needs a confirmed subject). library = {questions [{id (keep existing ids), text, intent, priority 1-3, source_url (a search result page; leave empty only when inferred)}], keywords {primary, long_tail, brand}}. No confirmation needed.", False),
     "open_search_projects": (OpenProjectsInput, "Open up to 5 promotion projects, one per question: items [{question_id, forms [text|graphic|video], tone, reader_level, genre (definition|buying-guide|comparison|shortlist|how-to|price-spec|case-study|faq), writer (external|platform), title}]. Questions already in progress or done are skipped. Each project gets a core text work plus derived graphic / video works; facts are frozen at this moment.", False),
     "get_search_project": (SearchProjectInput, "Read a promotion project: question, settings, each work's role / modality / chain state, its platform versions and the person's review decisions.", True),
+    "record_account_followers": (AccountFollowersInput, "Record one account's total followers (粉丝总数 / 关注者总数, the whole account, not a single work's gain) as read today from the platform's own backend or home page in the user's logged-in browser; where each platform shows it is in get_craft_skill(skill=\"craft-review\"). Counts as plain numbers (1.2万 -> 12000); if the page only shows a rounded number, record it and say so to the user. source_name names the page read (e.g. 抖音创作者中心首页). A second reading the same day replaces the first. Returns the previous reading for comparison and the 效果复盘 link where the persona's whole-network followers are summed.", False),
     "adopt_search_draft": (Scope, "搜索推广 only: after your saved draft passes its checks (and you judged any warnings), adopt it yourself; for a graphic piece call it again once its images are rendered and you checked them. Videos follow the video chain, where the person reviews.", False),
     "get_search_version_template": (VersionTemplateInput, "The platform's mechanical adaptation of an adopted 搜索推广 work for one platform (e.g. zhihu/article, toutiao/article, wechat/article), as the payload format to rewrite, plus titles already used in the project.", True),
     "save_search_version": (VersionInput, "Save your rewritten platform version (new angle and title for that platform's readers, same facts and brand wording); a title used by another version is refused. Runs its checks and returns them.", False),
@@ -779,7 +786,7 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         if name == "report_publish_result":
             return browser_publish.record_published(db, user, args.target_id, args.screenshot_path, args.link, args.note, args.model)
         return browser_publish.record_draft(db, user, args.target_id, args.screenshot_path, args.note, args.model)
-    if name in {"list_accounts", "import_account_metrics", "list_published_works"}:
+    if name in {"list_accounts", "import_account_metrics", "list_published_works", "record_account_followers"}:
         from . import account_metrics_import
 
         if name == "list_accounts":
@@ -797,6 +804,8 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
     if name in {"get_fact_template", "submit_facts"}:
         from . import fact_templates
 
+        if name == "record_account_followers":
+            return account_metrics_import.record_followers(db, user, args.account_id, args.followers, args.source_name)
         if name == "get_fact_template":
             return fact_templates.for_model(db, user, args.project_id, args.unit_id)
         return fact_templates.submit(db, user, args.project_id, args.unit_id, [item.model_dump() for item in args.items], args.templates)

@@ -34,7 +34,7 @@ GROUPS = {
                                                      "save_question_library", "open_search_projects", "get_search_project", "adopt_search_draft",
                                                      "get_search_version_template", "save_search_version", "submit_search_batch", "get_search_review"}),
     "publish": ("发布到平台（浏览器发表或存草稿，按你说的）", {"list_publish_targets", "get_publish_package", "report_publish_draft", "report_publish_result", "report_publish_link"}),
-    "review": ("效果复盘（读平台后台数据录入）", {"list_accounts", "list_published_works", "import_account_metrics"}),
+    "review": ("效果复盘（读平台后台数据录入）", {"list_accounts", "list_published_works", "import_account_metrics", "record_account_followers"}),
     "tools": ("小工具", {"start_media_transcription", "get_media_transcription"}),
 }
 # Registry descriptions are written for models; these are the same facts for the person maintaining the setup.
