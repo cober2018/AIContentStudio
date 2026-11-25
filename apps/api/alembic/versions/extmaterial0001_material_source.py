@@ -26,4 +26,9 @@ def upgrade():
 
 
 def downgrade():
-    raise RuntimeError("destructive_downgrade_blocked: linked materials reference their source folders")
+    # 与全链守卫一致：有数据拒绝且不做任何 schema 改动；空库才 drop 本版本新建的表
+    bind = op.get_bind()
+    if "material_source" in sa.inspect(bind).get_table_names() \
+            and bind.execute(sa.text("SELECT COUNT(*) FROM material_source")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: linked materials reference their source folders")
+    bind.execute(sa.text("DROP TABLE IF EXISTS material_source"))

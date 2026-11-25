@@ -738,6 +738,11 @@ def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: 
         canonical_payload(document)
     except VideoDocumentError as exc:
         _fail("video_chain_draft_invalid", f"导演稿格式不对：{exc}", 422)
+    from . import product_recipes, product_video
+
+    link = product_video.work(db, unit_id)
+    if link is not None:
+        product_recipes.check_draft(db, link, document, product_video._settings(db, link).get("recipe"))
     master_id = _save(db, user, project_id, unit_id, document, {"video_chain": "draft", "note": (note or "")[:2000]})
     master = db.get(ContentMasterRevision, master_id)
     project_folders.write_director_draft(db, project_id, master.revision_no, master.payload_json)

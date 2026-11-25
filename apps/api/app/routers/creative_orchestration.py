@@ -39,7 +39,7 @@ class MediaInputRoute(CapabilityInputRoute):
             generator = dependency()
             db = next(generator)
             try:
-                user = get_current_user(db, request.headers.get("x-studio-user"), request.headers.get("authorization"))
+                user = get_current_user(db, request.headers.get("x-studio-user"), request.headers.get("x-studio-local-token"), request.headers.get("authorization"))
                 if user.role not in {"admin", "editor"}:
                     raise HTTPException(403, "需要编辑权限")
                 row = creative_executions._owned(db, int(request.path_params["project_id"]), int(request.path_params["unit_id"]), int(request.path_params["execution_id"]), user, mutate=True)

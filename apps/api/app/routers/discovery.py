@@ -132,13 +132,22 @@ def sources(persona_id: int | None = None, origin: Literal["manual", "automatic"
             db=Depends(get_db), user=Depends(get_current_user)):
     rows = db.scalars(select(DiscoverySource).where(DiscoverySource.owner_user_id == user.id,
         (DiscoverySource.status == "merged") if merged_only else (DiscoverySource.status != "merged")).order_by(DiscoverySource.id)).all()
+    # 列表页固定 4 次预取（订阅/角色/合并目标/回执），替代每行 4-6 次查询
+    presub = registry.subscription_map(db, user.id)
     if merged_only:
-        rows = [s for s in rows if (target := db.get(DiscoverySource, registry.management(s).get("merged_into")))
+        merged_ids = [mid for s in rows if (mid := registry.management(s).get("merged_into"))]
+        targets = {t.id: t for t in db.scalars(select(DiscoverySource).where(DiscoverySource.id.in_(merged_ids)))} if merged_ids else {}
+        rows = [s for s in rows if (target := targets.get(registry.management(s).get("merged_into")))
                 and target.owner_user_id == user.id and registry.management(target).get("alias_notice")]
     rows = [s for s in rows if (origin is None or registry.origin(s) == origin
             or origin in {"manual", "automatic"} and registry.origin(s) == "both")
-            and (persona_id is None or persona_id in registry.selected_role_ids(db, s))]
-    return [{**registry.source_json(db, s), "catchup": catchup.source_projection(db, s)} for s in rows[offset:offset + limit]]
+            and (persona_id is None or persona_id in registry.selected_role_ids_from(s, presub))]
+    page = rows[offset:offset + limit]
+    personas_by_id = {p.id: p for p in db.scalars(select(ContentPersona).where(
+        ContentPersona.owner_user_id == user.id, ContentPersona.status != "deleted"))} if page else {}
+    projections = catchup.sources_projection(db, page)
+    return [{**registry.source_json(db, s, presub=presub, personas_by_id=personas_by_id),
+             "catchup": projections[s.id]} for s in page]
 
 
 @router.get("/source-health")

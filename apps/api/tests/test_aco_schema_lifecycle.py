@@ -18,7 +18,7 @@ NEW_TABLES = {
 def test_local_approved_schema_default_is_enabled_crs():
     from app.db import LOCAL_APPROVED_SCHEMA_HEAD
 
-    assert LOCAL_APPROVED_SCHEMA_HEAD == "a3series00000001"
+    assert LOCAL_APPROVED_SCHEMA_HEAD == "websearch0001"
 
 
 @pytest.fixture

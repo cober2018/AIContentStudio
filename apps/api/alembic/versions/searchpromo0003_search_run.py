@@ -32,4 +32,8 @@ def upgrade():
 
 
 def downgrade():
-    raise RuntimeError("destructive_downgrade_blocked: retain search run history")
+    # 与全链守卫一致：有数据拒绝且不做任何 schema 改动；空库才 drop 本版本新建的表
+    bind = op.get_bind()
+    if bind.execute(sa.text("SELECT COUNT(*) FROM search_run")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: retain search run history")
+    bind.execute(sa.text("DROP TABLE IF EXISTS search_run"))

@@ -91,4 +91,33 @@ def upgrade():
 
 
 def downgrade():
-    raise RuntimeError("destructive_downgrade_blocked: retain search promotion data")
+    # 有数据拒绝。空库时删掉本版的表，并把 production_domain 的检查收回到商品域那一版（不含 search）。
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    tables = set(inspector.get_table_names())
+    unit_columns = {column["name"] for column in inspector.get_columns("content_unit")} if "content_unit" in tables else set()
+    if "production_domain" in unit_columns and bind.execute(
+            sa.text("SELECT COUNT(*) FROM content_unit WHERE production_domain = 'search'")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: retain search promotion data")
+    for table in (
+        "promotion_category",
+        "promotion_subject",
+        "promotion_subject_revision",
+        "search_plan",
+        "search_plan_revision",
+        "search_work",
+    ):
+        if table in tables and bind.execute(sa.text(f"SELECT COUNT(*) FROM {table}")).scalar():
+            raise RuntimeError("destructive_downgrade_blocked: retain search promotion data")
+    for table in ("search_work", "search_plan_revision", "search_plan", "promotion_subject_revision", "promotion_subject", "promotion_category"):
+        if table in tables:
+            bind.execute(sa.text(f"DROP TABLE {table}"))
+    if "production_domain" in unit_columns:
+        names = {row["name"] for row in sa.inspect(bind).get_check_constraints("content_unit")}
+        with op.batch_alter_table("content_unit") as batch:
+            if "ck_content_unit_production_domain" in names:
+                batch.drop_constraint("ck_content_unit_production_domain", type_="check")
+            if "ck_content_unit_persona_required" in names:
+                batch.drop_constraint("ck_content_unit_persona_required", type_="check")
+            batch.create_check_constraint("ck_content_unit_production_domain", "production_domain IN ('persona', 'product')")
+            batch.create_check_constraint("ck_content_unit_persona_required", "production_domain = 'product' OR persona_id IS NOT NULL")

@@ -1,5 +1,12 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+
+const localDevTokenPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../api/scripts/startup/local-dev-token");
+const localDevToken = fs.existsSync(localDevTokenPath) ? fs.readFileSync(localDevTokenPath, "utf8").trim() : process.env.LOCAL_DEV_TOKEN || "";
 
 export default defineConfig({
   plugins: [react(), {
@@ -20,7 +27,14 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": process.env.AI_STUDIO_API_TARGET || "http://localhost:8000",
+      "/api": {
+        target: process.env.AI_STUDIO_API_TARGET || "http://127.0.0.1:8000",
+        configure(proxy) {
+          proxy.on("proxyReq", (proxyReq) => {
+            if (localDevToken) proxyReq.setHeader("X-Studio-Local-Token", localDevToken);
+          });
+        },
+      },
     },
   },
 });

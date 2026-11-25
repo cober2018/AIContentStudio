@@ -58,14 +58,8 @@ def observation_json(row):
     return data
 
 
-def coverage(db: Session, row, *, cutoff=None):
+def _coverage_fields(row, asset, *, has_metric: bool, has_feedback: bool):
     content = row.content_snapshot_json or {}
-    asset = db.get(ContentAsset, row.content_asset_id) if row.content_asset_id else None
-    observations = select(PerformanceObservation.id).where(PerformanceObservation.published_content_id == row.id)
-    if cutoff is not None:
-        observations = observations.where(PerformanceObservation.observed_at <= cutoff)
-    metric = db.scalar(observations.where(PerformanceObservation.numeric_value.is_not(None)).limit(1))
-    feedback = db.scalar(observations.where(PerformanceObservation.observation_kind == "feedback").limit(1))
 
     def state(value):
         return "known" if value is not None and value != "" and value != [] and value != {} else "missing"
@@ -79,24 +73,38 @@ def coverage(db: Session, row, *, cutoff=None):
         "account": "known" if row.content_account_id is not None else state(row.account_ref_snapshot),
         "channel": state(row.channel),
         "published_at": "known" if row.published_at else "unknown",
-        "metrics": "known" if metric is not None else "missing",
-        "comments_feedback": "known" if feedback is not None else "missing",
+        "metrics": "known" if has_metric else "missing",
+        "comments_feedback": "known" if has_feedback else "missing",
         "production_provenance": "known" if row.origin == "studio" and row.content_asset_id else "unknown",
     }
+
+
+def coverage(db: Session, row, *, cutoff=None):
+    asset = db.get(ContentAsset, row.content_asset_id) if row.content_asset_id else None
+    observations = select(PerformanceObservation.id).where(PerformanceObservation.published_content_id == row.id)
+    if cutoff is not None:
+        observations = observations.where(PerformanceObservation.observed_at <= cutoff)
+    metric = db.scalar(observations.where(PerformanceObservation.numeric_value.is_not(None)).limit(1))
+    feedback = db.scalar(observations.where(PerformanceObservation.observation_kind == "feedback").limit(1))
+    return _coverage_fields(row, asset, has_metric=metric is not None, has_feedback=feedback is not None)
 
 
 MODEL_VERIFICATION = "third_party_model_browser"
 
 
-def publication_evidence(db: Session, row) -> dict:
+def _evidence_fields(row, receipt):
     # A model clicking 发表 in the user's browser is not a human attestation; without a work URL it proves nothing public yet.
     if row.origin != "studio":
         return {"confirmed_by": None, "publication_verified": None, "pending_link": False}
-    receipt = db.get(DeliveryReceipt, row.delivery_receipt_id) if row.delivery_receipt_id else None
     by = "model" if receipt is not None and receipt.verification_method == MODEL_VERIFICATION else "human"
     linked = bool(row.canonical_url and row.canonical_url.startswith(("http://", "https://")))
     verified = by == "human" or linked
     return {"confirmed_by": by, "publication_verified": verified, "pending_link": not verified}
+
+
+def publication_evidence(db: Session, row) -> dict:
+    receipt = db.get(DeliveryReceipt, row.delivery_receipt_id) if row.delivery_receipt_id else None
+    return _evidence_fields(row, receipt)
 
 
 def record_json(db: Session, row):
@@ -107,6 +115,31 @@ def record_json(db: Session, row):
     data.update(publication_evidence(db, row))
     data["matched_work"] = matched_work(db, row)
     return data
+
+
+def records_json(db: Session, rows) -> list[dict]:
+    """列表页批量版 record_json：asset/observations/receipt 各一次 in_ 预取，避免每行 4-5 次查询。"""
+    row_ids = [row.id for row in rows]
+    if not row_ids:
+        return []
+    asset_ids = [row.content_asset_id for row in rows if row.content_asset_id]
+    assets = {a.id: a for a in db.scalars(select(ContentAsset).where(ContentAsset.id.in_(asset_ids)))} if asset_ids else {}
+    receipt_ids = [row.delivery_receipt_id for row in rows if row.delivery_receipt_id]
+    receipts = {r.id: r for r in db.scalars(select(DeliveryReceipt).where(DeliveryReceipt.id.in_(receipt_ids)))} if receipt_ids else {}
+    metric_ids = set(db.scalars(select(PerformanceObservation.published_content_id).where(
+        PerformanceObservation.published_content_id.in_(row_ids), PerformanceObservation.numeric_value.is_not(None))))
+    feedback_ids = set(db.scalars(select(PerformanceObservation.published_content_id).where(
+        PerformanceObservation.published_content_id.in_(row_ids), PerformanceObservation.observation_kind == "feedback")))
+    out = []
+    for row in rows:
+        data = {col.name: getattr(row, col.name) for col in row.__table__.columns}
+        data["content_snapshot"] = data.pop("content_snapshot_json") or {}
+        data.pop("coverage_json")
+        data["coverage"] = _coverage_fields(row, assets.get(row.content_asset_id),
+                                            has_metric=row.id in metric_ids, has_feedback=row.id in feedback_ids)
+        data.update(_evidence_fields(row, receipts.get(row.delivery_receipt_id)))
+        out.append(data)
+    return out
 
 
 def sync_receipt(

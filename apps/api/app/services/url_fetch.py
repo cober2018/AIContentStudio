@@ -288,16 +288,27 @@ def safe_fetch(
     json_body: dict | None = None,
     *,
     response_metadata: dict | None = None,
+    policy: str = "fetch",
 ) -> tuple[bytes, str]:
-    """返回 (响应体, mime_type)。重定向逐跳重新校验目标，防止跳转到内网。"""
+    """返回 (响应体, mime_type)。重定向逐跳重新校验目标，防止跳转到内网。
+
+    policy 取 OUTBOUND_HTTP_POLICIES 的键（默认 "fetch" 10s/5MB）；
+    大文件下载用 "minimax_download"（120s/30MB）等对应档位。
+    """
 
     settings = get_settings()
-    limit = min(settings.url_fetch_max_bytes, MAX_OUTBOUND_RESPONSE_BYTES)
-    timeout = min(settings.url_fetch_timeout_seconds, MAX_OUTBOUND_TIMEOUT_SECONDS)
+    policy_limits = OUTBOUND_HTTP_POLICIES.get(policy, OUTBOUND_HTTP_POLICIES["fetch"])
+    if policy == "fetch":
+        # 用户设置只收紧默认档；专用档（大文件下载等）按 policy 表执行
+        limit = min(settings.url_fetch_max_bytes, policy_limits.response_bytes)
+        timeout = min(settings.url_fetch_timeout_seconds, policy_limits.timeout_seconds)
+    else:
+        limit, timeout = policy_limits.response_bytes, policy_limits.timeout_seconds
     if limit < 1 or timeout <= 0:
         raise UnsafeUrlError("响应读取限制无效")
     request_body = _json_request_body(json_body)
     current_url = url
+    current_method = method.upper()
     redirect_count = 0
     deadline = time.monotonic() + timeout
     request_headers = {key: value for key, value in (headers or {}).items() if key.lower() != "accept-encoding"}
@@ -314,19 +325,20 @@ def safe_fetch(
                 raise UnsafeUrlError("响应超过总读取时限")
             if request_body is not None:
                 request_headers["Content-Type"] = "application/json"
-            with client.stream(method.upper(), current_url, headers=request_headers, content=request_body, timeout=remaining) as resp:
+            with client.stream(current_method, current_url, headers=request_headers, content=request_body, timeout=remaining) as resp:
                 if resp.status_code in {301, 302, 303, 307, 308}:
                     redirect_count += 1
                     if redirect_count > MAX_REDIRECTS:
                         raise UnsafeUrlError("重定向次数超限")
                     redirected = httpx.URL(current_url).join(resp.headers["location"])
-                    original = httpx.URL(url)
                     current = httpx.URL(current_url)
-                    if ((redirected.scheme, redirected.host, redirected.port) != (current.scheme, current.host, current.port)
-                            and (headers or json_body is not None or original.query
-                                 or current.query or redirected.query
-                                 or method.upper() not in {"GET", "HEAD"})):
-                        raise UnsafeUrlError("带凭据或正文的请求不允许跨域重定向")
+                    if (redirected.scheme, redirected.host, redirected.port) != (current.scheme, current.host, current.port):
+                        if current.scheme == "https" and redirected.scheme != "https":
+                            raise UnsafeUrlError("重定向不能从 https 降到 http")
+                        # 凭据和正文留在原主机。下一跳重新做 SSRF 校验，CDN 签名参数可以留在 URL 上。
+                        request_headers = {"Accept-Encoding": "identity"}
+                        request_body = None
+                        current_method = "GET"
                     current_url = str(redirected)
                     continue
                 if response_metadata is not None:

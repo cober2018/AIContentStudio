@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner } from "../components/ui";
+import { useMe } from "./useMe";
 
 type Launch = { status: string; reason: string | null; href: string };
 export function ProductLaunchPanel({ projectId, readOnly }: { projectId: number; readOnly: boolean }) {
   const user = currentUser(), client = useQueryClient(), navigate = useNavigate();
-  const me = useQuery({ queryKey: ["product-launch-user", user], queryFn: () => api.get<{ role: string }>("/users/me") });
+  const me = useMe();
   const editable = !readOnly && !!me.data && ["admin", "editor"].includes(me.data.role);
   const research = useMutation({ mutationFn: () => api.post<{ results: { url: string; title: string; snippet: string }[] }>(`/content-projects/${projectId}/product-research`) });
   const query = useQuery({ queryKey: ["product-launch", user, projectId], queryFn: () => api.get<Launch | null>(`/content-projects/${projectId}/product-launch`) });

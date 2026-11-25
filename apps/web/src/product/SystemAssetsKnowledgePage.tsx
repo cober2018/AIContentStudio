@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMe } from "./useMe";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, EmptyState, ErrorBanner, Field, PageHeader, Spinner, StatusBadge, Tabs, inputClass } from "../components/ui";
@@ -9,7 +10,7 @@ import {
 } from "./systemLibraryTypes";
 import type {
   CollectionItem, CollectionPage, FactPackDetail, KnowledgeCollection, LibraryItem, LibraryPage,
-  LibraryTab, LibraryUsage, LibraryUser, MaterialRevision, ProjectSummary, SourceDetail,
+  LibraryTab, LibraryUsage, MaterialRevision, ProjectSummary, SourceDetail,
 } from "./systemLibraryTypes";
 
 const box = "space-y-4 rounded-xl border border-slate-200 bg-white p-5";
@@ -283,7 +284,7 @@ function AssetsWorkspace() {
   function tool(next: string) { update({ view: next, resource: undefined, id: undefined, panel: undefined, revision: undefined, task: undefined }); }
   function filter(key: string, value: string) { update({ [key]: value, offset: undefined }); }
   function changeTab(next: LibraryTab) { update({ tab: next, offset: undefined, status: undefined, material_kind: undefined, source_type: undefined, rights: undefined }); }
-  const me = useLibraryRead<LibraryUser>("/users/me");
+  const me = useMe();
   const canWrite = me.isSuccess && !me.isFetching && ["admin", "editor"].includes(me.data.role);
   const listVisible = !hasResource && view === "list" && taskParam === null;
   const path = `/system-library?${libraryQuery({ type: tab === "all" ? undefined : tab, q: params.get("q") ?? "", status, source_type: tab === "source" ? sourceType : undefined, material_kind: tab === "material" ? kind : undefined, rights: tab === "material" || tab === "fact_pack" ? rights : undefined, limit: PAGE_SIZE, offset })}`;

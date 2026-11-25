@@ -151,6 +151,31 @@ def store_bytes(db: Session, content: bytes, *, subdir: str, suffix: str) -> tup
     return str(relative), content_hash
 
 
+def store_file(db: Session, path: str, *, subdir: str, suffix: str, maximum: int) -> tuple[str, str]:
+    """大文件流式入藏（分块 sha256，不整块进内存）；返回 (relative_path, content_hash)。"""
+    digest = hashlib.sha256()
+    size = 0
+    with open(path, "rb") as source:
+        while chunk := source.read(1024 * 1024):
+            size += len(chunk)
+            if size > maximum:
+                raise HTTPException(413, "素材超过大小上限")
+            digest.update(chunk)
+    content_hash = digest.hexdigest()
+    if subdir == "material":
+        from .material_byte_lock import hold_until_transaction_end
+
+        hold_until_transaction_end(db, content_hash)
+    relative = Path(subdir) / content_hash[:2] / f"{content_hash}{suffix}"
+    from .material_storage import provider
+
+    with library_guard():
+        storage = provider()
+        with open(path, "rb") as source:
+            storage.put_stream(str(relative), source, maximum=maximum, expected_hash=content_hash)
+    return str(relative), content_hash
+
+
 @contextmanager
 def library_guard():
     try:
@@ -181,7 +206,7 @@ def create_revision(
     db: Session,
     material: Material,
     *,
-    content: bytes,
+    content: bytes | None,
     suffix: str = ".bin",
     declared_mime: str | None = None,
     source_kind: str = MaterialSourceKind.upload.value,
@@ -201,10 +226,16 @@ def create_revision(
     duration_ms: int | None = None,
     metadata: dict | None = None,
     created_by: str | None = None,
+    # 大文件（手动上传的视频片段等）走本地文件流式入藏：content_path 与 content 二选一。
+    # 不受 validate_upload 的 30MB 内存式上限约束，改受 content_maximum 约束。
+    content_path: str | None = None,
+    content_maximum: int = 512 * 1024 * 1024,
     _execution_acceptance: object | None = None,
     _execution_stream=None,
     _stream_maximum: int = 30 * 1024 * 1024,
 ) -> MaterialRevision:
+    if (content is None) == (content_path is None):
+        raise HTTPException(500, "create_revision 需要 content 或 content_path 之一")
     if source_kind not in {k.value for k in MaterialSourceKind}:
         raise HTTPException(422, f"非法素材来源: {source_kind}")
     if source_kind == "external_execution":
@@ -215,6 +246,15 @@ def create_revision(
                 or not isinstance(source_metadata.get("package_hash"), str) or len(source_metadata["package_hash"]) != 64):
             raise HTTPException(422, {"code": "external_execution_provenance_required"})
         mime = declared_mime if _execution_stream is not None else validate_execution_file(content, declared_mime, material.kind)
+    elif content_path is not None:
+        # 魔数嗅探只看文件头，流式路径用头部样本做同一套识别
+        with open(content_path, "rb") as sample:
+            head = sample.read(64 * 1024)
+        if not head:
+            raise HTTPException(422, "素材文件为空")
+        mime = sniff_mime(head, declared_mime)
+        if mime == FALLBACK_MIME:
+            raise HTTPException(422, "无法识别的文件类型（允许 PNG/JPEG/GIF/WebP/PDF/MP4/MP3）")
     else:
         mime = validate_upload(content, declared_mime) if source_kind != MaterialSourceKind.legacy.value else (declared_mime or FALLBACK_MIME)
     if _execution_stream is not None:
@@ -231,6 +271,8 @@ def create_revision(
             raise HTTPException(409, {"code": "execution_local_storage_required"})
         with library_guard():
             storage.put_stream(relative, _execution_stream, maximum=_stream_maximum, expected_hash=content_hash)
+    elif content_path is not None:
+        relative, content_hash = store_file(db, content_path, subdir="material", suffix=suffix, maximum=content_maximum)
     else:
         relative, content_hash = store_bytes(db, content, subdir="material", suffix=suffix)
     latest_no = db.scalar(

@@ -413,13 +413,14 @@ def unbind_series_target(series_id: int, target_id: int, db: Session = Depends(g
 
 def _register_revisions(kind: str, path: str) -> None:
     # The four entity kinds have the same revision contract and authorization behavior.
-    async def list_rows(entity_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    # 同步 DB 读写保持 def：FastAPI 会自动放线程池，避免阻塞事件循环（SQLite 写锁竞争可卡满 busy_timeout）。
+    def list_rows(entity_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
         return _revisions(db, user, kind, entity_id)
 
-    async def read_row(entity_id: int, revision_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    def read_row(entity_id: int, revision_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
         return _revision_detail(db, user, kind, entity_id, revision_id)
 
-    async def create_row(payload: RevisionIn, entity_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    def create_row(payload: RevisionIn, entity_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
         return _save(db, user, kind, entity_id, payload)
 
     router.add_api_route(path + "/revisions", list_rows, methods=["GET"], name=f"list_{kind}_revisions")

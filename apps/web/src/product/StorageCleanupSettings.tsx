@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
+import { useMe } from "./useMe";
 
 type Days = { source_document_text_days: number; generation_result_days: number; candidate_material_days: number };
 type Stats = Partial<Record<"source_texts_cleared" | "source_text_bytes_freed" | "generation_files_deleted" | "generation_bytes_freed" | "generation_tasks_expired" | "candidate_materials_deleted" | "candidate_bytes_freed", number>> & Record<string, number | boolean>;
@@ -32,7 +33,7 @@ export default function StorageCleanupSettings() {
   const queryClient = useQueryClient();
   const key = ["storage-cleanup", currentUser()];
   const overview = useQuery({ queryKey: key, queryFn: () => api.get<Overview>("/settings/storage/cleanup"), retry: false });
-  const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const [days, setDays] = useState<Record<keyof Days, string>>({ source_document_text_days: "", generation_result_days: "", candidate_material_days: "" });
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, currentUser, setCurrentUser } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
+import { useMe } from "./useMe";
 
 const RuntimeModelSettings = lazy(() => import("./RuntimeModelSettings"));
 const ConnectorSettings = lazy(() => import("./ConnectorSettings"));
@@ -103,7 +104,7 @@ function SectionActions({ section, onDirtyChange }: { section: Section; onDirtyC
   const [modelDirty, setModelDirty] = useState(false);
   useEffect(() => { if (section.key === "models") onDirtyChange(modelDirty); }, [section.key, modelDirty, onDirtyChange]);
   const [showOperations, setShowOperations] = useState(false);
-  const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const editable = section.editability === "editable" && me.isSuccess && me.data.role === "admin";
   if (section.key === "models") return <><ModelSettingsWorkspace editable={editable} onDirtyChange={setModelDirty} /></>;
   if (section.key === "team") {

@@ -2,6 +2,7 @@ import { useTaskLink, taskReturn } from "./taskNavigation";
 import { FormEvent, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useMe } from "./useMe";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
 import { ProjectOverviewTab } from "./project/ProjectOverviewTab";
@@ -41,7 +42,7 @@ export function PersistentProjectPage() {
   const loadSequence = useRef(0);
   const currentProjectId = useRef(projectId);
   currentProjectId.current = projectId;
-  const me = useQuery({ queryKey: ["me", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const [searchParams, setSearchParams] = useSearchParams();
   const [project, setProject] = useState<Project | null>(null);
   const [personas, setPersonas] = useState<Persona[]>([]);

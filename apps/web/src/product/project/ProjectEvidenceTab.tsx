@@ -1,7 +1,7 @@
 import { FormEvent, lazy, Suspense, useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api, ApiError, currentUser } from "../../api";
+import { api, ApiError } from "../../api";
 import { Button, EmptyState, ErrorBanner, Field, Spinner, inputClass } from "../../components/ui";
+import { useMe } from "../useMe";
 
 const SourceDrawer = lazy(() => import("../SourceTools").then(module => ({ default: module.SourceDrawer })));
 const FactTemplatePicker = lazy(() => import("./FactTemplatePanel").then(module => ({ default: module.FactTemplatePicker })));
@@ -13,7 +13,7 @@ type SourceBinding = { id: number; source_document_id: number; title: string; so
 type Boundary = { id: number; revision_no: number; fact_pack_id: number; fact_pack_version: number; fact_pack_checksum: string };
 
 export function ProjectEvidenceTab({ projectId, readOnly: archived = false }: { projectId: number; readOnly?: boolean }) {
-  const me = useQuery({ queryKey: ["project-operations-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const readOnly = archived || !me.isSuccess || !["admin", "editor"].includes(me.data.role);
   const base = `/content-projects/${projectId}`;
   const [sources, setSources] = useState<SourceBinding[]>([]);

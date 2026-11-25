@@ -46,11 +46,11 @@ def test_plugins_put_and_view(client, seed_users, reset_runtime):
     resp = client.put(
         "/api/v1/settings/plugins",
         headers=ADMIN,
-        json={"skills_enabled": ["wewrite-write"], "mcp": [{"name": "browser", "url": "http://localhost:9222"}]},
+        json={"skills_enabled": ["ego-browser"], "mcp": [{"name": "browser", "url": "http://localhost:9222"}]},
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert "wewrite-write" in body["skills_enabled"]
+    assert "ego-browser" in body["skills_enabled"]
     assert body["mcp"][0]["name"] == "browser"
     # 自动发现的技能列表在视图里（本机 .agents/.zcode skills）
     assert len(body["skills"]) > 0

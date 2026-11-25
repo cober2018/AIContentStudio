@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
+import { useMe } from "./useMe";
 
 type Name = "overexposed_mean_luma" | "overexposed_clipped_percent" | "brightness_jump_luma" | "dialogue_spread_lu" | "cover_mismatch_mean" | "source_brightness_diff" | "source_highlight_diff";
 type Thresholds = Record<Name, number>;
@@ -23,7 +24,7 @@ export default function DeliveryCheckSettings() {
   const queryClient = useQueryClient();
   const key = ["delivery-checks", currentUser()];
   const view = useQuery({ queryKey: key, queryFn: () => api.get<View>("/settings/delivery-checks"), retry: false });
-  const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const [values, setValues] = useState<Record<Name, string>>({ overexposed_mean_luma: "", overexposed_clipped_percent: "", brightness_jump_luma: "", dialogue_spread_lu: "", cover_mismatch_mean: "", source_brightness_diff: "", source_highlight_diff: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");

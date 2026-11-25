@@ -8,12 +8,13 @@ import { DataGuardPanel } from "./DataGuardPanel";
 import { api, ApiError, currentUser } from "../api";
 import { Button, EmptyState, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
 import type { Assessment, AssessmentRevision, Conversion, Opportunity, OpportunitySignal, OpportunityStatus } from "./opportunityTypes";
+import { useMe } from "./useMe";
 
 const base = "/content-opportunities";
 const card = "card min-w-0 break-words p-6 space-y-4 transition-[transform,box-shadow,border-color] duration-300 ease-studio hover:border-ink-300";
 const shell = "mx-auto min-h-screen max-w-6xl space-y-6 bg-paper px-4 py-9 sm:px-8";
 function useOpportunityPermission() {
-  const me = useQuery({ queryKey: ["opportunity-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   return { editable: !!me.data && ["admin", "editor"].includes(me.data.role), error: me.isError };
 }
 function safeUrl(value: unknown): string | undefined {

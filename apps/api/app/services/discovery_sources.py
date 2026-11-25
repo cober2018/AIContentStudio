@@ -84,6 +84,26 @@ def selected_role_ids(db, source):
         PersonaSourceSubscription.manually_paused.is_(False))).all())
 
 
+def subscription_map(db, owner_id):
+    """owner 的全部启用订阅一次预取：source_id -> [persona_id]。列表页用它替代每行一查。"""
+    rows = db.scalars(select(PersonaSourceSubscription).join(
+        DiscoverySource, DiscoverySource.id == PersonaSourceSubscription.source_id).where(
+        DiscoverySource.owner_user_id == owner_id, PersonaSourceSubscription.enabled.is_(True),
+        PersonaSourceSubscription.manually_paused.is_(False))).all()
+    mapping: dict[int, list[int]] = {}
+    for row in rows:
+        mapping.setdefault(row.source_id, []).append(row.persona_id)
+    return mapping
+
+
+def selected_role_ids_from(source, presub: dict):
+    """subscription_map 的内存版 selected_role_ids（roles_managed 仍读 management 元数据）。"""
+    m = management(source)
+    if m.get("roles_managed"):
+        return m.get("persona_ids", [])
+    return presub.get(source.id, [])
+
+
 def reconcile_manual_sources(db, *, owner_id=None, persona_id=None):
     sources = db.scalars(select(DiscoverySource).where(DiscoverySource.status != "merged").order_by(DiscoverySource.id)).all()
     for source in sources:
@@ -205,13 +225,16 @@ def create_source(db, user, data):
     return source, True
 
 
-def source_json(db, source):
+def source_json(db, source, *, presub: dict | None = None, personas_by_id: dict | None = None):
     from .discovery_aggregation import accepts_source, is_aggregate
 
     m = management(source)
-    ids = selected_role_ids(db, source)
-    personas = db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == source.owner_user_id,
-                                                     ContentPersona.id.in_(ids), ContentPersona.status != "deleted")).all()
+    ids = selected_role_ids_from(source, presub) if presub is not None else selected_role_ids(db, source)
+    if personas_by_id is not None:
+        personas = [personas_by_id[i] for i in ids if i in personas_by_id]
+    else:
+        personas = db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == source.owner_user_id,
+                                                         ContentPersona.id.in_(ids), ContentPersona.status != "deleted")).all()
     return {"id": source.id, "name": source.name, "url": source.canonical_url, "kind": source.kind,
         "input_url": m.get("input_url") or (source.evidence_json or {}).get("search_url") or source.canonical_url,
         "collector_url": (source.adapter_json or {}).get("url"), "origin": origin(source), "status": source.status,

@@ -103,7 +103,10 @@ def _generate_once(target: dict, prompt: str, references: list[bytes], aspect_ra
             if item.get("b64_json"):
                 return base64.b64decode(item["b64_json"])
             if item.get("url"):
-                return httpx.get(item["url"], timeout=60).content
+                # provider 返回的 URL 不可信：走 safe_fetch 的私网拦截（UnsafeUrlError 是 ValueError，落入下方既有失败路径）
+                from .url_fetch import safe_fetch
+
+                return safe_fetch(item["url"], policy="image")[0]
     except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
         status = exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None
         # Refused before drawing: quota, key or rate limit, or the connection failed or was cut at once (no image takes seconds).

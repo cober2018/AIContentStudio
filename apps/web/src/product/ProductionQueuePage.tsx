@@ -1,6 +1,7 @@
 import { useTaskLink } from "./taskNavigation";
 import { useEffect, useState } from "react";
 import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
+import { useMe } from "./useMe";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, currentUser } from "../api";
 import { Button, EmptyState, ErrorBanner, Field, Spinner, StatusBadge, RatioSuffix, WorkCode, inputClass } from "../components/ui";
@@ -23,9 +24,9 @@ export default function ProductionQueuePage({ projectId, workspace }: { projectI
   const q = params.get(`${prefix}q`) ?? "";
   const modality = params.get(`${prefix}modality`) ?? "";
   const persona = workspace === "persona" ? params.get(`${prefix}persona`) ?? "" : "";
-  const recordsOpen = params.get(`${prefix}view`) === "records";
   // Published works are reviewed in 效果复盘 or 审阅与交付, so the persona list opens on the unpublished ones.
   const publishState = workspace === "persona" ? params.get(`${prefix}state`) ?? "" : "all";
+  const recordsOpen = params.get(`${prefix}view`) === "records";
   const showArchived = params.get(`${prefix}archived`) === "1";
   const requestedPage = Number(params.get(`${prefix}page`) ?? "1");
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
@@ -42,7 +43,7 @@ export default function ProductionQueuePage({ projectId, workspace }: { projectI
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const [lifecycleError, setLifecycleError] = useState("");
   const [lifecycleNotice, setLifecycleNotice] = useState("");
-  const me = useQuery({ queryKey: ["me", currentUser()], queryFn: () => api.get<{role: string}>("/users/me") });
+  const me = useMe();
   async function changeLifecycle(project: Project, unit: Unit, action: "archive" | "restore" | "delete") {
     if (action === "delete" && !window.confirm(`删除“${unit.title}”？\n将从当前和归档清单移除，本入口不提供恢复。项目、共享素材及已引用历史保留。`)) return;
     setLifecycleBusy(true); setLifecycleError(""); setLifecycleNotice("");

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMe } from "./useMe";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { Button, ErrorBanner, inputClass, StatusBadge } from "../components/ui";
@@ -29,12 +30,6 @@ interface SettingsView {
   plugins: PluginsView;
 }
 
-interface Me {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
-}
 
 function Panel({ title, desc, children }: { title: string; desc?: string; children: ReactNode }) {
   return (
@@ -178,7 +173,7 @@ function PluginsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: 
 
 export default function RuntimeModelSettings() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => api.get<SettingsView>("/settings") });
-  const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => api.get<Me>("/users/me") });
+  const { data: me } = useMe();
   if (!settings) return <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-400">加载配置中…</div>;
   return <PluginsPanel settings={settings} isAdmin={me?.role === "admin"} />;
 }

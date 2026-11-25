@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, Spinner } from "../components/ui";
+import { useMe } from "./useMe";
 
 type Plugin = {
   key: string;
@@ -15,7 +16,7 @@ type Catalog = { items: Plugin[]; note: string };
 
 export default function ChannelPluginPanel() {
   const client = useQueryClient();
-  const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const plugins = useQuery({ queryKey: ["channel-plugins", currentUser()], queryFn: () => api.get<Catalog>("/channels/plugins"), retry: false });
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

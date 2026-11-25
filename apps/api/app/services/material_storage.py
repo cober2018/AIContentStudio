@@ -329,6 +329,19 @@ class MinioMaterialStorage:
             return
         self.client.put_object(self.bucket, key, io.BytesIO(content), len(content))
 
+    def put_stream(self, key: str, source, *, maximum: int, expected_hash: str) -> None:
+        """分块上传。键里已经含内容哈希，对象已存在就不用再整块读回来比对。"""
+        from .creative_media_stream import inspect
+
+        key = _safe_key(key)
+        _validate_material_key(key, expected_hash)
+        size, digest = inspect(source, maximum)
+        if digest != expected_hash:
+            raise ValueError("storage_object_hash_mismatch")
+        if self.exists(key):
+            return
+        self.client.put_object(self.bucket, key, source, size)
+
     def read(self, key: str) -> bytes:
         key = _safe_key(key)
         response = self.client.get_object(self.bucket, key)

@@ -16,4 +16,12 @@ def upgrade():
 
 
 def downgrade():
-    raise RuntimeError("destructive_downgrade_blocked: retain unit lifecycle and history")
+    # 与全链守卫一致：有归档/删除等生命周期数据才拒绝；全是默认 active 才回退删列
+    bind = op.get_bind()
+    columns = {column["name"] for column in sa.inspect(bind).get_columns("content_unit")}
+    if "lifecycle" not in columns:
+        return
+    if bind.execute(sa.text("SELECT COUNT(*) FROM content_unit WHERE lifecycle != 'active'")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: retain unit lifecycle and history")
+    with op.batch_alter_table("content_unit") as batch:
+        batch.drop_column("lifecycle")

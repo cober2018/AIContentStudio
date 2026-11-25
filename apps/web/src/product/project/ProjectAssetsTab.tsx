@@ -1,9 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { api, ApiError, currentUser } from "../../api";
+import { api, ApiError } from "../../api";
 import { Button, EmptyState, ErrorBanner, Field, Spinner, inputClass } from "../../components/ui";
 import type { SharedAsset } from "./types";
+import { useMe } from "../useMe";
 
 const ProviderMediaPanel = lazy(() => import("../ProviderMediaPanel"));
 const ProviderSearchPanel = lazy(() => import("../ProviderSearchPanel"));
@@ -15,7 +15,7 @@ type FolderImport = { added: number; existing: number; skipped: { file: string; 
 type ImportedFolder = { folder: string; path: string | null; files: number; moved: number; refreshable: boolean };
 
 export function ProjectAssetsTab({ projectId, onChanged, onBusy, disabled = false, readOnly: archived = false }: { projectId: number; onChanged?: () => void; onBusy?: (busy: boolean) => void; disabled?: boolean; readOnly?: boolean }) {
-  const me = useQuery({ queryKey: ["project-operations-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const readOnly = archived || !me.isSuccess || !["admin", "editor"].includes(me.data.role);
   const base = `/content-projects/${projectId}`;
   const [assets, setAssets] = useState<SharedAsset[]>([]);

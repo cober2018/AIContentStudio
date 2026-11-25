@@ -8,7 +8,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -243,7 +243,7 @@ def import_records(payload, db, user):
             audit(db, user, "published_content.imported", row)
         items.append(row)
     commit(db)
-    return {"items": [service.record_json(db, r) for r in items], "total": len(items)}
+    return {"items": service.records_json(db, items), "total": len(items)}
 
 
 @router.post("/published-content", status_code=201)
@@ -294,7 +294,7 @@ def sync_studio(
     ).all()
     commit(db)
     return {
-        "items": [service.record_json(db, r) for r in items],
+        "items": service.records_json(db, items),
         "missing_confirmation_target_ids": missing,
         "skipped_receipt_ids": skipped,
         "processed": len(receipts),
@@ -485,10 +485,23 @@ def list_history(
         q = q.where(PublishedContentRecord.published_at < date_to)
     total = db.scalar(select(func.count()).select_from(q.subquery()))
     rows = db.scalars(q.order_by(PublishedContentRecord.id.desc()).offset(offset).limit(limit)).all()
-    evidence = [service.publication_evidence(db, r) for r in db.scalars(q.where(PublishedContentRecord.origin == "studio")).all()]
-    return {"items": [service.record_json(db, r) for r in rows], "total": total, "limit": limit, "offset": offset,
-            "verified_total": sum(1 for e in evidence if e["publication_verified"]),
-            "pending_link_total": sum(1 for e in evidence if e["pending_link"])}
+    # verified/pending 统计改聚合 SQL：不再全量拉 studio 行逐行查回执（与 publication_evidence 判定等价：
+    # verified = 无回执或非模型回执（=人工）或有作品链接；pending = 模型回执且无链接）
+    studio_sq = q.where(PublishedContentRecord.origin == "studio").subquery()
+    linked = or_(studio_sq.c.canonical_url.like("http://%"), studio_sq.c.canonical_url.like("https://%"))
+    # NULL LIKE 得 NULL 而非 false（SQL 三值逻辑）：无链接的行要显式按 IS NULL 计入"未挂链接"
+    not_linked = or_(studio_sq.c.canonical_url.is_(None), ~linked)
+    model_receipt = DeliveryReceipt.verification_method == service.MODEL_VERIFICATION
+    verified_total = db.scalar(
+        select(func.count()).select_from(studio_sq)
+        .outerjoin(DeliveryReceipt, DeliveryReceipt.id == studio_sq.c.delivery_receipt_id)
+        .where(or_(DeliveryReceipt.id.is_(None), ~model_receipt, linked)))
+    pending_link_total = db.scalar(
+        select(func.count()).select_from(studio_sq)
+        .join(DeliveryReceipt, DeliveryReceipt.id == studio_sq.c.delivery_receipt_id)
+        .where(model_receipt, not_linked))
+    return {"items": service.records_json(db, rows), "total": total, "limit": limit, "offset": offset,
+            "verified_total": verified_total, "pending_link_total": pending_link_total}
 
 
 @router.get("/published-content/{record_id}")

@@ -80,21 +80,40 @@ def _production_claims(token: str, settings) -> dict:
 def get_current_user(
     db: Session = Depends(get_db),
     x_studio_user: str | None = Header(default=None, alias="X-Studio-User"),
+    x_studio_local_token: str | None = Header(default=None, alias="X-Studio-Local-Token"),
     authorization: str | None = Header(default=None, alias="Authorization"),
 ) -> User:
-    return _current_user(db, x_studio_user, authorization, provision=True)
+    return _current_user(db, x_studio_user, authorization, x_studio_local_token, provision=True)
 
 
 def get_existing_user(
     db: Session = Depends(get_db),
     x_studio_user: str | None = Header(default=None, alias="X-Studio-User"),
+    x_studio_local_token: str | None = Header(default=None, alias="X-Studio-Local-Token"),
     authorization: str | None = Header(default=None, alias="Authorization"),
 ) -> User:
     # Pure previews must not create an identity while authorizing a read.
-    return _current_user(db, x_studio_user, authorization, provision=False)
+    return _current_user(db, x_studio_user, authorization, x_studio_local_token, provision=False)
 
 
-def _current_user(db, x_studio_user, authorization, *, provision):
+def _local_dev_token(settings) -> str:
+    """环境变量优先。开发模式下若本机令牌文件存在也算启用，这样没导出变量的 uvicorn 一样受保护。测试进程不读文件。"""
+    import os
+    from pathlib import Path
+
+    if settings.local_dev_token:
+        return settings.local_dev_token
+    if settings.app_env != "development" or os.environ.get("PYTEST_CURRENT_TEST"):
+        return ""
+    path = Path(__file__).resolve().parents[1] / "scripts" / "startup" / "local-dev-token"
+    try:
+        token = path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+    return token if token else ""
+
+
+def _current_user(db, x_studio_user, authorization, x_studio_local_token, *, provision):
     from .config import get_settings, validate_production_settings
 
     settings = get_settings()
@@ -110,6 +129,9 @@ def _current_user(db, x_studio_user, authorization, *, provision):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "production_identity_ambiguous")
         user = matches[0]
     else:
+        expected = _local_dev_token(settings)
+        if expected and not (isinstance(x_studio_local_token, str) and hmac.compare_digest(x_studio_local_token, expected)):
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "local_dev_token_required")
         email = (x_studio_user or "admin@studio.local").strip().lower()
         user = db.query(User).filter(User.email == email).first()
         if user is None:

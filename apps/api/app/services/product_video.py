@@ -187,6 +187,7 @@ def direction(db: Session, unit_id: int) -> dict | None:
                                           "dialogue": style in product_categories.DIALOGUE_STYLES},
         "hook": {"pinned": settings.get("hook_pinned") or None, "versions": settings.get("hook_versions", 1)},
         "reference_structure": settings.get("reference_structure") or None,
+        "recipe": _recipe_view(db, link, settings.get("recipe")),
         "material_mode": settings.get("material_mode", "mixed"),
         "i2v_mode": mode,
         "motion_library": {
@@ -195,6 +196,13 @@ def direction(db: Session, unit_id: int) -> dict | None:
             "intensity": list(motion["intensity"]), "max_stack": product_motion.MAX_STACK},
         "rules": _rules(settings.get("material_mode", "mixed"), mode, style) + [_people_rule(references(db, None, unit_id))],
     }
+
+
+def _recipe_view(db: Session, link: ProductSkuWork, chosen: str | None) -> dict:
+    from . import product_recipes
+
+    return {"chosen": product_recipes.get(chosen) if chosen else None,
+            "recently_used": product_recipes.recent(db, link), "list_tool": "list_product_recipes"}
 
 
 def _people_rule(refs: dict) -> str:
@@ -206,6 +214,10 @@ def _people_rule(refs: dict) -> str:
 
 def _rules(material_mode: str, mode: str, style: str | None) -> list[str]:
     rules = [
+        "成片配方：recipe.chosen 有值就按它做（用户选的）；没有就用 list_product_recipes 按这件商品和现有素材挑一个，"
+        "recently_used 里同品类最近用过的不要再用；needs.proof 的配方要有对应实拍或真实资料，没有就别选；needs.person 的要角色形象照或实拍人物。"
+        "按配方的风格、运镜计划、光线色调、创意方向和 make（素材少时的做法）写导演稿，导演稿顶层写 recipe {id, reason}；"
+        "制作设置里单独选了脚本风格的，风格以设置为准。生成画面出来后按配方的 check 逐条核对。",
         "脚本：用 studio.video.product-script@3；先读 product.category.directive。product.style 有值就读那个风格 skill 照着写，没有就在 product.category.styles 里挑一个并写理由；开头按 product.hook。",
         "导演稿每镜 board 可写 camera_presets（≤2 个运镜库 id，一个定住一个在动的不能叠）、look、intensity（subtle/normal/strong）、chain_from_previous；没写就用品类的 camera_plan 和 look。",
         "商品亮相和下单引导镜头只用商品原图或实拍，不让 AI 改商品；价格、评价、销量、证书只用真实资料。",
@@ -215,6 +227,10 @@ def _rules(material_mode: str, mode: str, style: str | None) -> list[str]:
         "photo_only": "出片方式：一张图出整片。除亮相和下单引导外，每个镜头都用图生视频，首帧用该镜关键帧，没有关键帧用商品主图。",
         "user_footage": "出片方式：给素材剪。只用用户放进库的素材，不自动补；缺素材的镜头在回执里列出。",
         "mixed": "出片方式：混合补齐。先用用户素材，缺的依次用免费公开素材 → 图生视频 → AE 模板，每镜回执写明素材来源。",
+        "creative": "出片方式：以效果为准。先按配方定每镜要的画面，再看素材：用户素材是原料，不必全用。"
+                    "原片能直接达到效果的用原片（board.source_kind=shoot）；画面平淡的从原片截一帧（grab_video_frame，可作首帧或尾帧）再图生视频（footage_frame）；"
+                    "没有合适素材的用 generate_shot_image 生首帧再图生视频（generated），或把这一镜改成手动去网页文生视频。"
+                    "有用户素材的镜头也可以这样生成。商品亮相和下单引导用商品原图、原片或原片截帧。每镜回执写明来源。",
     }[material_mode])
     rules.append("首帧：商品主图之外需要新场景时，用 generate_shot_image 生成这一镜的首帧（自动带商品主图和角色形象照作参考并检查商品一致，不过关会重画，最多 3 次；作品「共同视觉参考」里手动选的优先）；通过的图自动设为首帧。亮相和下单引导镜头只用商品原图。手动镜头把首帧和 get_shot_video_prompt 的提示词交给用户，用户在页面上传做好的视频；自动镜头生成完会直接放进这一镜。")
     rules.append("清晰度：小样阶段按小样档生成；小样通过后，成片档如果比生成时的档位高，先对每个自动生成的镜头重新 generate_shot_video（会按成片档出），再 set_shot_materials 换上新片，然后开成片剪辑；两档相同就沿用小样的片子，不重新生成。")
@@ -319,13 +335,15 @@ def _keyframe(db: Session, unit_id: int, shot: dict | None) -> int | None:
 
 def _frames(db: Session, unit_id: int, document: dict, shot: dict, following: dict | None, product: list[int]) -> tuple[int | None, int | None]:
     first = _keyframe(db, unit_id, shot) or (product[0] if product else None)
-    # Chaining pins this clip's last frame to the next shot's keyframe, so the cut between them does not jump.
-    last = _keyframe(db, unit_id, following) if following and (following.get("board") or {}).get("chain_from_previous") else None
+    # A last frame picked for the shot (e.g. the new outfit) wins; otherwise chaining pins it to the next shot's keyframe, so the cut does not jump.
+    picked = ((_setting(db, JOBS_KEY).get(str(unit_id)) or {}).get("last_frames") or {}).get(shot["id"])
+    last = picked or (_keyframe(db, unit_id, following) if following and (following.get("board") or {}).get("chain_from_previous") else None)
     return first, last
 
 
-def set_shot_first_frame(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, revision_id: int | None) -> dict:
-    """Pick the picture one shot's image-to-video starts from; None goes back to the 导演稿 keyframe or the product photo."""
+def set_shot_first_frame(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, revision_id: int | None, use: str = "first") -> dict:
+    """Pick the picture one shot's image-to-video starts (or, with use=last, ends) from; None goes back to the 导演稿 keyframe or the product photo
+    (for the last frame: back to chaining)."""
     _context(db, user, project_id, unit_id, shot_id)
     _after_approval(db, user, project_id, unit_id)
     if revision_id is not None:
@@ -334,15 +352,84 @@ def set_shot_first_frame(db: Session, user: User, project_id: int, unit_id: int,
                                                                        ProjectMaterialReference.material_revision_id == revision_id))
         if revision is None or revision.material.kind != "image" or attached is None:
             _fail(422, "product_first_frame_invalid", "首帧必须是这个项目里的一张图片")
+    if use not in {"first", "last"}:
+        _fail(422, "product_frame_use_invalid", "use 只能是 first（首帧）或 last（尾帧）")
     jobs = _setting(db, JOBS_KEY)
-    frames = jobs.setdefault(str(unit_id), {}).setdefault("frames", {})
+    frames = jobs.setdefault(str(unit_id), {}).setdefault("frames" if use == "first" else "last_frames", {})
     if revision_id is None:
         frames.pop(shot_id, None)
     else:
         frames[shot_id] = revision_id
     _put(db, JOBS_KEY, jobs, user.email)
     db.commit()
-    return {"shot_id": shot_id, "first_frame_revision_id": revision_id}
+    return {"shot_id": shot_id, f"{use}_frame_revision_id": revision_id}
+
+
+HLG_LUT = Path(__file__).resolve().parents[2] / "craft_skills" / "craft-resolve" / "luts" / "iphone-hlg-apple-sdr.cube"
+
+
+def _grab(path: Path, at_ms: int) -> bytes:
+    """One full-size PNG of the picture at at_ms; iPhone HLG footage goes through the same Apple SDR LUT the edit uses, else it comes out grey."""
+    import subprocess
+    import tempfile
+
+    probe = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=color_transfer", "-of", "default=nw=1:nk=1", str(path)],
+                           capture_output=True, text=True, timeout=60, check=False).stdout.strip()
+    picture = ("scale=in_color_matrix=bt2020:in_range=tv:out_range=pc:flags=accurate_rnd+full_chroma_int,format=rgb48le,"
+               f"lut3d=file='{HLG_LUT}',format=rgb24") if probe == "arib-std-b67" else "scale=out_range=pc:flags=accurate_rnd+full_chroma_int,format=rgb24"
+    with tempfile.TemporaryDirectory(prefix="aics-grab-") as folder:
+        target = Path(folder) / "frame.png"
+        result = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-ss", f"{at_ms / 1000:.3f}", "-i", str(path), "-frames:v", "1",
+                                 "-vf", picture, str(target)], capture_output=True, timeout=120, check=False)
+        if result.returncode != 0 or not target.is_file():
+            _fail(422, "video_frame_grab_failed", "这个时间点截不出画面：" + result.stderr.decode(errors="replace")[-300:])
+        return target.read_bytes()
+
+
+def grab_video_frame(db: Session, user: User, project_id: int, unit_id: int, revision_id: int, at_ms: int,
+                     shot_id: str | None = None, use: str = "first") -> dict:
+    """A frame of a project video becomes an image material (and, with shot_id, that shot's first or last frame). It is real footage."""
+    from .content_masters import owned_unit
+    from .material_previews import source_path
+    from .materials import create_material, create_revision
+    from .project_folders import require_library, store_new
+
+    owned_unit(db, project_id, unit_id, user)
+    require_library()
+    revision = db.get(MaterialRevision, revision_id)
+    attached = db.scalar(select(ProjectMaterialReference.id).where(ProjectMaterialReference.project_id == project_id,
+                                                                   ProjectMaterialReference.material_revision_id == revision_id))
+    if revision is None or revision.material.kind != "video" or attached is None:
+        _fail(422, "video_frame_source_invalid", "只能从这个项目里的视频截帧")
+    if revision.duration_ms and not 0 <= at_ms < revision.duration_ms:
+        _fail(422, "video_frame_time_invalid", f"时间点要在 0–{revision.duration_ms} 毫秒之间")
+    with source_path(db, revision) as path:
+        still = _grab(path, at_ms)
+    material = create_material(db, kind="image", title=f"截帧 · {revision.material.title}"[:190] + f" @{at_ms / 1000:.1f}s",
+                               tags=["截帧"], created_by=user.email)
+    import io
+
+    from PIL import Image
+
+    with Image.open(io.BytesIO(still)) as picture:
+        width, height = picture.size
+    # The frame is the same footage, so it keeps the video's source and rights.
+    flag = lambda value: True if value is None else value  # noqa: E731
+    frame = create_revision(
+        db, material, content=still, suffix=".png", declared_mime="image/png",
+        source_kind="upload" if revision.source_kind == "external_execution" else revision.source_kind,
+        rights_status=revision.rights_status or "cleared", public_use_allowed=flag(revision.public_use_allowed),
+        model_use_allowed=flag(revision.model_use_allowed), commercial_use_allowed=revision.commercial_use_allowed,
+        attribution_text=revision.attribution_text, width=width, height=height,
+        metadata={"material_source": "footage_frame", "source_revision_id": revision_id, "at_ms": at_ms}, created_by=user.email)
+    db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=frame.id, origin="system_reference", status="active",
+                                    attached_by=user.email, note=f"截帧 · 素材 {revision_id} @{at_ms} ms"))
+    store_new(db, frame, project_id, "图片/截帧")
+    db.commit()
+    result = {"material_revision_id": frame.id, "source_revision_id": revision_id, "at_ms": at_ms}
+    if shot_id:
+        result.update(set_shot_first_frame(db, user, project_id, unit_id, shot_id, frame.id, use))
+    return result
 
 
 def _context(db: Session, user: User, project_id: int, unit_id: int, shot_id: str):
@@ -534,23 +621,68 @@ def get_shot_video(db: Session, user: User, project_id: int, unit_id: int, shot_
         db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="system_reference", status="active",
                                         attached_by=user.email, note=f"图生视频 · {shot_id}"))
         store_new(db, revision, project_id, "视频/Broll")
-        job.update(state="done", material_revision_id=revision.id)
+        check = _clip_check(db, user, unit_id, output_content)
+        if check is not None:
+            revision.metadata_json = {**(revision.metadata_json or {}), "consistency": check}
+        job.update(state="done", material_revision_id=revision.id, **({"consistency": check} if check is not None else {}))
         _put(db, JOBS_KEY, jobs, user.email)
         db.commit()
-        # The automatic route ends with the clip on its shot; before the 导演稿 is approved it stays a candidate.
-        try:
-            place_shot_video(db, user, project_id, unit_id, shot_id, revision.id)
-            job["placed"] = True
-        except HTTPException:
-            db.rollback()
-            jobs = _setting(db, JOBS_KEY)
-            job = jobs[str(unit_id)]["jobs"][shot_id]
+        # The automatic route ends with the clip on its shot; before the 导演稿 is approved it stays a candidate,
+        # and a clip whose product drifted from the photo is never placed.
+        if check is None or check["pass"]:
+            try:
+                place_shot_video(db, user, project_id, unit_id, shot_id, revision.id)
+                job["placed"] = True
+            except HTTPException:
+                db.rollback()
+                jobs = _setting(db, JOBS_KEY)
+                job = jobs[str(unit_id)]["jobs"][shot_id]
     else:
         job.update(state="failed", reason=failure)
     _put(db, JOBS_KEY, jobs, user.email)
     db.commit()
+    drifted = job.get("consistency") and not job["consistency"]["pass"]
     return {"shot_id": shot_id, **{key: job.get(key) for key in ("state", "material_revision_id", "reason")},
+            **({"consistency": shot_image_summary(job["consistency"]), "placed": False,
+                "next": "片子里的商品和原图对不上，没放上这一镜：改提示词或换首帧后重新 generate_shot_video，或这一镜用原片"} if drifted else {}),
             **({"next": "这一镜可以改成手动：set_shot_video_mode(mode=manual)，再取 get_shot_video_prompt"} if job["state"] == "failed" else {})}
+
+
+def shot_image_summary(check: dict) -> str:
+    from .shot_image import summary
+
+    return summary(check)
+
+
+def _clip_check(db: Session, user: User, unit_id: int, content: bytes) -> dict | None:
+    """Product works: frames from the middle and the end of a generated clip held against the product photo; a frame without the product passes."""
+    import subprocess
+    import tempfile
+
+    from . import shot_image
+    from .voiceover import _duration_ms
+
+    if work(db, unit_id) is None:
+        return None
+    product = references(db, user, unit_id)["product"]
+    if not product:
+        return None
+    photo = shot_image.to_png(_image_bytes(db, product[0]))
+    length = _duration_ms(content, ".mp4") or 0
+    problems = []
+    with tempfile.TemporaryDirectory(prefix="aics-clip-") as folder:
+        clip = Path(folder) / "clip.mp4"
+        clip.write_bytes(content)
+        for name, at in (("中段", length / 2), ("结尾", max(0, length - 300))):
+            target = Path(folder) / f"{int(at)}.png"
+            subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-ss", f"{at / 1000:.3f}", "-i", str(clip), "-frames:v", "1", str(target)],
+                           capture_output=True, timeout=120, check=False)
+            if not target.is_file():
+                problems.append(f"{name}截不出画面，没法核对")
+                continue
+            verdict = shot_image.check(photo, target.read_bytes(), absent_ok=True)
+            problems += [f"{name}：{item}" for item in verdict["problems"]] or ([] if verdict["pass"] else [f"{name}：商品和原图不一致"])
+    return {"pass": not problems, "problems": problems[:8]}
 
 
 def save_publish_copy(db: Session, user: User, project_id: int, unit_id: int, value: dict) -> dict:
@@ -585,9 +717,12 @@ def _first_frames(db: Session, record: dict) -> dict:
         revision = db.get(MaterialRevision, revision_id)
         if revision is not None:
             check = (revision.metadata_json or {}).get("consistency")
+            # A picture picked from the library (e.g. made on ChatGPT) never went through the product check.
+            made_here = (revision.metadata_json or {}).get("material_source") in {"shot_still", "storyboard_grid"}
             frames[shot_id] = {"material_revision_id": revision.id, "material_id": revision.material_id,
                                "consistency": _verdict(check),
-                               "tries": len((check or {}).get("tries") or [])}
+                               "tries": len((check or {}).get("tries") or []),
+                               "source": "platform" if made_here else "external"}
     return frames
 
 
@@ -764,20 +899,24 @@ def place_shot_video(db: Session, user: User, project_id: int, unit_id: int, sho
     return video_chain.set_materials(db, user, project_id, unit_id, {shot_id: revision_id})
 
 
-def upload_shot_video(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, content: bytes, filename: str) -> dict:
-    """Manual route: the user made the clip on a website from the given still and prompt; it goes straight onto that shot."""
+def upload_shot_video(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, content_path: str, head: bytes,
+                      filename: str) -> dict:
+    """Manual route: the user made the clip on a website from the given still and prompt; it goes straight onto that shot.
+
+    视频走流式入藏：路由层先把上传分块落到临时文件（512MB 级不整块进内存），这里只收文件路径和头部魔数。"""
     from .materials import create_material, create_revision
-    from .voiceover import _duration_ms
+    from .voiceover import duration_ms_path
 
     _context(db, user, project_id, unit_id, shot_id)
-    if content[4:8] != b"ftyp":
+    if head[4:8] != b"ftyp":
         _fail(422, "shot_video_upload_invalid", "请上传 MP4 / MOV 视频文件")
     suffix = ".mov" if filename.lower().endswith(".mov") else ".mp4"
     material = create_material(db, kind="video", title=f"手动图生视频 · {shot_id}"[:200], tags=["图生视频", "手动"], created_by=user.email)
     revision = create_revision(
-        db, material, content=content, suffix=suffix, declared_mime="video/quicktime" if suffix == ".mov" else "video/mp4", source_kind="upload",
+        db, material, content=None, content_path=content_path, suffix=suffix, declared_mime="video/quicktime" if suffix == ".mov" else "video/mp4",
+        source_kind="upload",
         rights_status="cleared", public_use_allowed=True, model_use_allowed=True, attribution_text="手动图生视频",
-        duration_ms=_duration_ms(content, suffix), metadata={"shot_id": shot_id, "material_source": "i2v_manual"}, created_by=user.email)
+        duration_ms=duration_ms_path(content_path), metadata={"shot_id": shot_id, "material_source": "i2v_manual"}, created_by=user.email)
     db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="user_upload", status="active",
                                     attached_by=user.email, note=f"手动图生视频 · {shot_id}"))
     # The user's own copy may sit on the library drive; like other footage it is filed into the project on 准备剪辑, not now.

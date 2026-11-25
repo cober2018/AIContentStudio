@@ -12,7 +12,7 @@ export type GridRun = { status: "running" | "done" | "failed"; started_at?: numb
 export type View = { product: boolean; persona?: boolean; groups?: ConsistencyGroup[]; default_mode?: "manual" | "auto"; materials_auto?: boolean;
   resolution?: { phase: "sample" | "final"; sample: string; final: string; current: string }; modes?: Record<string, "manual" | "auto">; jobs?: Record<string, Job>;
   used?: Record<string, { material_revision_id: number; source: string; i2v: boolean; title: string }>;
-  frames?: Record<string, { material_revision_id: number; material_id: number; consistency: string | null; tries: number }>;
+  frames?: Record<string, { material_revision_id: number; material_id: number; consistency: string | null; tries: number; source?: "platform" | "external" }>;
   grid?: Record<string, Candidate[]>; grid_run?: GridRun | null; grid_sheets?: Record<string, string>; references?: References; person_notices?: Record<string, string>; other_people?: Record<string, string>;
   publish_copy?: Copy | null; cover?: { material_id: number; material_revision_id: number } | null; cover_vertical?: { material_id: number; material_revision_id: number } | null; cover_43?: { material_id: number; material_revision_id: number } | null; motion?: { camera: Item[]; looks: Item[] }; direction?: { material_mode: string; style: { name: string } | null; category: { name: string } | null } };
 type Prompt = { prompt: string; prompt_en: string; still_prompt: string; t2v_prompt?: string; t2v_prompt_en?: string;
@@ -34,7 +34,7 @@ function CopyText({ label, text }: { label: string; text: string }) {
   </div>;
 }
 
-function Thumb({ item }: { item: Candidate }) {
+function Thumb({ item, openable = false }: { item: Candidate; openable?: boolean }) {
   const [url, setUrl] = useState("");
   useEffect(() => {
     let objectUrl = "";
@@ -46,7 +46,9 @@ function Thumb({ item }: { item: Candidate }) {
     }).catch(() => {});
     return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [item.material_id, item.material_revision_id]);
-  return url ? <img src={url} alt={`候选 #${item.material_revision_id}`} className="h-40 w-auto rounded border border-slate-200" /> : <div className="h-40 w-24 rounded bg-slate-100" />;
+  if (!url) return <div className="h-40 w-24 rounded bg-slate-100" />;
+  const img = <img src={url} alt={`候选 #${item.material_revision_id}`} className="h-40 w-auto rounded border border-slate-200" />;
+  return openable ? <button type="button" title="点开看大图" className="block" onClick={() => window.open(url, "_blank")}>{img}</button> : img;
 }
 
 // One shot without the user's footage: how its clip is made (automatic, or by hand on a website and uploaded) and the picture it starts from.
@@ -114,10 +116,12 @@ export default function ShotWork({ shot, label, data, base, busy, locked, run, o
       {job && <span className={job.state === "failed" ? "text-amber-800" : "text-slate-500"}>{{ running: "生成中…", done: used?.material_revision_id === job.material_revision_id ? "已用进片" : `已生成${job.resolution ? ` ${job.resolution.toUpperCase()}` : ""}，素材 #${job.material_revision_id}（候选，选用后才进片）`, failed: `没成功：${job.reason || ""}，可改成手动` }[job.state] || job.state}</span>}
     </div>}
     {generated && <div className="mt-2 space-y-2 rounded bg-slate-50 p-2 text-sm">
-      <p className="text-slate-600">首帧：{frame ? <>素材 #{frame.material_revision_id}（{persona ? "生成图" : `生成图，主体一致性${frame.consistency || "未检查"}${frame.tries > 1 ? `，重画 ${frame.tries - 1} 次` : ""}`}）
+      <p className="text-slate-600">首帧：{frame ? <>素材 #{frame.material_revision_id}（{frame.source === "external" ? (persona ? "外部图片" : "外部图片，未做商品对照") : persona ? "生成图" : `生成图，主体一致性${frame.consistency || "未检查"}${frame.tries > 1 ? `，重画 ${frame.tries - 1} 次` : ""}`}）
         <Button size="sm" variant="ghost" disabled={busy} onClick={() => void download(frame.material_id, frame.material_revision_id)}>下载首帧</Button>
         <Button size="sm" variant="ghost" disabled={busy || locked} onClick={() => run(() => api.put(`${base}/shots/${shot.id}/first-frame`, { material_revision_id: null }))}>{persona ? "不用这张首帧" : "改回商品原图"}</Button></>
         : persona ? grid ? "还没有首帧，从下面的九宫格候选里挑一张" : "还没有首帧，自动图生视频要先生成一张" : "商品原图（或导演稿关键帧）"}</p>
+      {/* A grid candidate already in use is shown below with its 已用作首帧 mark, so only other first frames get their own thumbnail. */}
+      {frame && !(grid && candidates.some(item => item.material_revision_id === frame.material_revision_id)) && <Thumb item={frame} openable />}
       {grid && candidates.length > 0 && <div className="flex flex-wrap gap-3">{candidates.map(item => <div key={item.material_revision_id} className="space-y-1">
         <Thumb item={item} />
         {!persona && item.consistency && <p className={`text-xs ${item.consistency === "通过" ? "text-slate-500" : "text-amber-700"}`}>商品对照：{item.consistency}</p>}

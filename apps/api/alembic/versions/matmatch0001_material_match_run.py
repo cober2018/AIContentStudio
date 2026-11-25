@@ -38,4 +38,9 @@ def upgrade():
 
 
 def downgrade():
-    raise RuntimeError("destructive_downgrade_blocked: match runs hold reviewed material decisions")
+    # 与全链守卫一致：有数据拒绝且不做任何 schema 改动；空库才 drop 本版本新建的表
+    bind = op.get_bind()
+    if "material_match_run" in sa.inspect(bind).get_table_names() \
+            and bind.execute(sa.text("SELECT COUNT(*) FROM material_match_run")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: match runs hold reviewed material decisions")
+    bind.execute(sa.text("DROP TABLE IF EXISTS material_match_run"))

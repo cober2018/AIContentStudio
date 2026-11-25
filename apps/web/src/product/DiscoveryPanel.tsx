@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
+import { useMe } from "./useMe";
 
 type CatchupReceipt = { id: number; source_id: number; name: string | null; persona_ids: number[]; start_at: string | null; end_at: string; status: string; reason: string | null; counts: { scanned?: number; new_versions?: number; requests?: number }; coverage: { complete?: boolean; unconfirmed_interval?: { start_at: string | null; end_at: string; missing_count: number | null } | null }; finished_at: string | null; earlier_gap?: CatchupReceipt | null };
 type CollectionSnapshot = { status: string; frozen_at: string; target_at?: string; notice?: string; sources: CatchupReceipt[] };
@@ -238,7 +239,7 @@ export function DiscoveryPanel({ personaId = "" }: { personaId?: string }) {
   const [notice, setNotice] = useState("");
   useEffect(() => setOffset(0), [personaId]);
   const personas = useQuery({ queryKey: ["discovery-role-options", user], queryFn: () => api.get<Persona[]>("/content-personas"), enabled: tab === "sources" });
-  const me = useQuery({ queryKey: ["discovery-user", user], queryFn: () => api.get<{ role: string }>("/users/me") });
+  const me = useMe();
   const editable = !!me.data && ["admin", "editor"].includes(me.data.role);
   const status = useDiscoveryStatus();
   const suffix = personaId ? `?persona_id=${encodeURIComponent(personaId)}` : "";

@@ -10,7 +10,7 @@ from itertools import pairwise
 from urllib.parse import urljoin
 
 import httpx
-from sqlalchemy import or_, select, update
+from sqlalchemy import func, or_, select, update
 
 from ..models import (
     DiscoveryCatchupBatch as Batch,
@@ -459,6 +459,20 @@ def source_projection(db, source):
     gap = db.scalar(select(Receipt).where(Receipt.source_id == source.id, Receipt.status.in_(["partial", "failed"]))
                     .order_by(Receipt.id.desc()).limit(1))
     return {"latest": receipt_json(receipt, source) if receipt else None, "last_gap": receipt_json(gap, source) if gap else None}
+
+
+def sources_projection(db, sources) -> dict:
+    """source_projection 的批量版：每个 source 两条聚合查询的 max(id) 预取，替代每行 2 查。"""
+    ids = [s.id for s in sources]
+    if not ids:
+        return {}
+    latest_ids = select(func.max(Receipt.id)).where(Receipt.source_id.in_(ids)).group_by(Receipt.source_id).scalar_subquery()
+    gap_ids = select(func.max(Receipt.id)).where(Receipt.source_id.in_(ids), Receipt.status.in_(["partial", "failed"])) \
+        .group_by(Receipt.source_id).scalar_subquery()
+    latest = {r.source_id: r for r in db.scalars(select(Receipt).where(Receipt.id.in_(latest_ids)))}
+    gaps = {r.source_id: r for r in db.scalars(select(Receipt).where(Receipt.id.in_(gap_ids)))}
+    return {s.id: {"latest": receipt_json(latest[s.id], s) if s.id in latest else None,
+                   "last_gap": receipt_json(gaps[s.id], s) if s.id in gaps else None} for s in sources}
 
 
 def owner_projection(db, owner_id, persona_id=None):

@@ -8,7 +8,7 @@ import type { VideoPayload } from "./VideoStudioModel";
 const StoryboardGridDialog = lazy(() => import("./StoryboardGridDialog"));
 type Motion = { camera_presets?: string[]; look?: string; intensity?: "subtle" | "normal" | "strong"; chain_from_previous?: boolean };
 
-const MODES: Record<string, string> = { photo_only: "一张图出整片", user_footage: "给素材剪", mixed: "混合补齐" };
+const MODES: Record<string, string> = { photo_only: "一张图出整片", user_footage: "给素材剪", mixed: "混合补齐", creative: "以效果为准" };
 
 // Product works: per-shot camera / look / strength (view "draft"); the publish copy lives on the 交付 step.
 // Product and persona works (view "materials"): how each shot without the user's footage gets its clip; a consistency group of the 导演稿 is drawn in the storyboard-grid dialog.

@@ -65,10 +65,16 @@ def query(base_url: str, api_key: str, job_id: str) -> dict:
     if status not in DONE:
         return {"state": "running"}
     try:
-        content = httpx.get(root + "/content", headers=_headers(api_key), timeout=180, follow_redirects=True)
+        # 下载走 safe_fetch：重定向逐跳校验（原 follow_redirects=True 会跟到任意地址）；视频用大文件档
+        from .url_fetch import UnsafeUrlError, safe_fetch
+
+        content, _ = safe_fetch(root + "/content", headers=_headers(api_key), policy="minimax_download")
+    except UnsafeUrlError:
+        # 私网/被拦目标不会因重试变安全，直接失败而不是永远 running
+        return {"state": "failed", "reason": "download_target_blocked"}
     except httpx.HTTPError:
         return {"state": "running"}
     # Some relays label the file application/octet-stream; an MP4 carries "ftyp" right after its first box size.
-    if content.status_code != 200 or content.content[4:8] != b"ftyp":
+    if content[4:8] != b"ftyp":
         return {"state": "running"}
-    return {"state": "succeeded", "content": content.content}
+    return {"state": "succeeded", "content": content}

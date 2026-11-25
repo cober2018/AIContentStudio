@@ -8,6 +8,8 @@ x-studio-env: &studio-env
   LLM_PROVIDER: mock
   # 生产必须 false（SSRF 防护禁私网）
   SSRF_ALLOW_PRIVATE: "false"
+  # 与 make dev 的本机令牌同一变量。留空则容器内不启用；启用时 web 的 nginx 会替浏览器附上。
+  LOCAL_DEV_TOKEN: ${LOCAL_DEV_TOKEN:-}
   # 导出副本存储：单机部署下预签名 URL 会指向容器内域名，暂关闭（导出内联返回，功能可降级）；
   # bucket content-studio-assets 已由 minio-init 创建，需要时置 true 并解决外网可达 endpoint
   MINIO_ENABLED: "false"
@@ -62,9 +64,10 @@ services:
   # API 服务：uvicorn，容器化后替代裸进程（交接文档 §5.3 缺口）
   api:
     build: ./apps/api
-    # 开发环境对局域网开放（0.0.0.0）；对外部署请改回 127.0.0.1 并加访问控制
+    # 只绑回环：dev 模式身份可伪造（X-Studio-User header），不能对局域网暴露；
+    # 需外部访问时走带认证的反向代理，不要改回 0.0.0.0
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment: *studio-env
     depends_on:
       postgres:
@@ -83,9 +86,11 @@ services:
   # Web 前端：nginx 托管构建产物 + /api 同源反代到 api（无 CORS）
   web:
     build: ./apps/web
-    # 开发环境对局域网开放（0.0.0.0）；对外部署请改回 127.0.0.1 并加访问控制
+    # 只绑回环；对外访问请走带认证的反向代理，不要改回 0.0.0.0
     ports:
-      - "8088:80"
+      - "127.0.0.1:8088:80"
+    environment:
+      LOCAL_DEV_TOKEN: ${LOCAL_DEV_TOKEN:-}
     depends_on:
       api:
         condition: service_healthy

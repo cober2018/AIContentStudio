@@ -310,7 +310,8 @@ def capture_content_hash(document: dict, kind: str) -> str:
 
 BOARD_CAMERA = {"fixed", "push_in", "pull_out", "follow", "orbit", "pan"}
 BOARD_SPEAKER = {"narration", "presenter", "dialogue", "none"}
-BOARD_SOURCE = {"shoot", "product_image", "generated", "ae_template", "library"}
+# footage_frame: a frame grabbed from the user's own video starts a generated clip.
+BOARD_SOURCE = {"shoot", "product_image", "footage_frame", "generated", "ae_template", "library"}
 
 
 def canonical_board(value: object) -> dict:
@@ -396,7 +397,7 @@ def canonical_filming(value: object) -> dict:
 
 
 def canonical_payload(raw: object) -> dict:
-    payload = _object(raw, {"title", "aspect_ratio", "script", "shots", "timeline", "voice", "subtitles", "overlays", "music", "cover", "render_asset_ref", "postproduction", "capture_plan", "consistency_groups"}, "video_payload_invalid")
+    payload = _object(raw, {"title", "aspect_ratio", "script", "shots", "timeline", "voice", "subtitles", "overlays", "music", "cover", "render_asset_ref", "postproduction", "capture_plan", "consistency_groups", "recipe"}, "video_payload_invalid")
     result = {
         "title": _text(payload.get("title", ""), 500, "video_title_invalid"),
         "aspect_ratio": _ratio(payload.get("aspect_ratio")),
@@ -561,6 +562,12 @@ def canonical_payload(raw: object) -> dict:
             _fail("video_postproduction_aspect_mismatch")
     if "consistency_groups" in payload:
         result["consistency_groups"] = canonical_consistency_groups(payload["consistency_groups"], shots)
+    if "recipe" in payload:
+        # The finished-video recipe the product 导演稿 follows (product_recipes checks it on save).
+        recipe = _object(payload["recipe"], {"id", "reason"}, "video_recipe_invalid")
+        if not isinstance(recipe.get("id"), str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,39}", recipe["id"]):
+            _fail("video_recipe_invalid")
+        result["recipe"] = {"id": recipe["id"], "reason": _text(recipe.get("reason", ""), 300, "video_recipe_invalid")}
     return result
 
 

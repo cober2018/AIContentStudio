@@ -277,6 +277,16 @@ def _duration_ms(content: bytes, suffix: str) -> int | None:
         return None
 
 
+def duration_ms_path(path: str) -> int | None:
+    """ffprobe 直接探磁盘文件（大视频上传用，省掉把整块内容再复制成临时文件）。"""
+    done = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path],
+                          capture_output=True, text=True, timeout=20)
+    try:
+        return round(float(done.stdout.strip()) * 1000)
+    except ValueError:
+        return None
+
+
 MAX_FIT_SPEEDUP = 1.25
 DUB_END_MARGIN_MS = 100
 

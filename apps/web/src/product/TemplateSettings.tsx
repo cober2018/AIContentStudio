@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { api, currentUser } from "../api";
+import { api } from "../api";
 import { Button, EmptyState, Spinner, StatusBadge } from "../components/ui";
+import { useMe } from "./useMe";
 
 interface BrandVoice {
   id: number;
@@ -294,7 +295,7 @@ function PromptsTab({ readOnly }: { readOnly: boolean }) {
 
 export default function TemplateSettings() {
   const [tab, setTab] = useState<(typeof TABS)[number][0]>("brand-voice");
-  const me = useQuery({ queryKey: ["template-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const readOnly = !me.isSuccess || me.data.role !== "admin";
 
   return (

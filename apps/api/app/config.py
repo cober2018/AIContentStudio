@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     auth_issuer: str = ""
     auth_audience: str = ""
     auth_hmac_secret: str = ""
+    # 非生产环境的本机口令。设置后，请求必须带 X-Studio-Local-Token，X-Studio-User 不能再被任意本地进程冒用。
+    # 空字符串表示不启用（测试默认如此）。make dev 会生成 apps/api/scripts/startup/local-dev-token。
+    local_dev_token: str = ""
     required_schema_head: str = ""
     material_storage_backend: str = "local"
 

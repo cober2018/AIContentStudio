@@ -7,6 +7,7 @@ import { Button, ErrorBanner, Field, PageHeader, Spinner, StatusBadge, inputClas
 import ChannelIcon from "./ChannelIcon";
 import { categories, evidenceTypes, frozenEvidenceCount, insightReferences, memoryTypes, operationUUID, pageData, promotableClaim, queryString, scopeTypes } from "./learningTypes";
 import type { Analysis as AnalysisData, Coverage, Insight, LearningCandidate, MemoryEntry, MemoryRevision, Observation, Page, PromotableClaim, PublishedContent, ScopeType } from "./learningTypes";
+import { useMe } from "./useMe";
 
 // 后端存的是不带时区的 UTC；按北京时间显示，和平台后台一致。
 function publishedTime(value: string | null) {
@@ -373,7 +374,7 @@ export default function LearningWorkspace() {
   // 不带参数进来先看角色表现；带着作品编号的旧链接仍落到作品详情。
   const requested = params.get("tab") ?? (params.get("published") ? "history" : "persona");
   const tab = Object.prototype.hasOwnProperty.call(labels, requested) ? requested : "history";
-  const me = useQuery({ queryKey: ["learning-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const readOnly = !me.isSuccess || !["admin", "editor"].includes(me.data.role);
   const choose = (key: string, id: number) => setParams((old) => { const next = new URLSearchParams(old); next.set(key, String(id)); next.set("view", "detail"); if (old.get("offset")) next.set("list_offset", old.get("offset")!); next.delete("offset"); return next; });
   const candidate = params.get("candidate");

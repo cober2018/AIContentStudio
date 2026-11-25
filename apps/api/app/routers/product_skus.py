@@ -63,7 +63,8 @@ class ProductionSettings(BaseModel):
     hook_pinned: str = Field(default="", max_length=40)
     hook_versions: int = Field(default=1, ge=1, le=3)
     reference_structure: str = Field(default="", max_length=4000)
-    material_mode: Literal["photo_only", "user_footage", "mixed"] = "mixed"
+    material_mode: Literal["photo_only", "user_footage", "mixed", "creative"] = "mixed"
+    recipe: str | None = Field(default=None, pattern=r"^[a-z0-9][a-z0-9-]{1,39}$")
     i2v_mode: Literal["default", "manual", "auto"] = "default"
     feedback: Feedback | None = None
 
@@ -145,6 +146,9 @@ def owned_unit(db, user, project_id, unit_id, mutable=False):
 
 def validate_settings(db, user, settings, project_id=None):
     from ..models import ProjectMaterialReference
+    from ..services import product_recipes
+    if settings.get("recipe") and product_recipes.get(settings["recipe"]) is None:
+        raise HTTPException(422, "成片配方不在配方库里")
     from ..services.studio_creative_catalog import validate_production_stages
     try:
         if settings.get("production_stages") is not None:
@@ -165,6 +169,11 @@ def validate_settings(db, user, settings, project_id=None):
             ProjectMaterialReference.material_revision_id == revision.id, ProjectMaterialReference.status == "active"))
         if revision.created_by != user.email and not visible:
             raise HTTPException(403, "共用参考需要本人素材或本项目明确引用")
+
+
+def editable_settings(stored: dict) -> dict:
+    """What the page edits and sends back: server-added keys (e.g. frozen product_production_methods) stay out, or the next save is rejected as extra."""
+    return {key: value for key, value in stored.items() if key in ProductionSettings.model_fields}
 
 
 def latest_profile(db, unit_id):
@@ -327,9 +336,19 @@ def read_profile(project_id: int, unit_id: int, db=Depends(get_db), user=Depends
     owned_unit(db, user, project_id, unit_id)
     row = latest_profile(db, unit_id)
     link = db.scalar(select(ProductSkuWork).where(ProductSkuWork.unit_id == unit_id))
-    return {"revision": row.revision if row else 0, "settings": {key: value for key, value in row.settings_json.items() if key in ProductionSettings.model_fields} if row else {},
+    return {"revision": row.revision if row else 0, "settings": editable_settings(row.settings_json) if row else {},
         "sku_id": link.sku_id if link else None, "sku_revision_id": link.sku_revision_id if link else None,
         "plan_id": link.plan_id if link else None}
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/product-recipes")
+def read_recipes(project_id: int, unit_id: int, db=Depends(get_db), user=Depends(get_current_user)):
+    from ..services import product_recipes, product_video
+    owned_unit(db, user, project_id, unit_id)
+    link = product_video.work(db, unit_id)
+    if link is None:
+        raise HTTPException(409, "只有商品作品有成片配方")
+    return product_recipes.listing(db, link, chosen=product_video._settings(db, link).get("recipe"))
 
 
 @router.put("/content-projects/{project_id}/units/{unit_id}/production-profile")
@@ -351,7 +370,7 @@ def save_profile(project_id: int, unit_id: int, payload: ProfileIn, db=Depends(g
         settings_json=settings, settings_hash=digest(settings), created_by=user.email)
     db.add(row)
     commit(db)
-    return {"revision": row.revision, "settings": row.settings_json}
+    return {"revision": row.revision, "settings": editable_settings(row.settings_json)}
 
 
 @router.post("/product-skus/{sku_id}/works", status_code=201)
@@ -526,10 +545,15 @@ def save_reference(sku_id: int, payload: ReferenceIn, db=Depends(get_db), user=D
 
 @router.get("/production-workspaces")
 def workspace_rows(workspace: Literal["product", "persona"], db=Depends(get_db), user=Depends(get_current_user)):
+    projects = db.scalars(select(ContentProject).where(ContentProject.owner_user_id == user.id).order_by(ContentProject.id.desc())).all()
+    # 一次 in_ 批量取全部 unit，避免每个项目再查一遍（N+1）
+    units_by_project: dict[int, list] = {}
+    if projects:
+        for unit in db.scalars(select(ContentUnit).where(ContentUnit.project_id.in_([p.id for p in projects]))):
+            units_by_project.setdefault(unit.project_id, []).append(unit)
     items = []
-    for project in db.scalars(select(ContentProject).where(ContentProject.owner_user_id == user.id).order_by(ContentProject.id.desc())):
-        units = list(db.scalars(select(ContentUnit).where(ContentUnit.project_id == project.id)))
-        selected = [u for u in units if u.production_domain == workspace and u.lifecycle != "deleted"]
+    for project in projects:
+        selected = [u for u in units_by_project.get(project.id, []) if u.production_domain == workspace and u.lifecycle != "deleted"]
         if selected:
             items.append({"id": project.id, "title": project.title, "objective": project.objective, "status": project.status,
                 "units": [{"id":u.id,"project_id":project.id,"title":u.title,"status":u.status,"lifecycle":u.lifecycle,"persona_id":u.persona_id,
@@ -770,9 +794,32 @@ def post_grid_redraw(project_id: int, unit_id: int, shot_id: str, db=Depends(get
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/upload")
 async def upload_shot_video(project_id: int, unit_id: int, shot_id: str, file: UploadFile, db=Depends(get_db), user=Depends(require_editor)):
+    import os
+    import tempfile
+
+    from starlette.concurrency import run_in_threadpool
+
     from ..services import product_video
 
-    content = await file.read(512 * 1024 * 1024 + 1)
-    if len(content) > 512 * 1024 * 1024:
-        raise HTTPException(413, "视频文件超过 512 MB")
-    return product_video.upload_shot_video(db, user, project_id, unit_id, shot_id, content, file.filename or "clip.mp4")
+    # 分块流式落盘：512MB 级视频不再整块读进内存（旧实现 await file.read(512MB) 会常驻占用）
+    with tempfile.NamedTemporaryFile(prefix="shot-upload-", suffix=".part", delete=False) as handle:
+        temp_path = handle.name
+        total, head = 0, b""
+        try:
+            while chunk := await file.read(1024 * 1024):
+                total += len(chunk)
+                if total > 512 * 1024 * 1024:
+                    raise HTTPException(413, "视频文件超过 512 MB")
+                if not head:
+                    head = chunk[:12]
+                handle.write(chunk)
+            # 工作线程按路径另开文件读，必须先把用户态缓冲刷进 inode，否则尾部不足一块缓冲的字节会丢
+            handle.flush()
+            os.fsync(handle.fileno())
+            # 路由层只做大小/魔数粗检提前失败，具体错误码由 service 给出
+            if total == 0 or len(head) < 8 or head[4:8] != b"ftyp":
+                raise HTTPException(422, "请上传 MP4 / MOV 视频文件")
+            return await run_in_threadpool(product_video.upload_shot_video, db, user, project_id, unit_id, shot_id,
+                                           temp_path, head, file.filename or "clip.mp4")
+        finally:
+            os.unlink(temp_path)

@@ -4,6 +4,7 @@ import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
 import { capabilityApi, checkedPage, checkedPreferenceEdits, contextQuery, emptyArgsSchema, kindLabels, parseArgsSchema, parseObject, preferenceEditReference, queryString, scopeFromFields, scopeLabels, scopeText, statusLabels } from "./capabilityMemoryTypes";
 import type { ArgumentProperty, CapabilityArtifact, CapabilityContext, CapabilityDefinition, CapabilityKind, CapabilityOutcome, CapabilityRevision, CapabilityScopeType, CapabilityStatus, CapabilityUseResult, JsonObject, SavedPreferenceEdit } from "./capabilityMemoryTypes";
+import { useMe } from "./useMe";
 
 export interface CapabilityMemoryPanelProps extends CapabilityContext {
   readOnly?: boolean;
@@ -431,7 +432,7 @@ function CapabilityWorkspace({ projectId, unitId, executionId, readOnly = false,
   const context = { projectId, unitId, executionId };
   const inContext = projectId !== undefined || unitId !== undefined;
   const validContext = !inContext || (Number.isSafeInteger(projectId) && Number(projectId) > 0 && Number.isSafeInteger(unitId) && Number(unitId) > 0);
-  const me = useQuery({ queryKey: ["capability-memory-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false, refetchOnWindowFocus: false });
+  const me = useMe();
   const editable = validContext && !readOnly && me.isSuccess && !me.isFetching && ["admin", "editor"].includes(me.data.role);
   const [tab, setTab] = useState<"candidate" | "saved" | "pinned" | "archived">("candidate");
   const [retired, setRetired] = useState<"archived" | "deprecated">("archived");

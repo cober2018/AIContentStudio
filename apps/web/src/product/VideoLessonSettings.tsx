@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
+import { useMe } from "./useMe";
 
 type Source = { project_id: number; project_title: string; unit_id: number; unit_title: string };
 type Lesson = { id: number; title: string; rule: string; scope: string; status: "proposed" | "active" | "rejected" | "retired"; occurrences: number; sources: Source[]; proposed_by: string | null; decided_at: string | null };
@@ -23,7 +24,7 @@ export default function VideoLessonSettings() {
   const lessons = useQuery({ queryKey: lessonsKey, queryFn: () => api.get<{ items: Lesson[] }>("/settings/video-lessons"), retry: false });
   const [showRecords, setShowRecords] = useState(false);
   const records = useQuery({ queryKey: ["video-rework-records", currentUser()], queryFn: () => api.get<{ items: ReworkRecord[] }>("/settings/video-lessons/records?limit=50"), enabled: showRecords, retry: false });
-  const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState<Draft>({ title: "", rule: "", scope: "" });
   const [busy, setBusy] = useState(false);

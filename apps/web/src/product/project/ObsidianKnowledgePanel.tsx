@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, currentUser } from "../../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../../components/ui";
+import { useMe } from "../useMe";
 
 type KnowledgeModality = "text" | "graphic" | "video";
 type Purpose = "professional" | "style";
@@ -33,7 +34,7 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
   const base = `/content-projects/${projectId}/knowledge`;
   const contextKey = ["project-knowledge", projectId, user];
   const connectionKey = ["obsidian-connection", user];
-  const me = useQuery({ queryKey: ["project-operations-user", user], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const writable = !readOnly && me.isSuccess && ["admin", "editor"].includes(me.data.role);
   const saved = useQuery({ queryKey: contextKey, queryFn: () => api.get<KnowledgeContext>(base), enabled: me.isSuccess, retry: false, staleTime: Infinity, refetchOnWindowFocus: false, refetchOnReconnect: false });
   const connection = useQuery({ queryKey: connectionKey, queryFn: () => api.get<Connection>("/obsidian/connection"), enabled: writable, retry: false, staleTime: Infinity, refetchOnWindowFocus: false, refetchOnReconnect: false });

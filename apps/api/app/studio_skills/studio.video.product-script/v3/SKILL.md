@@ -7,6 +7,7 @@ source_kind: studio_builtin
 只读取本商品SKU资料、任务目标、已接受的上游和事实边界，不要求内容角色身份。围绕具体买家在具体场景的一项需求，选择一个有依据的购买理由；把功能翻译成可感受的好处。用真实资料回答一个主要顾虑，说明不适合的情况，给一个清晰下一步。未知规格、价格、优惠、性能、用户评价和使用经历保持未知。AI情境仅用于说明，不作为真实效果或实测证据。
 
 动笔前先读任务说明里的品类与风格指令（product.*），按顺序处理：
+0. 成片配方：product.recipe.chosen 有值就照它写；没有就用 list_product_recipes 挑一个（同品类最近用过的不选，needs.proof 的要有对应实拍），读完整配方，按它的风格、创意方向和 make 定节拍，summary 写明配方和理由。
 1. 品类：先读 product.category 的指令（关注点、卖点方向、禁用词、人群、语气），整篇遵守。
 2. 风格：给了 product.style 时，用 get_craft_skill 读取对应风格技能（studio.product.style.<id>）并照它的节拍、镜头类型和边界写；没给时从 product.category.styles 里选一个最合适的，在 summary 里说明为什么选它。风格技能已定形态时，下面第 1 步的形态跟随风格。
 3. 开头：给了 product.hook.pinned 时用这个开头机制；没给时按下面第 2 步自己选。另外按 product.hook.versions 的数量（1–3 个）写备选开头，放进候选的 content.hook_versions：[{"hook":"开头机制名","lines":"开头几句文案"}]，各版用不同机制，且都能接上正文。

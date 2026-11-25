@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { api, currentUser } from "../api";
+import { api } from "../api";
 import { Button, EmptyState, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
+import { useMe } from "./useMe";
 
 interface Endpoint {
   id: number;
@@ -264,7 +265,7 @@ function ConnectorCard({ connector, readOnly, allowPull }: { connector: Connecto
 
 export default function ConnectorSettings({ readOnly = false, allowPull = true }: { readOnly?: boolean; allowPull?: boolean }) {
   const [showCreate, setShowCreate] = useState(false);
-  const me = useQuery({ queryKey: ["connector-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const me = useMe();
   const canConfigure = !readOnly && me.isSuccess && me.data.role === "admin";
   const canPull = allowPull && me.isSuccess && ["admin", "editor"].includes(me.data.role);
   const { data, isLoading, error } = useQuery({

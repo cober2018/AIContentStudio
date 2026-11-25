@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import uuid
 import wave
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -798,24 +799,39 @@ def execute(db: Session, user: User, task_id: str, expected: int) -> dict:
     db.commit()
     try:
         if fan_out:
-            candidates = []
-            for candidate_index in range(params["items"]):
-                candidate_request = {**request, "parameters": {**params, "items": 1},
-                                     "candidate_index": candidate_index}
-                candidate = provider_calls.call(generate, candidate_request, timeout_seconds=call_timeout)
-                if not isinstance(candidate, provider_media.providers.MediaOutput) or candidate.status != "succeeded":
-                    output = (candidate if not candidates and isinstance(candidate, provider_media.providers.MediaOutput)
-                              else provider_media.providers.MediaOutput("unknown"))
-                    break
-                candidates.append({"content": candidate.content, "mime_type": candidate.mime_type,
-                                   "metadata": candidate.metadata})
-            else:
+            # 用户已确认的 items 个候选并行发出（provider_calls 每调用独立线程 + 全局信号量限流），
+            # 总时长从 items×timeout 降到约 ceil(items/并发)×timeout。
+            # 和串行不同：中途失败也停不掉已经发出的调用，所以只要有不确定结果就整批记 unknown。
+            # 全部提交后再汇总。并行后不能再把「其中一个确认失败」当成整批没发出：
+            # 其余调用可能已经送出且结果不确定，那种情况必须记 unknown，避免被当成可重发的失败。
+            with ThreadPoolExecutor(max_workers=min(params["items"], 4), thread_name_prefix="gen-fanout") as pool:
+                futures = [pool.submit(provider_calls.call, generate,
+                                       {**request, "parameters": {**params, "items": 1}, "candidate_index": index},
+                                       timeout_seconds=call_timeout) for index in range(params["items"])]
+            outcomes = [future.result() for future in futures]
+            candidates, confirmed_failure, uncertain = [], None, False
+            for candidate in outcomes:
+                if isinstance(candidate, provider_media.providers.MediaOutput) and candidate.status == "succeeded":
+                    candidates.append({"content": candidate.content, "mime_type": candidate.mime_type,
+                                       "metadata": candidate.metadata})
+                elif isinstance(candidate, provider_media.providers.MediaOutput) and candidate.status == "failed":
+                    confirmed_failure = confirmed_failure or candidate
+                else:
+                    uncertain = True
+            if not outcomes:
+                raise HTTPException(422, "durable_provider_dispatch_unavailable")
+            if uncertain or (candidates and confirmed_failure is not None):
+                output = provider_media.providers.MediaOutput("unknown")
+            elif candidates:
                 output = provider_media.providers.MediaOutput("succeeded", metadata={"candidates": candidates})
+            else:
+                output = confirmed_failure or provider_media.providers.MediaOutput("failed")
         else:
             output = provider_calls.call(submit, request, timeout_seconds=call_timeout)
     except provider_calls.ProviderCapacityError:
-        # No send occurred, but this committed claim is conservatively not reused.
-        output = provider_media.providers.MediaOutput("unknown" if fan_out and candidates else "failed")
+        # 串行时容量不足发生在下一次调用前，已成功的候选留在 candidates 里。
+        # 并行时其余调用可能已经发出，不能记成「确认失败」（那会被当成没送出、可以重来）。
+        output = provider_media.providers.MediaOutput("unknown" if fan_out else "failed")
     except Exception:  # noqa: BLE001 Timeout or exception cannot prove non-delivery.
         output = provider_media.providers.MediaOutput("unknown")
     try:

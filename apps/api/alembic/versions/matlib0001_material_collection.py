@@ -42,4 +42,12 @@ def upgrade():
 
 
 def downgrade():
-    raise RuntimeError("destructive_downgrade_blocked: collections hold user curation")
+    # 与全链守卫一致：有数据拒绝且不做任何 schema 改动；空库才 drop 本版本新建的表
+    bind = op.get_bind()
+    tables = set(sa.inspect(bind).get_table_names())
+    for table in ("material_collection_item", "material_collection"):
+        if table in tables and bind.execute(sa.text(f"SELECT COUNT(*) FROM {table}")).scalar():
+            raise RuntimeError("destructive_downgrade_blocked: collections hold user curation")
+    for table in ("material_collection_item", "material_collection"):
+        if table in tables:
+            bind.execute(sa.text(f"DROP TABLE {table}"))

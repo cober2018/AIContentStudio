@@ -37,4 +37,38 @@ def upgrade():
 
 
 def downgrade():
-    raise RuntimeError("destructive_downgrade_blocked: retain product domain and independent account ownership")
+    # 与全链守卫一致：有商品域/独立账号归属数据才拒绝；全是默认值才回退删列
+    bind = op.get_bind()
+    unit_columns = {column["name"] for column in sa.inspect(bind).get_columns("content_unit")}
+    account_columns = {column["name"] for column in sa.inspect(bind).get_columns("content_account")}
+    if "production_domain" in unit_columns and bind.execute(
+            sa.text("SELECT COUNT(*) FROM content_unit WHERE production_domain IS NULL OR production_domain != 'persona'")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: retain product domain and independent account ownership")
+    if "owner_user_id" in account_columns and bind.execute(
+            sa.text("SELECT COUNT(*) FROM content_account WHERE owner_user_id IS NOT NULL")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: retain product domain and independent account ownership")
+    # 本版把 persona_id 改成可空。有空值就无法收回非空约束，拒绝而不是留下更松的表。
+    if "persona_id" in unit_columns and bind.execute(sa.text("SELECT COUNT(*) FROM content_unit WHERE persona_id IS NULL")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: retain product domain and independent account ownership")
+    if "persona_id" in account_columns and bind.execute(sa.text("SELECT COUNT(*) FROM content_account WHERE persona_id IS NULL")).scalar():
+        raise RuntimeError("destructive_downgrade_blocked: retain product domain and independent account ownership")
+    # batch recreate 不会自动剔除引用被删列的索引/约束，须先显式 drop（f6e 同款模式）
+    if "owner_user_id" in account_columns:
+        if "ix_content_account_owner_user_id" in {i["name"] for i in sa.inspect(bind).get_indexes("content_account")}:
+            op.drop_index("ix_content_account_owner_user_id", table_name="content_account")
+        foreign_keys = {fk["name"] for fk in sa.inspect(bind).get_foreign_keys("content_account")}
+        with op.batch_alter_table("content_account") as batch:
+            if "fk_content_account_owner_user_id" in foreign_keys:
+                batch.drop_constraint("fk_content_account_owner_user_id", type_="foreignkey")
+            batch.drop_column("owner_user_id")
+            if "persona_id" in account_columns:
+                batch.alter_column("persona_id", existing_type=sa.Integer(), nullable=False)
+    if "production_domain" in unit_columns:
+        constraints = {c["name"] for c in sa.inspect(bind).get_check_constraints("content_unit")}
+        with op.batch_alter_table("content_unit") as batch:
+            for name in ("ck_content_unit_production_domain", "ck_content_unit_persona_required"):
+                if name in constraints:
+                    batch.drop_constraint(name, type_="check")
+            batch.drop_column("production_domain")
+            if "persona_id" in unit_columns:
+                batch.alter_column("persona_id", existing_type=sa.Integer(), nullable=False)

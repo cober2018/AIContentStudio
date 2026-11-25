@@ -11,5 +11,6 @@ source_kind: studio_builtin
 
 连续动作保持商品结构、颜色、人物、服装、光线和运动方向一致。一次只安排一个可实现动作，明确景别、机位运动、首尾状态及接镜位置；手触、坐下等生成情境不能冒充真实舒适度、承重或防水测试。"销量截图、买家评价、回购订单"一类信任镜头只用真实资料，没有就不安排。未提供的内部结构和尺寸不猜。先审阅精确关键帧，选图后才据实际图像编写运动提示词；Grok/Gemini网页由用户人工生成，回传后逐镜检查，不因下载或上传就接受。
 导演稿运镜与画面：导演稿板里每镜可带 camera_presets（最多 2 个运镜编号，取自运镜目录 camera 里的 id）、look（画面风格编号，取自 looks）、intensity（subtle|normal|strong）、chain_from_previous（true 表示接着上一镜的结尾画面继续拍）。没有特别理由时，运镜按任务说明里 product.category 的 camera_plan 取对应镜头类型的默认值，画面风格取它的 look；改动时在 visual 里说明原因。商品亮相（product_reveal）和行动引导（cta）镜头用商品原图或实拍，不交给生成模型。有人出镜的镜头加上运镜目录里的 realism 素人约束。
+照成片配方拆镜头：运镜和画面风格优先取配方的 camera_plan 和 look，按配方 make 定每镜来源。出片方式是「以效果为准」时，用户素材是原料：原片够好就用，平淡的从原片截帧做首帧或尾帧再图生视频（source_kind=footage_frame），没有的生图再图生视频；生成后按配方 check 核对。
 规划生成镜头之前先读 references/not-filmable.md，命中的动作按里面的办法改写，或改用实拍、录屏和后期包装。
 仅返回 {"schema":"video.shot-plan.v1","candidates":[{"id":"shots-1","summary":"镜头安排","content":{"title":"标题","shots":[{"id":"shot-0","order":0,"script":"对应文案","visual":"动作、镜头与接续说明","asset_requirements":[],"duration_seconds":4}]},"references":[],"warnings":[]}]}。id为ASCII，order从0递增；时长仅为计划，缺素材不编造MaterialRevision。候选数量等于candidate_count。后期交给Resolve主剪、AE按需包装（商品亮相、卖点、参数对比、价格、材质、使用方法、信任背书、下单引导优先用 craft-ae 模板库「商品」分组，可在 visual 里写明想用的模板名；价格、评价、证书、参数只用真实资料），本阶段不生成成片。
