@@ -423,6 +423,8 @@ def preview_output(project_id: int, unit_id: int, execution_id: int, output_id: 
             source = stack.enter_context(streams.material_file(revision, output["size_bytes"]))
         else:
             source = stack.enter_context(creative_executions.open_output(user.id, execution_id, output["staging_key"], output["size_bytes"]))
+        # 校验和分段传输会把整段文件读完。连接留到响应结束会让并行 Range 占满 SQLite 池，其它页面只能 500。
+        db.close()
         if streams.inspect(source, output["size_bytes"]) != (output["size_bytes"], digest):
             raise HTTPException(409, {"code": "creative_output_hash_mismatch", "message": "文件已变化，请重新交付"})
         size, start, end = output["size_bytes"], 0, output["size_bytes"] - 1
