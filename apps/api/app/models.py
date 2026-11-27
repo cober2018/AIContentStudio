@@ -738,6 +738,8 @@ class ContentMasterRevision(Base):
     edit_summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
     idempotency_key: Mapped[str] = mapped_column(String(150))
     request_fingerprint: Mapped[str] = mapped_column(String(64))
+    # A form work's revision records which body (项目本体) revision it was derived from.
+    source_body_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_master_revision.id"))
     created_by: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -1492,6 +1494,8 @@ class ContentProject(Base):
     title: Mapped[str] = mapped_column(String(300))
     objective: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(30), default="draft")
+    # 本体与形态：勾了哪几种、本体从哪来、何时定稿开工；旧项目为空。
+    form_plan_json: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
@@ -1764,6 +1768,8 @@ class ContentUnit(Base):
     series_id: Mapped[int | None] = mapped_column(ForeignKey("content_series.id"), index=True)
     identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"), index=True)
     modality: Mapped[str] = mapped_column(String(20))
+    # body（本体）/ graphic_cards / video_landscape / video_portrait; fixed once set, empty on older works.
+    form: Mapped[str | None] = mapped_column(String(30))
     channel_id: Mapped[str | None] = mapped_column(String(100))
     title: Mapped[str] = mapped_column(String(300))
     status: Mapped[str] = mapped_column(String(30), default="draft")

@@ -351,7 +351,9 @@ class GraphicImageNoteAdapter:
         if len(refs) != len(canvases) or set(refs) != {canvas["id"] for canvas in canvases}:
             raise AdapterUnavailable("render_canvas_coverage_missing")
         if self.contract.payload_schema == "wechat.image_message.v1":
-            if len(title) > 32:
+            from .platform_limits import limit
+
+            if len(title) > limit("wechat", "image_message_title"):
                 raise AdapterUnavailable("image_message_title_over_32_chars")
             cards = [{"id": canvas["id"], "order": index, "image_ref_key": canvas["id"]} for index, canvas in enumerate(canvases)]
             payload = {"title": title, "cards": cards}

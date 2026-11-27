@@ -29,6 +29,7 @@ EVENT_TYPES = frozenset({
     "creation_recipe.adjustment_saved",
     "creation_recipe.method_applied",
     "creation_recipe.selected",
+    "project.forms_planned", "project.forms_changed", "body.imported", "body.finalized", "body.updated", "unit.form_redo",
 })
 
 

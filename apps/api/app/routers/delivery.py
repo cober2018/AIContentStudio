@@ -171,7 +171,14 @@ def create_delivery_target(asset_id: int, payload: GenericTargetIn, db: Session 
         raise HTTPException(404, "批准资产不存在")
     authorize_project_asset(db, asset, user, mutate=True)
     target = delivery_service.authorize_target(db, asset, payload, user)
-    return _target_json(target)
+    return {**_target_json(target), "copy_warnings": _copy_warnings(asset, target.channel)}
+
+
+def _copy_warnings(asset: ContentAsset, channel: str) -> list[dict]:
+    """The work's one publish copy checked against this platform's mechanical limits; a warning, never a second copy."""
+    from ..services.platform_limits import check
+
+    return check(channel, (asset.candidate_manifest_json or {}).get("publish_copy"))
 
 
 @router.get("/assets/{asset_id}/delivery-targets")
@@ -186,7 +193,7 @@ def list_delivery_targets(asset_id: int, db: Session = Depends(get_db), user: Us
     from ..services.browser_publish import latest_drafts
 
     drafts = latest_drafts(db, [t.id for t in rows])
-    return [{**_target_json(t), "browser_draft": drafts.get(t.id)} for t in rows]
+    return [{**_target_json(t), "browser_draft": drafts.get(t.id), "copy_warnings": _copy_warnings(asset, t.channel) if asset else []} for t in rows]
 
 
 @router.get("/delivery-targets/{target_id}")

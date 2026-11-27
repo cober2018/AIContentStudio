@@ -123,9 +123,10 @@ def start(db: Session, user: User, subject_id: int, options: dict) -> dict:
         _fail(422, "search_batch_limit", f"一次 1–{sp.BATCH_LIMIT} 个项目")
     item = sp.ProjectItem.model_validate({"question_id": "q0", "genre": "faq", "writer": "platform", "forms": options.get("forms") or ["text"],
                                           "tone": options.get("tone") or "专业中立科普", "reader_level": options.get("reader_level") or "小白",
-                                          "platforms": options.get("platforms") or sp.DEFAULT_PLATFORMS})
+                                          "platforms": options.get("platforms") or sp.DEFAULT_PLATFORMS, "video_aspect": options.get("video_aspect") or "9:16"})
     return _enqueue(db, user, "start", subject_id=subject_id, options={"count": count, "forms": item.forms, "tone": item.tone,
-                                                                       "reader_level": item.reader_level, "platforms": item.platforms})
+                                                                       "reader_level": item.reader_level, "platforms": item.platforms,
+                                                                       "video_aspect": item.video_aspect})
 
 
 def retry(db: Session, user: User, run_id: int) -> dict:
@@ -297,7 +298,8 @@ def _run_start(db: Session, user: User, run: SearchRun) -> None:
     if not open_ones:
         raise StepFailed("问题库里的问题都已经做过或在做，先补充问题库")
     items = [sp.ProjectItem.model_validate({"question_id": q["id"], "forms": options["forms"], "tone": options["tone"], "reader_level": options["reader_level"],
-                                            "genre": _genre_for(q["text"]), "writer": "platform", "platforms": options["platforms"]}) for q in open_ones]
+                                            "genre": _genre_for(q["text"]), "writer": "platform", "platforms": options["platforms"],
+                                            "video_aspect": options.get("video_aspect") or "9:16"}) for q in open_ones]
     opened = sp.open_projects(db, user, subject_id, items)
     _step(db, run, "开项目", "done", f"开了 {len(opened['opened'])} 个项目" + (f"，跳过 {len(opened['skipped'])} 个" if opened["skipped"] else ""))
     for project in opened["opened"]:

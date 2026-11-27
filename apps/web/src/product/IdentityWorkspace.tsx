@@ -11,6 +11,7 @@ import AccountPublisherPanel from "./AccountPublisherPanel";
 import ChannelIcon from "./ChannelIcon";
 import StarterPersonaGallery from "./StarterGallery";
 import PersonaVoicePreset from "./PersonaVoicePreset";
+import { PersonaDefaultForms } from "./project/TopicForms";
 import PersonaChromeProfile, { useChromeProfiles } from "./PersonaChromeProfile";
 import { PersonaPortraitEditor } from "./PersonaPortraits";
 import { SpeechSampleFolderEditor } from "./PersonaSpeechSamples";
@@ -503,6 +504,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
         {tab === "edit" && current.kind === "brand" && <BrandProfileEditor key={identityKey} brandId={current.id} brandName={current.name} revision={revisions[0]} readOnly={creativeReadOnly} onSaved={sideRevisionSaved} />}
         {tab === "edit" && current.kind !== "brand" && <div className="space-y-8">{revisionConflict && <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-5 text-[14px] text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}。当前输入已保留，需先核对历史再显式加载，不能继续覆盖。</p><Button variant="secondary" onClick={() => { if (!window.confirm("加载最新修订将覆盖当前表单，确认继续？")) return; const next = draftFrom(revisions[0]?.profile || {}); setDraft(next); baselineDraft.current = JSON.stringify(next); setRevisionConflict(false); setError(""); }}>加载最新修订（覆盖当前表单）</Button></div>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">声音</h3><div className="max-w-md"><PersonaVoicePreset personaId={current.id} disabled={creativeReadOnly} /></div></section>}
+          {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-1 font-serif text-[20px] font-semibold text-ink-900">默认做哪几种</h3><p className="mb-4 text-[12.5px] text-ink-500">这个角色定了选题后预先勾好的形态；每个项目都还能改。</p><div className="max-w-2xl"><PersonaDefaultForms personaId={current.id} disabled={creativeReadOnly} /></div></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">浏览器</h3><div className="max-w-md"><PersonaChromeProfile personaId={current.id} disabled={creativeReadOnly} /></div></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">形象照</h3><PersonaPortraitEditor key={identityKey} personaId={current.id} personaName={current.name} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">逐字稿样本</h3><SpeechSampleFolderEditor key={identityKey} personaId={current.id} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}

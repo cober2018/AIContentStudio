@@ -124,9 +124,14 @@ def package(db: Session, user: User, target_id: int) -> dict:
             shots = str(export_dir(db, project["id"], "final").parent / "发布截图")
         except Exception:  # noqa: BLE001 Without the material drive the model falls back to the system temp folder.
             shots = None
+    from .platform_limits import check
+
+    copy = manifest.get("publish_copy") or {}
     return {**head, "project_id": project.get("id"), "unit_id": project.get("unit_id"), "title": manifest.get("title"),
             "screenshot_dir": shots,
-            "aspect_ratio": manifest.get("aspect_ratio"), "files": files, "publish_copy": manifest.get("publish_copy") or {}}
+            "aspect_ratio": manifest.get("aspect_ratio"), "files": files, "publish_copy": copy,
+            # Over a platform's mechanical limit: shorten when filling the page, never write a second copy.
+            "copy_warnings": check(target.channel, copy)}
 
 
 def _open_target(db: Session, user: User, target_id: int, screenshot_path: str) -> tuple[DeliveryTarget, Path]:

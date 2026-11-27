@@ -35,6 +35,8 @@ from ..models import (
 KEY = "video_chain"
 # Returned with the brief so any external model (not only one with the repo's skills) follows the same chain.
 RULES = [
+    "形态作品（brief.form 不为空）：只从 form.body.sections（本体那一版的分块）取材，照 form.writing_standard 写；aspect_ratio 必须是 form.aspect_ratio（横版 16:9、竖版 9:16），不一致存不进去；"
+    "口播、字幕、叠字里的阿拉伯数字要在本体或 facts 里有，结论不能比本体强，否则存稿被拒并列出哪条。本体还没定稿时 brief 会拒绝，等用户在页面上定稿。",
     "你主导整条视频；平台不调用自己的模型。导演稿存好即自动采用，不用等；三处停下等用户：素材（只在第一次剪小样前，且素材开关为手动时）、小样、成片。有意见就出下一版再停。",
     "事实：口播和画面里当事实说的话（数字、症状、研究结论、政策、参数等）只用 get_video_brief 的 facts（已冻结的事实边界）里有的；角色作品写导演稿前先用 get_fact_template 看题材模板，把要当事实说的话连出处用 submit_facts 交上去，平台核对后自动冻结；被退回的换来源或不说。事实改了要重存导演稿。"
     "fact_templates 里每个模板的 red_lines 必须守，opinion_only 列的内容只能当个人经历或观点说。",
@@ -680,8 +682,12 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .project_brief import current_brief
     from .project_evidence import current_boundary
 
+    from . import topic_forms
+
     project, unit = owned_unit(db, project_id, unit_id, user)
     product_video.require_persona(db, unit_id)
+    topic_forms.require_started(db, unit)
+    form = topic_forms.brief_part(db, unit)
     row = current_brief(db, project_id)
     boundary = current_boundary(db, project_id)
     facts = []
@@ -693,7 +699,8 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
                                                        .where(FactPackItem.fact_pack_id == boundary.fact_pack_id)
                                                        .order_by(FactPackItem.sort_order).limit(80))]
     siblings = []
-    for other in db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id, ContentUnit.id != unit_id)):
+    # A form work reads the body's 块 in form.body instead of flattened sibling texts.
+    for other in [] if form else db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id, ContentUnit.id != unit_id)):
         master = _latest(db, other.id)
         if master is not None and master.payload_schema.startswith("text."):
             siblings.append({"unit": other.title, "text": _text_of(master)[:8000]})
@@ -719,6 +726,8 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             "persona": persona_brief(db, user, unit),
             # Search works: the question this piece answers, its keywords, the sourced facts it may cite and the search writing rules.
             "search": __import__("app.services.search_promotion", fromlist=["writing_brief"]).writing_brief(db, unit),
+            # 形态: 横版 / 竖版 spec (aspect_ratio is fixed by the work), the body revision's 块 and the shared writing standard.
+            "form": form,
             # The reference video being cloned, when the user attached one; null otherwise.
             "reference": reference_video.brief_view(db, unit_id),
             # Approved lessons from earlier rework, plus this work's sent-back notes not yet turned into a lesson.

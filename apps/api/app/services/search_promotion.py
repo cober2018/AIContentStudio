@@ -6,6 +6,7 @@ Two human gates only: confirming a subject's base material, and reviewing the pl
 from __future__ import annotations
 
 import re
+from typing import Literal
 from datetime import UTC, datetime
 
 from fastapi import HTTPException
@@ -488,6 +489,8 @@ class ProjectItem(BaseModel):
     writer: str = "external"
     platforms: list[str] = Field(default_factory=lambda: list(DEFAULT_PLATFORMS), min_length=1, max_length=7)
     title: str = Field(default="", max_length=300)
+    # 视频做横版还是竖版；作品上固定，导演稿画幅要和它一致。
+    video_aspect: Literal["16:9", "9:16"] = "9:16"
 
     @field_validator("platforms")
     @classmethod
@@ -562,7 +565,7 @@ def _open_one(db: Session, user: User, subject: PromotionSubject, confirmed: Pro
     content = db.get(ContentProject, project["id"])
     _bind_fact_boundary(db, user, content, confirmed)
     settings = {"forms": item.forms, "tone": item.tone.strip(), "reader_level": item.reader_level.strip(), "genre": item.genre, "writer": item.writer,
-                "platforms": item.platforms}
+                "platforms": item.platforms, **({"video_aspect": item.video_aspect} if "video" in item.forms else {})}
     db.add(SearchProject(project_id=content.id, subject_id=subject.id, subject_revision_id=confirmed.id, library_revision_id=library.id,
                          question_id=question["id"], settings_json=settings, created_by=user.email))
     # The core piece is always text; graphic and video are derived from it. Graphic cards are drawn for 小红书 first.
@@ -570,8 +573,11 @@ def _open_one(db: Session, user: User, subject: PromotionSubject, confirmed: Pro
     units = []
     for role, modality, channel in plan:
         label = "核心稿" if role == "core" else FORMS[modality]
+        # The core piece is the project's body; derived works carry a fixed form (video: 横版 or 竖版).
+        form = "body" if role == "core" else "graphic_cards" if modality == "graphic" else (
+            "video_landscape" if item.video_aspect == "16:9" else "video_portrait")
         unit = ContentUnit(project_id=content.id, persona_id=None, identity_snapshot_id=None, production_domain="search",
-                           modality=modality, channel_id=channel, title=f"{label}｜{title}"[:300])
+                           modality=modality, channel_id=channel, title=f"{label}｜{title}"[:300], form=form)
         db.add(unit)
         db.flush()
         db.add(SearchWork(unit_id=unit.id, project_id=content.id, role=role))

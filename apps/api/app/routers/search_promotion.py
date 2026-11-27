@@ -61,6 +61,7 @@ class StartIn(BaseModel):
     tone: str = Field(default="专业中立科普", max_length=100)
     reader_level: str = Field(default="小白", max_length=50)
     platforms: list[str] = Field(default_factory=lambda: list(service.DEFAULT_PLATFORMS), min_length=1, max_length=7)
+    video_aspect: Literal["16:9", "9:16"] = "9:16"
 
 
 class DecisionIn(BaseModel):

@@ -515,6 +515,16 @@ class TopicLink(Input):
     title: str | None = Field(default=None, max_length=300)
 
 
+class PublishedArticle(Input):
+    title: str = Field(default="", max_length=500)
+    text: str = Field(min_length=1, max_length=200_000)
+    url: str | None = Field(default=None, max_length=2000, pattern=r"^https?://")
+    published_at: str | None = Field(default=None, max_length=40)
+
+
+FormKey = Literal["long_article", "graphic_cards", "video_landscape", "video_portrait"]
+
+
 class ProjectCreateInput(Input):
     title: str = Field(min_length=1, max_length=300)
     objective: str = Field(min_length=1, max_length=2000)
@@ -522,6 +532,11 @@ class ProjectCreateInput(Input):
     core_message: str | None = Field(default=None, max_length=1000)
     angle: str | None = Field(default=None, max_length=1000)
     links: list[TopicLink] = Field(default_factory=list, max_length=10)
+    # 本体与形态：给了 persona_id 就一起建本体（全文）和形态作品；forms 不给用角色默认勾选。
+    persona_id: ID | None = None
+    forms: list[FormKey] | None = Field(default=None, min_length=1, max_length=4)
+    body_source: Literal["new", "published_article"] = "new"
+    article: PublishedArticle | None = None
 
 
 class UnitCreateInput(Input):
@@ -572,7 +587,8 @@ TOOLS = {
     "start_media_transcription": (MediaTranscriptionInput, "Small tool, not tied to any project: transcribe one local audio or video file (full path on this Mac or the material drive) with the platform's local speech recognition (no network, no cost). Writes one folder with <name>.txt (plain text), <name>.srt (subtitles) and <name>.md (notes split at scene changes, each part with its screenshot in images/ by relative path; audio gets text only). Default folder: 自媒体素材/AIContentStudio/转写/<name>/ on the material drive; output_dir (full path) writes elsewhere; earlier results are never overwritten. Runs in the background one job at a time and returns job_id at once; read it with get_media_transcription.", False),
     "get_media_transcription": (MediaTranscriptionReadInput, "Read a job started with start_media_transcription: status (queued / running / done / failed with reason), output folder, files (txt, srt, md, images), duration, cue and screenshot counts and the opening text. While queued or running, call again after a while.", True),
     "list_personas": (EmptyInput, "Start of a self-sourced topic: read the owner's active personas (id, name, positioning) and the channels a work can target. A project takes no persona; each work picks one.", True),
-    "create_project": (ProjectCreateInput, "Create a content project from a topic you researched yourself, with revision 1 of its brief. rationale (why this topic, now) is required; links are optional because a topic drawn from many sources may have no single source. Then call create_unit. Not for product works.", False),
+    "create_project": (ProjectCreateInput, "Create a content project from a topic you researched yourself, with revision 1 of its brief. rationale (why this topic, now) is required; links are optional because a topic drawn from many sources may have no single source. Pass persona_id to also create the project's body (本体: one full article) and its form works: forms from long_article, graphic_cards, video_landscape, video_portrait (omit to use the persona's default ticks; only pass forms the user asked for). body_source new: write the body with get_article_brief / save_article_draft, then stop — the user makes it final on the page and may change the ticks there; published_article: pass article (text, url) and the body is final at once. Without persona_id, call create_unit as before. Not for product works.", False),
+    "list_form_works": (EmptyInput, "One body, four forms: list the form works (图卡 / 横版视频 / 竖版视频) waiting for you. A project's forms start only after the user makes its body (本体, the full article) final on the page. Each item gives the body revision's sections (问题、结论、做法与口径、结果表或算例、适用条件、出处), the form's spec and the next tool; take material only from the body, follow writing_standard (craft-writing). Saves record the body revision automatically and are refused when a number or a conclusion does not match the body, or a video's aspect_ratio does not match its form.", True),
     "create_unit": (UnitCreateInput, "Create a work in a project for one persona (video, graphic or text; channel optional, from list_personas). Returns unit_id; continue with the normal flow, e.g. get_video_brief, where the 导演稿, 小样 and 成片 stops wait for the user.", False),
     "list_accounts": (EmptyInput, "Before importing account data: list the owner's active platform accounts (id, name, platform channel and label, persona id and name, whether the platform accepts imports) and the metric keys each platform accepts.", True),
     "record_account_followers": (AccountFollowersInput, "Record one account's total followers (粉丝总数 / 关注者总数, the whole account, not a single work's gain) as read today from the platform's own backend or home page in the user's logged-in browser; where each platform shows it is in get_craft_skill(skill=\"craft-review\"). Counts as plain numbers (1.2万 -> 12000); if the page only shows a rounded number, record it and say so to the user. source_name names the page read (e.g. 抖音创作者中心首页). A second reading the same day replaces the first. Returns the previous reading for comparison and the 效果复盘 link where the persona's whole-network followers are summed.", False),
@@ -587,7 +603,7 @@ TOOLS = {
     "save_promotion_subject_draft": (SubjectDraftInput, "Draft or redraft a promotion subject from the material the user gave (name, links, files) and your own research. subject = {name, category_id or proposed_category {top_key: physical|digital|service|org, name}, audiences [individual|business|government], brand, url, description, facts [{text, url, excerpt, source}], brand_statement, banned_words}. Every fact needs the page url and an exact excerpt from it: the platform opens the link, drops facts whose excerpt is not there (returned in rejected_facts) and marks unreachable pages for a manual check. Saves a DRAFT; then STOP and tell the user to confirm it on the page — you cannot confirm it.", False),
     "get_search_subject": (SubjectRefInput, "Read one promotion subject: confirmed and draft versions, the question library with each question's coverage (none / in_progress / done), its projects, category hints and the genre list.", True),
     "save_question_library": (LibraryInput, "Save a new version of the subject's question library (needs a confirmed subject). library = {questions [{id (keep existing ids), text, intent, priority 1-3, source_url (a search result page; leave empty only when inferred)}], keywords {primary, long_tail, brand}}. No confirmation needed.", False),
-    "open_search_projects": (OpenProjectsInput, "Open up to 5 promotion projects, one per question: items [{question_id, forms [text|graphic|video], tone, reader_level, genre (definition|buying-guide|comparison|shortlist|how-to|price-spec|case-study|faq), writer (external|platform), title}]. Questions already in progress or done are skipped. Each project gets a core text work plus derived graphic / video works; facts are frozen at this moment.", False),
+    "open_search_projects": (OpenProjectsInput, "Open up to 5 promotion projects, one per question: items [{question_id, forms [text|graphic|video], tone, reader_level, genre (definition|buying-guide|comparison|shortlist|how-to|price-spec|case-study|faq), writer (external|platform), title, video_aspect (16:9 or 9:16, default 9:16; fixed on the video work)}]. Questions already in progress or done are skipped. Each project gets a core text work (its body) plus derived graphic / video works, which record the core revision they come from; facts are frozen at this moment.", False),
     "get_search_project": (SearchProjectInput, "Read a promotion project: question, settings, each work's role / modality / chain state, its platform versions and the person's review decisions.", True),
     "adopt_search_draft": (Scope, "搜索推广 only: after your saved draft passes its checks (and you judged any warnings), adopt it yourself; for a graphic piece call it again once its images are rendered and you checked them. Videos follow the video chain, where the person reviews.", False),
     "get_search_version_template": (VersionTemplateInput, "The platform's mechanical adaptation of an adopted 搜索推广 work for one platform (e.g. zhihu/article, toutiao/article, wechat/article), as the payload format to rewrite, plus titles already used in the project.", True),
@@ -787,6 +803,10 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return media_transcription.result(db, args.job_id)
     if name in {"list_personas", "create_project", "create_unit"}:
         return _self_sourced(db, name, args, user)
+    if name == "list_form_works":
+        from . import topic_forms
+
+        return topic_forms.pending(db, user)
     if name in _SEARCH_TOOLS:
         return _search(db, name, args, user)
     if name in {"list_publish_targets", "get_publish_package", "report_publish_draft", "report_publish_result", "report_publish_link"}:
@@ -892,7 +912,19 @@ def _self_sourced(db: Session, name: str, args: Input, user: User) -> dict:
         reference = {"kind": MODEL_TOPIC, "rationale": args.rationale, "links": [link.model_dump(exclude_none=True) for link in args.links]}
         brief = projects.save_project_brief(projects.BriefRevisionIn(expected_revision=0, objective=args.objective,
             core_message=args.core_message, angle=args.angle, references=[reference]), project["id"], db=db, user=user)
-        return {"project_id": project["id"], "brief_revision": brief["revision_no"]}
+        if args.persona_id is None:
+            return {"project_id": project["id"], "brief_revision": brief["revision_no"]}
+        from . import topic_forms
+
+        forms = topic_forms.create(db, user, project["id"], persona_id=args.persona_id,
+                                   forms=list(args.forms) if args.forms else topic_forms.persona_defaults(db, args.persona_id),
+                                   body_source=args.body_source, article=args.article.model_dump() if args.article else None)
+        body = forms["body"]
+        return {"project_id": project["id"], "brief_revision": brief["revision_no"], "forms": forms["forms"],
+                "body_unit_id": body["unit_id"], "body_state": body["label"], "review_url": body["review_url"],
+                "works": [{"unit_id": item["unit_id"], "form": item["form"], "title": item["title"]} for item in forms["works"]],
+                "next": "本体已导入并定稿，用 list_form_works 领形态作品" if args.body_source == "published_article"
+                        else "用 get_article_brief / save_article_draft 写本体（body_unit_id），存稿后停下等用户在页面上定稿"}
     unit = projects.create_unit(projects.UnitIn(title=args.title, persona_id=args.persona_id, modality=args.modality,
                                                 channel_id=args.channel_id), args.project_id, db=db, user=user)
     return {"project_id": unit["project_id"], "unit_id": unit["id"], "persona_id": unit["persona_id"], "modality": unit["modality"]}
@@ -1116,11 +1148,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material|media_transcription|search|promotion|fact_boundary|variant|publish)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material|media_transcription|search|promotion|fact_boundary|variant|publish|body|form|forms)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_asset_", "video_chain_", "video_edit_queue_", "article_chain_", "search_", "promotion_", "publish_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_asset_", "video_chain_", "video_edit_queue_", "article_chain_", "search_", "promotion_", "publish_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_", "body_", "form_", "forms_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

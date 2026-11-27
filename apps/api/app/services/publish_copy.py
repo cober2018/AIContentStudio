@@ -44,9 +44,14 @@ def get(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .content_masters import owned_unit
 
     _project, unit = owned_unit(db, project_id, unit_id, user)
+    from . import platform_limits
+
     which = kind(db, unit)
+    copy = stored(db, unit_id)
+    channels = list(platform_limits.LIMITS) if unit.modality == "video" else ["xiaohongshu", "bilibili", "wechat"]
+    # One copy serves every platform; going over a platform's mechanical limit is only flagged, never a second copy.
     return {"format": "graphic" if which == "graphic" else "video", "limits": LIMITS[which], "skill": SKILLS[which],
-            "copy": stored(db, unit_id)}
+            "copy": copy, "platform_warnings": platform_limits.check_all(channels, copy)}
 
 
 def save(db: Session, user: User, project_id: int, unit_id: int, value: dict) -> dict:

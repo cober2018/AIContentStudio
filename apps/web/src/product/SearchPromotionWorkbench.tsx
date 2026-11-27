@@ -226,7 +226,7 @@ function SubjectEditor({ subjectId, base, head, onDone, onCancel }: { subjectId:
 function LibrarySection({ subject }: { subject: Subject }) {
   const client = useQueryClient();
   const library = subject.library;
-  const [picked, setPicked] = useState<Record<string, { forms: string[]; genre: string; tone: string; reader_level: string; writer: string }>>({});
+  const [picked, setPicked] = useState<Record<string, { forms: string[]; genre: string; tone: string; reader_level: string; writer: string; video_aspect: "16:9" | "9:16" }>>({});
   const [editing, setEditing] = useState(false);
   const refresh = () => client.invalidateQueries({ queryKey: ["search-subject"] });
   const open = useMutation({
@@ -244,7 +244,7 @@ function LibrarySection({ subject }: { subject: Subject }) {
         return <div key={question.id} className="rounded-lg border p-3">
           <div className="flex flex-wrap items-center gap-2">
             <input type="checkbox" aria-label={`选中 ${question.text}`} disabled={question.coverage !== "none" || (!choice && count >= 5)} checked={!!choice}
-              onChange={event => { const next = { ...picked }; if (event.target.checked) next[question.id] = { forms: ["text"], genre: "buying-guide", tone: "专业中立科普", reader_level: "小白", writer: "external" }; else delete next[question.id]; setPicked(next); }} />
+              onChange={event => { const next = { ...picked }; if (event.target.checked) next[question.id] = { forms: ["text"], genre: "buying-guide", tone: "专业中立科普", reader_level: "小白", writer: "external", video_aspect: "9:16" }; else delete next[question.id]; setPicked(next); }} />
             <span className="font-medium">{question.text}</span><Chip tone={tone}>{label}</Chip><Chip>优先级 {question.priority}</Chip>
             {question.source_kind === "search" ? <a className="text-sm underline" href={question.source_url} target="_blank" rel="noreferrer">来源</a> : <Chip>模型推断</Chip>}
           </div>
@@ -255,6 +255,7 @@ function LibrarySection({ subject }: { subject: Subject }) {
             <Field label="体裁"><select className={inputClass} value={choice.genre} onChange={event => setPicked({ ...picked, [question.id]: { ...choice, genre: event.target.value } })}>{subject.genres.map(g => <option key={g.key} value={g.key}>{g.name}（{g.for}）</option>)}</select></Field>
             <Field label="基调"><input className={inputClass} value={choice.tone} onChange={event => setPicked({ ...picked, [question.id]: { ...choice, tone: event.target.value } })} /></Field>
             <Field label="读者"><select className={inputClass} value={choice.reader_level} onChange={event => setPicked({ ...picked, [question.id]: { ...choice, reader_level: event.target.value } })}><option>小白</option><option>行业内行</option></select></Field>
+            {choice.forms.includes("video") && <Field label="视频画幅"><select className={inputClass} value={choice.video_aspect} onChange={event => setPicked({ ...picked, [question.id]: { ...choice, video_aspect: event.target.value as "16:9" | "9:16" } })}><option value="9:16">竖版 9:16</option><option value="16:9">横版 16:9</option></select></Field>}
             <Field label="谁来写"><select className={inputClass} value={choice.writer} onChange={event => setPicked({ ...picked, [question.id]: { ...choice, writer: event.target.value } })}><option value="external">第三方模型</option><option value="platform">平台模型</option></select></Field>
           </div>}
         </div>;
@@ -360,7 +361,8 @@ function StartPanel({ subjectId }: { subjectId: number }) {
   const [tone, setTone] = useState("专业中立科普");
   const [reader, setReader] = useState("小白");
   const [platforms, setPlatforms] = useState<string[]>(["wechat", "zhihu", "toutiao"]);
-  const start = useMutation({ mutationFn: () => api.post<Run>(`${BASE}/subjects/${subjectId}/start`, { count, forms, tone, reader_level: reader, platforms }),
+  const [aspect, setAspect] = useState<"16:9" | "9:16">("9:16");
+  const start = useMutation({ mutationFn: () => api.post<Run>(`${BASE}/subjects/${subjectId}/start`, { count, forms, tone, reader_level: reader, platforms, video_aspect: aspect }),
     onSuccess: () => client.invalidateQueries({ queryKey: ["search-runs"] }) });
   const toggle = (list: string[], key: string, on: boolean) => on ? [...list, key] : list.filter(item => item !== key);
   return <Section title="开始（平台模型自动做）" eyebrow="用第三方模型时，直接对它说「做这个推广对象的搜索推广」">
@@ -370,6 +372,7 @@ function StartPanel({ subjectId }: { subjectId: number }) {
       <Field label="形式"><div className="flex gap-3">{FORMS.map(([key, name]) => <label key={key} className="flex items-center gap-1 text-sm"><input type="checkbox" checked={forms.includes(key)} onChange={event => setForms(toggle(forms, key, event.target.checked))} />{name}</label>)}</div></Field>
       <Field label="基调"><input className={inputClass} value={tone} onChange={event => setTone(event.target.value)} /></Field>
       <Field label="读者"><select className={inputClass} value={reader} onChange={event => setReader(event.target.value)}><option>小白</option><option>行业内行</option></select></Field>
+      {forms.includes("video") && <Field label="视频画幅"><select className={inputClass} value={aspect} onChange={event => setAspect(event.target.value as "16:9" | "9:16")}><option value="9:16">竖版 9:16</option><option value="16:9">横版 16:9</option></select></Field>}
     </div>
     <Field label="发布平台"><div className="flex flex-wrap gap-3">{PLATFORMS.map(([key, name]) => <label key={key} className="flex items-center gap-1 text-sm"><input type="checkbox" checked={platforms.includes(key)} onChange={event => setPlatforms(toggle(platforms, key, event.target.checked))} />{name}</label>)}</div></Field>
     {start.isError && <div className="mt-2"><ErrorBanner message={message(start.error)} /></div>}

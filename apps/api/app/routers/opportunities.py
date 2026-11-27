@@ -84,6 +84,8 @@ class ConversionIn(BaseModel):
     objective: str | None = None
     selected_signal_ids: list[int] = Field(default_factory=list)
     brief_overrides: dict = Field(default_factory=dict)
+    # 要做哪几种：转项目时一起建本体和勾选的形态作品；不给就照旧只建项目。
+    forms_plan: dict | None = None
 
 
 def _validate_priority(priority: str) -> None:
@@ -387,6 +389,12 @@ def convert_to_project(
 
 
 def _convert_to_project(payload: ConversionIn, opportunity_id: int, db: Session, user: User):
+    from .topic_forms import PlanIn
+
+    try:
+        plan = PlanIn.model_validate(payload.forms_plan) if payload.forms_plan is not None else None
+    except ValueError as exc:
+        raise HTTPException(422, "要做哪几种填得不对") from exc
     opportunity = service.lock_opportunity(db, opportunity_id, user)
     existing = db.scalar(
         select(OpportunityProjectConversion).where(OpportunityProjectConversion.opportunity_id == opportunity.id)
@@ -539,6 +547,11 @@ def _convert_to_project(payload: ConversionIn, opportunity_id: int, db: Session,
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(409, "内容机会转换冲突，请刷新后重试") from exc
+    if plan is not None:
+        from ..services import topic_forms
+
+        topic_forms.create(db, user, project.id, persona_id=plan.persona_id, forms=plan.forms, body_source=plan.body_source,
+                           writer=plan.writer, article=plan.article.model_dump() if plan.article else None)
     return {
         "project_id": project.id,
         "conversion_id": conversion.id,

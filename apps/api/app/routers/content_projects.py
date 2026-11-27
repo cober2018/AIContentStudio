@@ -391,6 +391,7 @@ def _unit_json(unit: ContentUnit, aspect: str | None = None) -> dict:
         "identity_snapshot_id": unit.identity_snapshot_id,
         "identity_state": "product_context" if unit.production_domain == "product" else "search_context" if unit.production_domain == "search" else "frozen" if unit.identity_snapshot_id else "legacy_identity",
         "modality": unit.modality,
+        "form": unit.form,
         "channel_id": unit.channel_id,
         "title": unit.title,
         "status": unit.status,

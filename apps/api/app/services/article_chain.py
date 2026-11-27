@@ -31,6 +31,8 @@ from ..models import (
 KEY = "article_chain"
 WRITERS = {"platform", "external"}
 RULES = [
+    "本体与形态（brief.form 不为空）：本体（form.key=body）就是全文，用二级标题按 form.sections 分块写，存稿后停下等用户定稿；"
+    "图卡等形态作品只从 form.body.sections 取材，照 form.writing_standard 写，数字要在本体或 facts 里有、结论不能比本体强，否则存稿被拒并列出哪条。",
     "页面开关是「第三方模型」时才由你写；是「平台模型」时由平台阶段写，你不要存稿。",
     "读 get_article_brief：任务书、事实、来源原文、当前稿和格式示例。数字只用事实里有的，并写清来源；不夸大。",
     "当事实说的话（数字、症状、研究结论、政策、参数等）只用 facts（已冻结的事实边界）里有的；角色作品写稿前先用 get_fact_template 看题材模板，把要当事实说的话连出处用 submit_facts 交上去，平台核对后自动冻结；被退回的换来源或不说。事实改了要重存稿子。"
@@ -178,6 +180,9 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, decision: str
     unit = _unit(db, user, project_id, unit_id, mutate=True)
     current = _state(db, unit_id)
     allowed = {"draft_review": {"approve", "changes"}, "draft_changes": {"approve", "changes"}, "final_review": {"accept", "changes"}}
+    if unit.form == "body" and unit.production_domain == "persona":
+        # A final body can be reopened with notes; its derived works keep the old final until the next 定稿.
+        allowed["done"] = {"changes"}
     if current["state"] not in allowed:
         _fail("article_chain_not_waiting", "现在没有等你看的稿")
     if decision not in allowed[current["state"]]:
@@ -196,6 +201,10 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, decision: str
         from . import graphic_review
 
         graphic_review.run(db, user, project_id, unit_id)
+    if decision == "approve" and unit.form == "body":
+        from .topic_forms import body_finalized
+
+        body_finalized(db, user, unit)
     return state(db, user, project_id, unit_id)
 
 
@@ -225,7 +234,10 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
 
     from ..models import ContentProject
 
+    from . import topic_forms
+
     unit = _unit(db, user, project_id, unit_id)
+    topic_forms.require_started(db, unit)
     project = db.get(ContentProject, project_id)
     row = current_brief(db, project_id)
     boundary = current_boundary(db, project_id)
@@ -237,8 +249,10 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
                  for item_id, checksum, statement, snapshot in db.execute(
                      select(FactPackItem.id, FactPackItem.snapshot_checksum, Fact.statement, FactPackItem.snapshot_json).outerjoin(Fact, FactPackItem.fact_id == Fact.id)
                      .where(FactPackItem.fact_pack_id == boundary.fact_pack_id).order_by(FactPackItem.sort_order).limit(80))]
+    form = topic_forms.brief_part(db, unit)
     siblings = []
-    for other in db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id, ContentUnit.id != unit_id)):
+    # A body or form work reads the body's 块 in form.body instead of flattened sibling texts.
+    for other in [] if form else db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id, ContentUnit.id != unit_id)):
         master = _latest(db, other.id)
         if master is not None and master.payload_schema.startswith("text."):
             siblings.append({"unit": other.title, "text": _text_of(master)[:8000]})
@@ -253,6 +267,8 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             "persona": persona_brief(db, user, unit),
             # Search works: the question this piece answers, its keywords, the sourced facts it may cite and the search writing rules.
             "search": __import__("app.services.search_promotion", fromlist=["writing_brief"]).writing_brief(db, unit),
+            # 本体 / 形态: the form's spec, the body revision's 块 and the shared writing standard; null for older works.
+            "form": form,
             "state": state(db, user, project_id, unit_id),
             # The current version doubles as the format example the model fills in.
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload_schema": master.payload_schema,

@@ -29,7 +29,7 @@ GROUPS = {
                                         "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "redo_work_covers", "file_as_common", "propose_lesson",
                                         "import_material_folder", "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
                                         "grab_video_frame", "list_product_recipes"}),
-    "article": ("写文章 / 图文（第三方模型写作）", {"prepare_daily_review", "get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}),
+    "article": ("写文章 / 图文（第三方模型写作）", {"list_form_works", "prepare_daily_review", "get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}),
     "facts": ("事实边界（按题材模板自动核对）", {"get_fact_template", "submit_facts"}),
     "search": ("搜索推广（资料起草 → 问题库 → 开项目 → 平台版本 → 整批送审）", {"list_promotion_subjects", "save_promotion_subject_draft", "get_search_subject",
                                                      "save_question_library", "open_search_projects", "get_search_project", "adopt_search_draft",
@@ -40,6 +40,7 @@ GROUPS = {
 }
 # Registry descriptions are written for models; these are the same facts for the person maintaining the setup.
 SUMMARIES = {
+    "list_form_works": "列出本体已定稿、等第三方模型做的形态作品（图卡、横版、竖版），带本体分块和形态规格",
     "list_publish_targets": "列出等着发布的交付目标（哪个作品、发哪个平台、上次上传的草稿）",
     "get_publish_package": "取一个交付目标的发布包：成片、封面的本机路径和发布文案",
     "report_publish_draft": "记一笔「已在平台存成草稿」（附截图），交付页能看到",

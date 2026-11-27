@@ -968,8 +968,13 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         evidence = db.get(FactPackItem, item.get("fact_pack_item_id"))
         if boundary is None or evidence is None or evidence.fact_pack_id != boundary.fact_pack_id or not evidence.snapshot_checksum or evidence.snapshot_checksum != item.get("snapshot_checksum") or evidence.fact_pack.status != "frozen" or evidence.evidence_kind == "legacy_untyped":
             raise HTTPException(422, "证据必须属于当前冻结事实边界并匹配快照")
+    from .topic_forms import guard_save
+
+    # A form work (图卡 / 横版 / 竖版) must agree with the body it derives from, and records which body revision that is.
+    body_revision_id = guard_save(db, unit, payload_schema, payload["payload"], latest)
     row = ContentMasterRevision(
         project_id=project_id, content_unit_id=unit_id, revision_no=head + 1, parent_revision_id=parent_id,
+        source_body_revision_id=body_revision_id,
         modality=modality, channel_id=unit.channel_id, content_form=content_form, payload_schema=payload_schema,
         payload_json=payload["payload"], payload_hash=_hash(payload["payload"]), context_hash=_hash(context),
         creative_intent_json=creative_intent, creative_intent_hash=creative_intent_hash,

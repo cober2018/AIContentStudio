@@ -17,7 +17,7 @@ TOOL_NAMES = {
     "list_publish_targets", "get_publish_package", "report_publish_draft", "report_publish_result", "report_publish_link", "list_published_works",
     "list_promotion_subjects", "save_promotion_subject_draft", "get_search_subject", "save_question_library", "open_search_projects",
     "get_search_project", "adopt_search_draft", "get_search_version_template", "save_search_version", "submit_search_batch", "get_search_review",
-    "list_personas", "create_project", "create_unit", "get_context", "get_package", "get_execution", "find_capabilities", "use_capability",
+    "list_personas", "create_project", "create_unit", "list_form_works", "get_context", "get_package", "get_execution", "find_capabilities", "use_capability",
     "claim_execution", "start_execution", "materialize_inputs", "report_progress",
     "report_blocker", "report_checkpoint", "submit_output", "mark_unknown",
     "reconcile_unknown", "request_human_review",
@@ -34,7 +34,7 @@ TOOL_NAMES = {
     "list_accounts", "import_account_metrics", "record_account_followers",
     "prepare_daily_review",
 }
-READ_ONLY_TOOLS = {"list_publish_targets", "list_published_works", "get_publish_package", "list_promotion_subjects", "get_search_subject", "get_search_project", "get_search_version_template", "get_search_review", "list_personas", "list_accounts", "get_context", "get_package", "get_execution", "find_capabilities",
+READ_ONLY_TOOLS = {"list_form_works", "list_publish_targets", "list_published_works", "get_publish_package", "list_promotion_subjects", "get_search_subject", "get_search_project", "get_search_version_template", "get_search_review", "list_personas", "list_accounts", "get_context", "get_package", "get_execution", "find_capabilities",
                    "get_stages", "preview_stage", "get_stage_result", "get_stage_decision", "get_material_match", "get_shot_slots",
                    "get_craft_skill", "list_ae_templates", "get_video_brief", "get_video_decision",
                    "get_article_brief", "get_article_decision", "get_review_tasks", "get_shot_video_prompt", "list_product_recipes", "get_reference_video", "get_web_materials",

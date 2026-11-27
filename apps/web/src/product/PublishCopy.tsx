@@ -5,7 +5,7 @@ import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
 import { errorText } from "./ShotWork";
 
 type Copy = { title: string; hashtags: string[]; interaction: string; cover_text?: string; description?: string; lead?: string };
-type View = { format: "video" | "graphic"; limits: Record<string, number>; copy: Copy | null };
+type View = { format: "video" | "graphic"; limits: Record<string, number>; copy: Copy | null; platform_warnings?: { channel: string; platform: string; field: string; message: string }[] };
 
 // One general copy per work; video and graphic works have different fields.
 export default function PublishCopy({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
@@ -17,7 +17,7 @@ export default function PublishCopy({ projectId, unitId, readOnly }: { projectId
   const [issue, setIssue] = useState("");
   if (query.isPending) return null;
   if (query.isError) return <ErrorBanner message={errorText(query.error)} />;
-  const { format, limits, copy } = query.data;
+  const { format, limits, copy, platform_warnings: warnings = [] } = query.data;
   const empty: Copy = format === "graphic" ? { title: "", lead: "", hashtags: [], interaction: "" } : { title: "", hashtags: [], cover_text: "", interaction: "", description: "" };
   const draft = edit ?? { ...empty, ...(copy || {}) };
   const set = (key: keyof Copy, value: string) => setEdit({ ...draft, [key]: value });
@@ -43,6 +43,7 @@ export default function PublishCopy({ projectId, unitId, readOnly }: { projectId
       ? <Field label={`导语（≤${limits.lead} 字，放在图前面）`}><textarea className={`${inputClass} min-h-[72px]`} maxLength={limits.lead} disabled={readOnly} value={draft.lead ?? ""} onChange={event => set("lead", event.target.value)} /></Field>
       : <Field label={`简介（≤${limits.description} 字）`}><textarea className={`${inputClass} min-h-[96px]`} maxLength={limits.description} disabled={readOnly} value={draft.description ?? ""} onChange={event => set("description", event.target.value)} /></Field>}</div>
     {!copy && !edit && <p className="mt-2 text-xs text-slate-500">第三方模型会写一版，你也可以先自己填。</p>}
+    {copy && !edit && warnings.length > 0 && <div className="mt-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-900"><p className="font-medium">各平台的机械限制（只提示，不另写一版）</p><ul className="mt-1 list-disc pl-5">{warnings.map(item => <li key={`${item.channel}-${item.field}`}>{item.message}</li>)}</ul></div>}
     <div className="mt-3"><Button size="sm" disabled={readOnly || busy || !edit} onClick={() => void save()}>{busy ? "保存中…" : "保存发布文案"}</Button></div>
     {issue && <ErrorBanner message={issue} />}
   </section>;

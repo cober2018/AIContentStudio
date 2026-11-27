@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
+import { BodyReviewForms, useForms } from "./project/TopicForms";
 
 type Chain = { writer: "platform" | "external" | "daily_review"; state: string; label: string; detail?: string; locked?: boolean; notes?: { note: string }[]; master_id: number | null;
   review?: { state: "not_sent" | "rendered" | "sent" | "failed"; message?: string; candidate_id?: number };
@@ -133,7 +134,7 @@ function Versions({ projectId, unitId, readOnly }: { projectId: number; unitId: 
 export type ArticlePart = "draft" | "images" | "delivery";
 
 // One writing chain shown across the work's steps: 稿子 (who writes, draft review, versions), 成图 (check the rendered images), 交付 (sending status).
-type DocBlock = { id: string; type: string; level?: number; content?: { text: string }[]; material_revision_id?: number; alt_text?: string; caption?: string };
+type DocBlock = { id: string; type: string; level?: number; content?: { text: string }[]; items?: { id: string; content?: { text: string }[] }[]; material_revision_id?: number; alt_text?: string; caption?: string };
 
 function BlockImage({ block, materialId }: { block: DocBlock; materialId?: number }) {
   const url = useMaterialUrl(materialId, block.material_revision_id || 0);
@@ -160,6 +161,11 @@ function CurrentDraft({ projectId, unitId, masterId }: { projectId: number; unit
       const text = (block.content || []).map(item => item.text).join("");
       if (block.type === "heading") return <h4 key={block.id} className="mt-5 text-base font-semibold text-slate-900">{text}</h4>;
       if (block.type === "image" || block.type === "chart") return <BlockImage key={block.id} block={block} materialId={materials.get(block.material_revision_id || 0)} />;
+      if (block.type === "bullet_list" || block.type === "ordered_list") {
+        const items = (block.items || []).map(item => <li key={item.id}>{(item.content || []).map(run => run.text).join("")}</li>);
+        return block.type === "ordered_list" ? <ol key={block.id} className="mt-2 list-decimal space-y-1 pl-6">{items}</ol> : <ul key={block.id} className="mt-2 list-disc space-y-1 pl-6">{items}</ul>;
+      }
+      if (block.type === "quote") return <blockquote key={block.id} className="mt-2 border-l-4 border-slate-200 pl-3 text-slate-600">{text}</blockquote>;
       return text ? <p key={block.id} className="mt-2 whitespace-pre-wrap">{text}</p> : null;
     })}</div> : <pre className="mt-3 whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-700">{plainText(master.data?.payload).join("\n\n")}</pre>}
   </section>;
@@ -172,6 +178,8 @@ export default function ArticleChainPanel({ projectId, unitId, readOnly, isGraph
   const chain = useQuery({ queryKey: ["article-chain", currentUser(), projectId, unitId], retry: false,
     queryFn: () => api.get<Chain>(`${base}/article-chain`),
     refetchInterval: query => ["not_started", "draft_changes", "platform"].includes(query.state.data?.state || "") ? 15000 : false });
+  const forms = useForms(projectId);
+  const isBody = forms.data?.body?.unit_id === unitId;
   const [notes, setNotes] = useState<string[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -207,7 +215,7 @@ export default function ArticleChainPanel({ projectId, unitId, readOnly, isGraph
     <div className="flex flex-wrap gap-2">
       {checking
         ? <Button disabled={busy} onClick={() => { if (window.confirm("成图验收通过并定稿？定稿后不能再改，要调整只能复制一份。")) void act(() => api.post(`${base}/article-chain/decision`, { decision: "accept", notes: [] })); }}>{busy ? "送审中…" : "验收通过"}</Button>
-        : <Button disabled={busy} onClick={() => { if (window.confirm(isGraphic ? "采用这版稿子？平台会接着出图，出好后到「成图」一步验收。" : "采用当前版本并定稿？定稿后不能再改，要调整只能复制一份。")) void act(() => api.post(`${base}/article-chain/decision`, { decision: "approve", notes: [] })); }}>{busy ? "出图中…" : isGraphic ? "采用" : "采用并定稿"}</Button>}
+        : <Button disabled={busy} onClick={() => { if (window.confirm(isGraphic ? "采用这版稿子？平台会接着出图，出好后到「成图」一步验收。" : isBody ? "定稿这一版本体？勾选的形态会马上开工；以后要改本体，可以写意见重开。" : "采用当前版本并定稿？定稿后不能再改，要调整只能复制一份。")) void act(async () => { await api.post(`${base}/article-chain/decision`, { decision: "approve", notes: [] }); await client.invalidateQueries({ queryKey: ["topic-forms"] }); }); }}>{busy ? "出图中…" : isGraphic ? "采用" : "采用并定稿"}</Button>}
       <Button variant="secondary" disabled={busy || !pending.length} onClick={() => void act(async () => { await api.post(`${base}/article-chain/decision`, { decision: "changes", notes: pending.map(note => ({ note })) }); setNotes([]); setText(""); })}>按意见修改</Button>
     </div>
     <p className="text-xs text-slate-500">{daily || external ? "回到第三方模型那边说一声「继续」，它会读到你的决定。" : "写了意见后，在下面的创作流程里重跑，采用的新稿会回到这里。"}</p>
@@ -254,6 +262,7 @@ export default function ArticleChainPanel({ projectId, unitId, readOnly, isGraph
       {decisionControls}
       {failure}
     </section>
+    {isBody && <BodyReviewForms projectId={projectId} unitId={unitId} readOnly={readOnly} state={data.state} />}
     {!isGraphic && data.master_id && <CurrentDraft projectId={projectId} unitId={unitId} masterId={data.master_id} />}
     <Versions projectId={projectId} unitId={unitId} readOnly={readOnly} />
   </div>;
